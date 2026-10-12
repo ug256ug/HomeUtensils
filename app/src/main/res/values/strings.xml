@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">HomeUtensils</string>
+    <string name="uganda_country">Uganda</string>
+    <string name="currency_prefix">UGX </string>
+</resources>

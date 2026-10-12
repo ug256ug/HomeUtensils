@@ -1,0 +1,6 @@
+{
+  "name": "HomeUtensils",
+  "description": "Clean mobile platform for Ugandan users to complete household utensil image tasks, manage wallets, referrals, and admin tasks.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
