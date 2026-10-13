@@ -541,7 +541,7 @@ class HomeUtensilsViewModel(application: Application) : AndroidViewModel(applica
             // PART 1 — GIFT CODE ELIGIBILITY
             // Gift codes must be redeemable only by members with an active, unexpired Plus package.
             val profile = database.userProfileDao().getProfileOnce()
-            val isActivated = profile != null && (profile.isPackageActivated || profile.packageActivationDate > 0L || profile.paidCapitalUgx > 0L)
+            val isActivated = profile != null && (profile.isPackageActivated || profile.packageActivatedAt > 0L || profile.paidCapitalUgx > 0L)
             val isPlus = profile != null && profile.packageName.contains("PLUS", ignoreCase = true)
             val isUnexpired = profile != null && !profile.isPackageExpired &&
                 (profile.packageExpiresAt == 0L || System.currentTimeMillis() < profile.packageExpiresAt) &&
