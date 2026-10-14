@@ -2910,130 +2910,159 @@ class HomeUtensilsRepository(private val database: HomeUtensilsDatabase) {
 
         Result.success("Payment reported successfully. Agent notified to verify within $timeoutMins minutes.")
     }
+suspend fun confirmPaymentAndActivate(
+    requestId: String,
+    agentId: String
+): Result<String> = withContext(Dispatchers.IO) {
+    database.withTransaction {
+        val request = database.agentActivationRequestDao().getRequestByIdOnce(requestId)
+            ?: return@withTransaction Result.failure(Exception("Activation request not found."))
 
-    suspend fun confirmPaymentAndActivate(
-        requestId: String,
-        agentId: String
-    ): Result<String> = withContext(Dispatchers.IO) {
-        database.withTransaction {
-            val request = database.agentActivationRequestDao().getRequestByIdOnce(requestId)
-                ?: return@withTransaction Result.failure(Exception("Activation request not found."))
+        if (request.status == "Activation Completed" || request.status == "Confirmed") {
+            return@withTransaction Result.failure(
+                Exception("Duplicate activation prevented: This request is already completed.")
+            )
+        }
 
-            if (request.status == "Activation Completed" || request.status == "Confirmed") {
-                return@withTransaction Result.failure(Exception("Duplicate activation prevented: This request is already completed."))
-            }
+        if (request.status != "Payment Reported") {
+            return@withTransaction Result.failure(
+                Exception("Payment must be reported before activation.")
+            )
+        }
 
-            val pkg = HomeUtensilsPackage.fromName(request.packageName)
-            val agent = database.agentWorkingFloatDao().getAgentById(agentId)
-                ?: return@withTransaction Result.failure(Exception("Agent not found."))
+        if (request.paymentMethod.isBlank() || request.paymentReference.isBlank()) {
+            return@withTransaction Result.failure(
+                Exception("Payment method and reference are required.")
+            )
+        }
 
-            if (agent.workingFloatUgx < request.amountUgx) {
-                return@withTransaction Result.failure(Exception("Insufficient Agent Working Float (Available: UGX ${agent.workingFloatUgx}, Required: UGX ${request.amountUgx})."))
-            }
+        if (request.agentId != agentId) {
+            return@withTransaction Result.failure(
+                Exception("Only the assigned agent can confirm this payment.")
+            )
+        }
 
-            // 1. Deduct agent float atomically
-            database.agentWorkingFloatDao().deductWorkingFloat(agentId, request.amountUgx)
+        val pkg = HomeUtensilsPackage.fromName(request.packageName)
+        val agent = database.agentWorkingFloatDao().getAgentById(agentId)
+            ?: return@withTransaction Result.failure(Exception("Agent not found."))
 
-            // 2. Create Activation Cycle for member
-            val cycleId = "CYCLE-APR-" + UUID.randomUUID().toString().take(8).uppercase()
-            val now = System.currentTimeMillis()
-            val durationMs = pkg.durationDays * 86400 * 1000L
-            val cycle = ActivationCycleEntity(
-                id = cycleId,
-                userId = if (request.memberId == "HU7K4M92Q") "current_user" else request.memberId,
-                memberId = request.memberId,
-                packageTier = pkg.displayName,
-                cycleType = "FIRST_ACTIVATION",
-                amountUgx = request.amountUgx,
-                initialTasksAllowed = pkg.initialTasksCount,
+        if (agent.workingFloatUgx < request.amountUgx) {
+            return@withTransaction Result.failure(
+                Exception("Insufficient Agent Working Float (Available: UGX ${agent.workingFloatUgx}, Required: UGX ${request.amountUgx}).")
+            )
+        }
+
+        // 1. Deduct agent float atomically
+        database.agentWorkingFloatDao().deductWorkingFloat(agentId, request.amountUgx)
+
+        // 2. Create Activation Cycle for member
+        val cycleId = "CYCLE-APR-" + UUID.randomUUID().toString().take(8).uppercase()
+        val now = System.currentTimeMillis()
+        val durationMs = pkg.durationDays * 86400 * 1000L
+        val cycle = ActivationCycleEntity(
+            id = cycleId,
+            userId = if (request.memberId == "HU7K4M92Q") "current_user" else request.memberId,
+            memberId = request.memberId,
+            packageTier = pkg.displayName,
+            cycleType = "FIRST_ACTIVATION",
+            amountUgx = request.amountUgx,
+            initialTasksAllowed = pkg.initialTasksCount,
+            activatedAt = now,
+            expiresAt = now + durationMs,
+            status = "ACTIVE",
+            facilitatedByAgentId = agentId
+        )
+        database.activationCycleDao().insertCycle(cycle)
+
+        // 3. Update member profile if this is the current user
+        if (request.memberId == "HU7K4M92Q") {
+            database.userProfileDao().updateCycleDetails(
+                packageName = pkg.displayName,
+                paidCapital = pkg.paidCapitalUgx,
+                cycleId = cycleId,
                 activatedAt = now,
                 expiresAt = now + durationMs,
-                status = "ACTIVE",
-                facilitatedByAgentId = agentId
+                isExpired = false
             )
-            database.activationCycleDao().insertCycle(cycle)
+        }
 
-            // 3. Update member profile if current_user
-            if (request.memberId == "HU7K4M92Q") {
-                database.userProfileDao().updateCycleDetails(
-                    packageName = pkg.displayName,
-                    paidCapital = pkg.paidCapitalUgx,
-                    cycleId = cycleId,
-                    activatedAt = now,
-                    expiresAt = now + durationMs,
-                    isExpired = false
-                )
-            }
+        // 4. Create Agent Facilitation record
+        val facId = "AGT-FAC-" + UUID.randomUUID().toString().take(8).uppercase()
+        database.agentFacilitationDao().insertFacilitation(
+            AgentFacilitationEntity(
+                id = facId,
+                agentId = agentId,
+                recipientMemberId = request.memberId,
+                recipientName = request.memberName,
+                packageName = pkg.displayName,
+                amountUgx = request.amountUgx,
+                feeUgx = 0L,
+                timestamp = now
+            )
+        )
 
-            // 4. Create Agent Facilitation record
-            val facId = "AGT-FAC-" + UUID.randomUUID().toString().take(8).uppercase()
-            database.agentFacilitationDao().insertFacilitation(
-                AgentFacilitationEntity(
-                    id = facId,
+        // 5. Create Ledger Transaction Entity
+        val txId = "TXN-ACT-" + UUID.randomUUID().toString().take(8).uppercase()
+        database.walletTransactionDao().insertTransaction(
+            WalletTransactionEntity(
+                id = txId,
+                title = "Agent Protected Package Activation (${pkg.displayName})",
+                type = "AGENT_FACILITATION",
+                amountUgx = request.amountUgx,
+                status = "CREDITED",
+                eventKey = requestId,
+                timestamp = now,
+                feeUgx = 0L,
+                netAmountUgx = request.amountUgx,
+                referenceNumber = request.paymentReference,
+                counterpartyName = agent.agentName,
+                counterpartyId = agent.agentId,
+                runningBalanceUgx = pkg.paidCapitalUgx,
+                paymentMethod = request.paymentMethod,
+                notes = "Facilitated by Agent ${agent.agentId}. Float deducted atomically after payment report."
+            )
+        )
+
+        // 6. Record 2% Agent commission
+        val commUgx = (request.amountUgx * 0.02).toLong()
+        if (commUgx > 0) {
+            database.agentWorkingFloatDao().addCommission(agentId, commUgx)
+            database.agentCommissionLogDao().insertCommissionLog(
+                AgentCommissionLogEntity(
+                    id = "COMM-" + UUID.randomUUID().toString().take(8).uppercase(),
                     agentId = agentId,
-                    recipientMemberId = request.memberId,
-                    recipientName = request.memberName,
-                    packageName = pkg.displayName,
-                    amountUgx = request.amountUgx,
-                    feeUgx = 0L,
+                    memberId = request.memberId,
+                    cycleId = cycleId,
+                    taskId = "ACTIVATION_BONUS",
+                    taskTitle = "2% Package Facilitation Commission (${pkg.displayName})",
+                    taskRewardUgx = request.amountUgx,
+                    commissionRate = 0.02,
+                    commissionUgx = commUgx,
                     timestamp = now
                 )
             )
-
-            // 5. Create Ledger Transaction Entity for Visual Passbook
-            val txId = "TXN-ACT-" + UUID.randomUUID().toString().take(8).uppercase()
-            database.walletTransactionDao().insertTransaction(
-                WalletTransactionEntity(
-                    id = txId,
-                    title = "Agent Protected Package Activation (${pkg.displayName})",
-                    type = "AGENT_FACILITATION",
-                    amountUgx = request.amountUgx,
-                    status = "CREDITED",
-                    eventKey = requestId,
-                    timestamp = now,
-                    feeUgx = 0L,
-                    netAmountUgx = request.amountUgx,
-                    referenceNumber = request.paymentReference.ifBlank { facId },
-                    counterpartyName = agent.agentName,
-                    counterpartyId = agent.agentId,
-                    runningBalanceUgx = pkg.paidCapitalUgx,
-                    paymentMethod = request.paymentMethod.ifBlank { "Agent Official Process" },
-                    notes = "Facilitated by Agent ${agent.agentId}. Float deducted atomically."
-                )
-            )
-
-            // 6. 2% Agent commission
-            val commUgx = (request.amountUgx * 0.02).toLong()
-            if (commUgx > 0) {
-                database.agentWorkingFloatDao().addCommission(agentId, commUgx)
-                database.agentCommissionLogDao().insertCommissionLog(
-                    AgentCommissionLogEntity(
-                        id = "COMM-" + UUID.randomUUID().toString().take(8).uppercase(),
-                        agentId = agentId,
-                        memberId = request.memberId,
-                        cycleId = cycleId,
-                        taskId = "ACTIVATION_BONUS",
-                        taskTitle = "2% Package Facilitation Commission (${pkg.displayName})",
-                        taskRewardUgx = request.amountUgx,
-                        commissionRate = 0.02,
-                        commissionUgx = commUgx,
-                        timestamp = now
-                    )
-                )
-            }
-
-            // 7. Complete Request & clear unresolved case count if disputed previously
-            database.agentActivationRequestDao().completeActivation(requestId, "Activation Completed", cycleId)
-            val updatedUnresolved = database.agentActivationRequestDao().getUnresolvedCasesCountForAgent(agentId)
-            database.agentWorkingFloatDao().updateUnresolvedCount(agentId, updatedUnresolved)
-            val config = database.agentPaymentConfigDao().getConfigOnce()
-            if (updatedUnresolved < (config?.maxUnresolvedCasesThreshold ?: 2)) {
-                database.agentWorkingFloatDao().updateRestriction(agentId, false, "")
-            }
-
-            Result.success("Activation completed successfully! Agent float deducted by UGX ${request.amountUgx}. Member package is now active.")
         }
+
+        // 7. Complete request and refresh unresolved-case count
+        database.agentActivationRequestDao().completeActivation(
+            requestId,
+            "Activation Completed",
+            cycleId
+        )
+        val updatedUnresolved =
+            database.agentActivationRequestDao().getUnresolvedCasesCountForAgent(agentId)
+        database.agentWorkingFloatDao().updateUnresolvedCount(agentId, updatedUnresolved)
+
+        val config = database.agentPaymentConfigDao().getConfigOnce()
+        if (updatedUnresolved < (config?.maxUnresolvedCasesThreshold ?: 2)) {
+            database.agentWorkingFloatDao().updateRestriction(agentId, false, "")
+        }
+
+        Result.success(
+            "Activation completed successfully! Agent float deducted by UGX ${request.amountUgx}. Member package is now active."
+        )
     }
+}
 
     suspend fun disputeAgentPayment(
         requestId: String,
