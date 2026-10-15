@@ -1221,10 +1221,20 @@ class HomeUtensilsViewModel(application: Application) : AndroidViewModel(applica
 
         _uiState.value = _uiState.value.copy(showAgentApplicationDialog = true)
     }
-if (transactionPin != profile.transactionPin) {
-    return@withTransaction TransferResult(
-        false,
-        "Incorrect Transaction PIN. Please check and try again."
+fun openAgentPortalFromMemberApp() {
+    val application = memberAgentApplication.value ?: return
+
+    if (application.status != "APPROVED") {
+        _uiState.value = _uiState.value.copy(
+            userMessage = "Your agent application must be approved before you can access the agent portal."
+        )
+        return
+    }
+
+    _uiState.value = _uiState.value.copy(
+        currentPortal = AppPortal.AGENT_DASHBOARD,
+        activeAgentId =
+            "AGT-${application.region.take(3).uppercase()}-${application.memberId.takeLast(4)}"
     )
 }
     fun setShowPayoutSetupDialog(show: Boolean) {
