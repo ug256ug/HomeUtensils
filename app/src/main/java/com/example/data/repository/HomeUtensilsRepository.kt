@@ -1946,12 +1946,10 @@ class HomeUtensilsRepository(private val database: HomeUtensilsDatabase) {
             }
 
             if (transactionPin != profile.transactionPin) {
-    return@withTransaction TransferResult(
-        false,
-        "Incorrect Transaction PIN. Please check and try again."
-    )
-}
-                return@withTransaction TransferResult(false, "Incorrect Transaction PIN. Please check and try again.")
+                return@withTransaction TransferResult(
+                    false,
+                    "Incorrect Transaction PIN. Please check and try again."
+                )
             }
 
             val cleanRecipient = recipientMemberId.trim().uppercase()
