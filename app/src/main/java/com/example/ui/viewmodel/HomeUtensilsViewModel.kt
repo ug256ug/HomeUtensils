@@ -881,10 +881,12 @@ class HomeUtensilsViewModel(application: Application) : AndroidViewModel(applica
     }
 
     fun loginAgent(agentId: String, password: String) {
-        if (agentId.isBlank() || password.isBlank()) {
-            _uiState.value = _uiState.value.copy(authError = "Please enter both Agent ID and password.")
-            return
-        }
+    _uiState.value = _uiState.value.copy(
+        currentPortal = AppPortal.MEMBER_AUTH,
+        authError = null,
+        userMessage = "Please sign in through Member Login. Approved agents can access the Agent Dashboard from their member account."
+    )
+}
 
         val cleanId = agentId.trim().uppercase()
         val cleanPass = password.trim()
