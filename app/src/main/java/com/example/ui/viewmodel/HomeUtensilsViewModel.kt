@@ -1221,16 +1221,12 @@ class HomeUtensilsViewModel(application: Application) : AndroidViewModel(applica
 
         _uiState.value = _uiState.value.copy(showAgentApplicationDialog = true)
     }
-
-    fun openAgentPortalFromMemberApp() {
-        _uiState.value = _uiState.value.copy(
-            currentPortal = AppPortal.AGENT_DASHBOARD,
-            activeAgentId = memberAgentApplication.value?.let { app ->
-                "AGT-${app.region.take(3).uppercase()}-${app.memberId.takeLast(4)}"
-            } ?: "AGT-74921-CEN"
-        )
-    }
-
+if (transactionPin != profile.transactionPin) {
+    return@withTransaction TransferResult(
+        false,
+        "Incorrect Transaction PIN. Please check and try again."
+    )
+}
     fun setShowPayoutSetupDialog(show: Boolean) {
         _uiState.value = _uiState.value.copy(showPayoutSetupDialog = show)
     }
