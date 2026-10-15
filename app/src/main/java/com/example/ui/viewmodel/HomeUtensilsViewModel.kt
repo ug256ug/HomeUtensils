@@ -881,31 +881,12 @@ class HomeUtensilsViewModel(application: Application) : AndroidViewModel(applica
     }
 
     
-    fun loginAgent(agentId: String, password: String) {
+        fun loginAgent(agentId: String, password: String) {
         _uiState.value = _uiState.value.copy(
             currentPortal = AppPortal.MEMBER_AUTH,
             authError = null,
             userMessage = "Please sign in through Member Login. Approved agents can access the Agent Dashboard from their member account."
         )
-    }
-
-
-
-        val cleanId = agentId.trim().uppercase()
-        val cleanPass = password.trim()
-
-        if ((cleanId == "AGT-CENTRAL-001" || cleanId == "AGT-74921-CEN" || cleanId.startsWith("AGT-")) && cleanPass == "Agent123!") {
-            _uiState.value = _uiState.value.copy(
-                activeAgentId = cleanId,
-                currentPortal = AppPortal.AGENT_DASHBOARD,
-                authError = null,
-                userMessage = "Authenticated as Field Agent: $cleanId"
-            )
-        } else {
-            _uiState.value = _uiState.value.copy(
-                authError = "Incorrect credentials. Use Agent account: ID AGT-74921-CEN, Password Agent123!"
-            )
-        }
     }
 
     fun loginAdmin(adminId: String, password: String) {
