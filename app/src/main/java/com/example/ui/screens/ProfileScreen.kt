@@ -483,6 +483,7 @@ fun ProfileScreen(
         }
 
         
+        
         // App Information
         item {
             Box(
@@ -506,6 +507,7 @@ fun ProfileScreen(
                 }
             }
         }
+    }
 
     // District Picker Dialog
     if (showDistrictDialog) {
