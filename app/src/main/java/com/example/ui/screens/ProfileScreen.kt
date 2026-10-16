@@ -482,6 +482,7 @@ fun ProfileScreen(
             }
         }
 
+        
         // App Information
         item {
             Box(
@@ -492,7 +493,7 @@ fun ProfileScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "HomeUtensils Uganda v1.0.0",
+                        text = "HomeUtensils Uganda v${com.example.BuildConfig.VERSION_NAME}",
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.SemiBold,
                         color = TextSecondary
@@ -505,7 +506,6 @@ fun ProfileScreen(
                 }
             }
         }
-    }
 
     // District Picker Dialog
     if (showDistrictDialog) {
