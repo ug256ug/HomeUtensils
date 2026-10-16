@@ -1,30 +1,210 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HomeUtensils</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#176b45">
+  <title>HomeUtensils | Member Dashboard</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #fff8f0; color: #333; }
-    header { background: #176b45; color: white; padding: 28px 16px; text-align: center; }
-    main { max-width: 700px; margin: auto; padding: 24px 16px; }
-    h2 { color: #176b45; }
-    .item { background: white; padding: 16px; margin: 12px 0; border-radius: 10px; box-shadow: 0 2px 6px #ddd; }
-    footer { text-align: center; padding: 20px; color: #666; }
+    :root {
+      --green: #176b45;
+      --green-dark: #104b32;
+      --cream: #fff8f0;
+      --blue: #1976d2;
+      --muted: #667085;
+      --border: #e7e9ed;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--cream);
+      color: #27332d;
+    }
+    header {
+      background: var(--green);
+      color: white;
+      padding: 20px 16px;
+    }
+    .top, main, footer { max-width: 1000px; margin: auto; }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    header h1 { margin: 0; font-size: 23px; }
+    header p { margin: 6px 0 0; font-size: 13px; opacity: .9; }
+    .tag {
+      background: #e2f7e9;
+      color: #176b45;
+      border-radius: 30px;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+    main { padding: 22px 16px 36px; }
+    h2 { margin: 0 0 8px; color: var(--green-dark); }
+    .intro { color: var(--muted); line-height: 1.5; }
+    .notice {
+      background: #fff0c2;
+      border: 1px solid #f2d780;
+      border-radius: 10px;
+      padding: 12px;
+      margin: 18px 0;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin: 18px 0;
+    }
+    .card {
+      background: white;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      box-shadow: 0 2px 5px #183b2510;
+      min-width: 0;
+    }
+    .label { color: var(--muted); font-size: 12px; }
+    .value { font-size: 21px; font-weight: bold; margin: 9px 0; overflow-wrap: anywhere; }
+    .small { color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .section-title { margin: 26px 0 12px; font-size: 18px; }
+    .ledger { border-left: 4px solid var(--green); }
+    .ledger h3 { margin: 0 0 8px; font-size: 16px; }
+    .ledger p { margin: 0; line-height: 1.5; font-size: 13px; color: var(--muted); }
+    .blue { border-left-color: var(--blue); }
+    .gold { border-left-color: #d69e16; }
+    .purple { border-left-color: #7b61a8; }
+    .details { display: grid; gap: 0; }
+    .detail-row {
+      display: flex; justify-content: space-between; gap: 12px;
+      padding: 13px 0; border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .detail-row:last-child { border-bottom: 0; }
+    .detail-row span:first-child { color: var(--muted); }
+    .detail-row strong { text-align: right; overflow-wrap: anywhere; }
+    nav {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin: 22px 0;
+    }
+    nav a {
+      display: block; text-align: center; padding: 12px 5px;
+      background: white; color: var(--green-dark);
+      text-decoration: none; border: 1px solid var(--border);
+      border-radius: 9px; font-size: 12px; font-weight: bold;
+    }
+    .status { color: #9a6700; font-weight: bold; }
+    footer { padding: 22px 16px; text-align: center; color: var(--muted); font-size: 12px; }
+    @media (min-width: 650px) {
+      .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .ledgers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 380px) {
+      .grid { grid-template-columns: 1fr; }
+      header h1 { font-size: 20px; }
+      .tag { font-size: 10px; }
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>HomeUtensils</h1>
-    <p>Useful essentials for every home</p>
+    <div class="top">
+      <div>
+        <h1>HomeUtensils</h1>
+        <p>Your home essentials member portal</p>
+      </div>
+      <span class="tag">PREVIEW</span>
+    </div>
   </header>
+
   <main>
-    <h2>Welcome!</h2>
-    <p>Discover everyday utensils and essentials for your home.</p>
-    <div class="item"><h3>Kitchen Utensils</h3><p>Tools to help make cooking easier.</p></div>
-    <div class="item"><h3>Home Essentials</h3><p>Useful items to make your home comfortable.</p></div>
-    <div class="item"><h3>Contact Us</h3><p>Contact us to learn more about our products.</p></div>
+    <h2>Member Dashboard</h2>
+    <p class="intro">Your account overview, package details, and ledger sections in one place.</p>
+
+    <div class="notice">
+      <strong>Preview mode:</strong> This is a visual website prototype.
+      No real account, balance, payment, or transaction is connected yet.
+      Do not use these sample figures to make financial decisions.
+    </div>
+
+    <h3 class="section-title">Account Overview</h3>
+    <div class="card details">
+      <div class="detail-row"><span>Member name</span><strong>Not connected</strong></div>
+      <div class="detail-row"><span>Member ID</span><strong>Not assigned</strong></div>
+      <div class="detail-row"><span>Account status</span><strong class="status">Awaiting secure connection</strong></div>
+      <div class="detail-row"><span>Package</span><strong>Not connected</strong></div>
+      <div class="detail-row"><span>Activation date</span><strong>Not available</strong></div>
+      <div class="detail-row"><span>Expiry date</span><strong>Not available</strong></div>
+    </div>
+
+    <h3 class="section-title">Wallet Summary</h3>
+    <div class="grid">
+      <div class="card">
+        <div class="label">Withdrawable balance</div>
+        <div class="value">UGX —</div>
+        <div class="small">Requires verified account data</div>
+      </div>
+      <div class="card">
+        <div class="label">Paid capital</div>
+        <div class="value">UGX —</div>
+        <div class="small">Display rules must be confirmed</div>
+      </div>
+      <div class="card">
+        <div class="label">Total income earned</div>
+        <div class="value">UGX —</div>
+        <div class="small">Requires verified transaction records</div>
+      </div>
+    </div>
+
+    <h3 class="section-title">Your Ledgers</h3>
+    <div class="grid ledgers">
+      <div class="card ledger">
+        <h3>Capital Ledger</h3>
+        <p>Capital records, contributions, and applicable package dates.</p>
+      </div>
+      <div class="card ledger blue">
+        <h3>Marketing Ledger</h3>
+        <p>Marketing-related entries and verified earnings records.</p>
+      </div>
+      <div class="card ledger gold">
+        <h3>Salary Ledger</h3>
+        <p>Salary entries, payment history, and applicable dates.</p>
+      </div>
+      <div class="card ledger purple">
+        <h3>Annuity Money Ledger</h3>
+        <p>Annuity entries, payment dates, and recorded balances.</p>
+      </div>
+    </div>
+
+    <h3 class="section-title">Package Expiry & Account</h3>
+    <div class="card details">
+      <div class="detail-row"><span>Package expiry</span><strong>Not connected</strong></div>
+      <div class="detail-row"><span>Days remaining</span><strong>—</strong></div>
+      <div class="detail-row"><span>Expired packages</span><strong>Records not connected</strong></div>
+    </div>
+
+    <nav aria-label="Dashboard sections">
+      <a href="#account">Account</a>
+      <a href="#wallet">Wallet</a>
+      <a href="#ledgers">Ledgers</a>
+    </nav>
+
+    <div id="account"></div>
+    <div id="wallet"></div>
+    <div id="ledgers"></div>
   </main>
-  <footer>HomeUtensils &copy; 2026</footer>
+
+  <footer>
+    HomeUtensils &copy; 2026 · Website preview
+  </footer>
 </body>
 </html>
