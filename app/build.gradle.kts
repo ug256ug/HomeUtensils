@@ -12,8 +12,9 @@ android {
   namespace = "com.example"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 
-  defaultConfig {
-    applicationId = "com.aistudio.homeutensils.ugmkpq"
+  applicationId = "com.aistudio.homeutensils.v2"
+versionCode = 2
+versionName = "2.0"
     minSdk = 24
     targetSdk = 35
     versionCode = 1
