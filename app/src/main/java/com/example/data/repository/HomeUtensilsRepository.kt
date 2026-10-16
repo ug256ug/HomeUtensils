@@ -2215,9 +2215,9 @@ class HomeUtensilsRepository(private val database: HomeUtensilsDatabase) {
                 )
             }
 
-            if (enteredPin != profile.transactionPin && enteredPin != "1234") {
-                return@withTransaction WithdrawalResult(false, "Incorrect Transaction PIN. Please check and try again.")
-            }
+            if (enteredPin != profile.transactionPin) {
+    return@withTransaction WithdrawalResult(false, "Incorrect Transaction PIN. Please check and try again.")
+}
 
             // Only one pending withdrawal per member at a time
             val pending = database.withdrawalRequestDao().getPendingWithdrawalsForUser(profile.id)
