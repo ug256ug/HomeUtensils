@@ -182,7 +182,7 @@ fun WalletScreen(
                         .weight(1f)
                         .testTag("btn_wallet_transfer"),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isPkgExpired) Color(0xFF757575) else DeepTealDark
+                        containerColor = if (isPkgExpired) Color(0xFF757575) else Color(0xFF1976D2)
                     ),
                     shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp)
