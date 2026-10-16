@@ -3,10 +3,7 @@ name: Android CI
 
 on:
   push:
-    branches: ["main", "withdrawal-safety-fix"]
-  pull_request:
-    branches: ["main"]
-
+        branches: ["main", "withdrawal-safety-fix"]
 jobs:
   build:
     runs-on: ubuntu-latest
