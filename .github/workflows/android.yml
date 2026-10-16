@@ -1,8 +1,9 @@
+
 name: Android CI
 
 on:
   push:
-        branches: ["main", "withdrawal-safety-fix"]
+    branches: ["main", "withdrawal-safety-fix"]
   pull_request:
     branches: ["main"]
 
