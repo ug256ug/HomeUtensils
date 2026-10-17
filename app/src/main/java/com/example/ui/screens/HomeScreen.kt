@@ -1,6 +1,6 @@
+
 package com.example.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,15 +19,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Autorenew
-import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
@@ -36,17 +33,13 @@ import androidx.compose.material.icons.filled.GroupAdd
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Kitchen
 import androidx.compose.material.icons.filled.MonetizationOn
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.SupportAgent
-import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material.icons.filled.Upgrade
-import androidx.compose.material.icons.filled.Verified
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
@@ -69,7 +62,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -86,25 +78,14 @@ import com.example.data.model.LiveActivityEvent
 import com.example.data.model.UserProfileEntity
 import com.example.data.model.UtensilTaskEntity
 import com.example.ui.components.AllLiveActivityDialog
-import com.example.ui.components.MemberPaymentGuidanceCard
-import com.example.ui.components.PackageBadgeChip
 import com.example.ui.components.PackageTierIcon
 import com.example.ui.components.PackageVisualTier
-import com.example.ui.components.RewardBadge
 import com.example.ui.components.RoyalCrownIcon
-import com.example.ui.components.StatusBadge
-import com.example.ui.components.UtensilThumbnail
 import com.example.ui.components.formatUgx
 import com.example.ui.theme.DeepTeal
 import com.example.ui.theme.DeepTealContainer
 import com.example.ui.theme.DeepTealDark
 import com.example.ui.theme.PlusCrownGold
-import com.example.ui.theme.PlusPurple
-import com.example.ui.theme.PlusPurpleContainer
-import com.example.ui.theme.SoftGold
-import com.example.ui.theme.SoftGoldContainer
-import com.example.ui.theme.SoftGoldDark
-import com.example.ui.theme.SoftGoldOnContainer
 import com.example.ui.theme.StatusGreen
 import com.example.ui.theme.StatusGreenContainer
 import com.example.ui.theme.StatusGreenText
@@ -113,9 +94,6 @@ import com.example.ui.theme.TextSecondary
 import com.example.ui.theme.WarningRed
 import com.example.ui.theme.WarningRedContainer
 import com.example.ui.theme.WarningRedText
-import com.example.ui.theme.WarmCreamBackground
-import com.example.ui.theme.WarmCreamBorder
-import com.example.ui.theme.WarmCreamSurface
 import com.example.ui.theme.WarmWhite
 import com.example.ui.viewmodel.AppNavTab
 import kotlinx.coroutines.delay
@@ -123,25 +101,14 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/**
- * Clean, simplified, and mobile-friendly Home Screen for HomeUtensils.
- * Designed specifically for ordinary Android phone users:
- * 1. Who am I? (Member Identity Card with photo, name, masked id/phone, package)
- * 2. Which package & is it active? (Prominent badge & clear ACTIVE / EXPIRED pill)
- * 3. When does it expire? (Package Expiry Card with activation date, expiry date, live countdown)
- * 4. Financial Summary (3 distinct cards: Total Income Earned, Paid Capital, Withdrawable Balance)
- * 5. Task Summary (Available tasks, Completed tasks, [START TASKS] button)
- * 6. Live Activity (Compact feed with genuine recorded platform events & View All)
- * 7. Expandable details (Package Details, Transaction History, Agent Details)
- */
 @Composable
 fun HomeScreen(
     userProfile: UserProfileEntity?,
     tasks: List<UtensilTaskEntity>,
-    completedTaskCount: Int = 12,
-    taskIncomeUgx: Long = userProfile?.walletBalanceUgx ?: 18500L,
-    activationExpiryDate: String = "28 Oct 2026",
-    daysRemaining: Int = 29,
+    completedTaskCount: Int = 0,
+    taskIncomeUgx: Long = userProfile?.walletBalanceUgx ?: 0L,
+    activationExpiryDate: String = "Not available",
+    daysRemaining: Int = 0,
     onNavigateTab: (AppNavTab) -> Unit,
     onTaskClicked: (UtensilTaskEntity) -> Unit,
     onOpenGiftCode: () -> Unit,
@@ -170,11 +137,8 @@ fun HomeScreen(
         PackageVisualTier.fromPackageName(userProfile?.packageName)
     }
 
-    val isExpired = userProfile?.isPackageExpired == true ||
-        (userProfile?.packageExpiresAt != null && userProfile.packageExpiresAt > 0 && System.currentTimeMillis() >= userProfile.packageExpiresAt)
-
-    // Accurate countdown time calculation using actual backend timestamps
     var currentTimeMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
+
     LaunchedEffect(Unit) {
         while (true) {
             delay(1000L)
@@ -183,39 +147,53 @@ fun HomeScreen(
     }
 
     val expiryTimestamp = userProfile?.packageExpiresAt ?: 0L
-    val timeRemainingMs = if (expiryTimestamp > currentTimeMs) expiryTimestamp - currentTimeMs else 0L
+    val hasProfile = userProfile != null
+    val hasExpiryTimestamp = expiryTimestamp > 0L
+    val expiryPassed = hasExpiryTimestamp && currentTimeMs >= expiryTimestamp
+    val isExpired = userProfile?.isPackageExpired == true || expiryPassed
+    val isPackageActive = hasProfile && hasExpiryTimestamp && !isExpired
 
-    val daysLeft = timeRemainingMs / (1000L * 60 * 60 * 24)
-    val hoursLeft = (timeRemainingMs / (1000L * 60 * 60)) % 24
-    val minutesLeft = (timeRemainingMs / (1000L * 60)) % 60
-    val secondsLeft = (timeRemainingMs / 1000L) % 60
-
-    val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
-    val expiryFormatted = remember(expiryTimestamp) {
-        if (expiryTimestamp > 0) dateFormat.format(Date(expiryTimestamp)) else activationExpiryDate
+    val timeRemainingMs = if (hasExpiryTimestamp && expiryTimestamp > currentTimeMs) {
+        expiryTimestamp - currentTimeMs
+    } else {
+        0L
     }
 
-    // Determine activation date from timestamp or 30 days prior to expiry
-    val activationFormatted = remember(expiryTimestamp) {
-        if (expiryTimestamp > 0) {
-            val actMs = expiryTimestamp - (30L * 24 * 60 * 60 * 1000L)
-            dateFormat.format(Date(actMs))
+    val daysLeft = timeRemainingMs / 86_400_000L
+    val hoursLeft = (timeRemainingMs / 3_600_000L) % 24
+    val minutesLeft = (timeRemainingMs / 60_000L) % 60
+    val secondsLeft = (timeRemainingMs / 1_000L) % 60
+
+    val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
+    val expiryFormatted = remember(expiryTimestamp, activationExpiryDate) {
+        if (expiryTimestamp > 0L) {
+            dateFormat.format(Date(expiryTimestamp))
         } else {
-            "12 Apr 2025"
+            activationExpiryDate
         }
     }
 
-    // Masked user ID and phone
-    val maskedUserId = remember(userProfile?.memberId) {
-        val mid = userProfile?.memberId ?: "HU7K4M92Q"
-        if (mid.length > 5) "@" + mid.lowercase() else "@" + mid.lowercase()
-    }
-    val maskedPhone = remember(userProfile?.phoneNumber) {
-        val phone = userProfile?.phoneNumber ?: "+256 772 458921"
-        if (phone.length >= 10) {
-            phone.take(4) + " 7XX XXX " + phone.takeLast(3)
+    val activationFormatted = remember(expiryTimestamp) {
+        if (expiryTimestamp > 0L) {
+            val activationMs = expiryTimestamp - 30L * 24L * 60L * 60L * 1000L
+            dateFormat.format(Date(activationMs))
         } else {
-            "+256 7XX XXX 123"
+            "Not available"
+        }
+    }
+
+    val maskedUserId = remember(userProfile?.memberId) {
+        userProfile?.memberId?.takeIf { it.isNotBlank() }?.let { id ->
+            if (id.length > 5) "@${id.lowercase()}" else id
+        } ?: "Not available"
+    }
+
+    val maskedPhone = remember(userProfile?.phoneNumber) {
+        val phone = userProfile?.phoneNumber.orEmpty()
+        when {
+            phone.length >= 7 -> "${phone.take(4)} XXX XXX ${phone.takeLast(3)}"
+            phone.isNotBlank() -> "Hidden"
+            else -> "Not available"
         }
     }
 
@@ -224,34 +202,32 @@ fun HomeScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFF3F7FA)) // Clean, modern light backdrop
+            .background(Color(0xFFF3F7FA))
             .statusBarsPadding()
             .testTag("home_screen_list"),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp),
+        contentPadding = PaddingValues(
+            start = 16.dp,
+            end = 16.dp,
+            top = 12.dp,
+            bottom = 24.dp
+        ),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        // ==========================================
-        // A. TOP COMPACT HEADER (Logo, Welcome, Name, Bell)
-        // ==========================================
         item {
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("home_top_header"),
+                modifier = Modifier.fillMaxWidth().testTag("home_top_header"),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = WarmWhite),
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(14.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
                             modifier = Modifier
@@ -262,23 +238,23 @@ fun HomeScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Kitchen,
-                                contentDescription = "HomeUtensils Logo",
-                                tint = SoftGold,
+                                contentDescription = "HomeUtensils logo",
+                                tint = Color(0xFFFFD76A),
                                 modifier = Modifier.size(24.dp)
                             )
                         }
 
-                        Spacer(modifier = Modifier.width(10.dp))
+                        Spacer(Modifier.width(10.dp))
 
                         Column {
                             Text(
-                                text = "Welcome back,",
+                                "Welcome back,",
                                 fontSize = 12.sp,
-                                color = TextSecondary,
-                                fontWeight = FontWeight.Normal
+                                color = TextSecondary
                             )
                             Text(
-                                text = userProfile?.fullName ?: "Sarah N. Okello",
+                                userProfile?.fullName?.takeIf { it.isNotBlank() }
+                                    ?: "Member",
                                 fontSize = 17.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = DeepTealDark,
@@ -289,50 +265,38 @@ fun HomeScreen(
                     }
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        // Notification Bell with unread badge
                         IconButton(
                             onClick = onNotificationClick,
-                            modifier = Modifier
-                                .size(38.dp)
-                                .testTag("home_notification_bell")
+                            modifier = Modifier.size(38.dp).testTag("home_notification_bell")
                         ) {
                             BadgedBox(
                                 badge = {
                                     if (unreadNotificationsCount > 0) {
-                                        Badge(
-                                            containerColor = Color(0xFFE53935),
-                                            contentColor = Color.White
-                                        ) {
+                                        Badge {
                                             Text(
-                                                text = "$unreadNotificationsCount",
-                                                fontSize = 10.sp,
-                                                fontWeight = FontWeight.Bold
+                                                unreadNotificationsCount.toString(),
+                                                fontSize = 10.sp
                                             )
                                         }
                                     }
                                 }
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Notifications,
+                                    Icons.Default.Notifications,
                                     contentDescription = "Notifications",
-                                    tint = DeepTealDark,
-                                    modifier = Modifier.size(22.dp)
+                                    tint = DeepTealDark
                                 )
                             }
                         }
 
-                        // Logout / Switch button
                         IconButton(
                             onClick = onLogoutClick,
-                            modifier = Modifier
-                                .size(38.dp)
-                                .testTag("home_logout_button")
+                            modifier = Modifier.size(38.dp).testTag("home_logout_button")
                         ) {
                             Icon(
-                                imageVector = Icons.Default.ExitToApp,
-                                contentDescription = "Sign Out",
-                                tint = Color(0xFF718096),
-                                modifier = Modifier.size(20.dp)
+                                Icons.Default.ExitToApp,
+                                contentDescription = "Sign out",
+                                tint = TextSecondary
                             )
                         }
                     }
@@ -340,116 +304,82 @@ fun HomeScreen(
             }
         }
 
-        // ==========================================
-        // B. MEMBER IDENTITY CARD
-        // Profile photo, name, username/masked ID, contact, package name & status
-        // ==========================================
         item {
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("member_identity_card"),
+                modifier = Modifier.fillMaxWidth().testTag("member_identity_card"),
                 shape = RoundedCornerShape(18.dp),
                 colors = CardDefaults.cardColors(containerColor = WarmWhite),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                 border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0))
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Profile Photo + Info
                     Row(
                         modifier = Modifier.weight(1f),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Generated Profile Avatar Photo
-                        Box(
-                            modifier = Modifier
-                                .size(64.dp)
-                                .clip(CircleShape)
-                                .background(DeepTealContainer)
-                                .border(2.dp, SoftGold.copy(alpha = 0.8f), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            val context = LocalContext.current
-                            val avatarResId = remember {
-                                val id = context.resources.getIdentifier(
-                                    "img_sarah_avatar_1791616150174",
-                                    "drawable",
-                                    context.packageName
-                                )
-                                if (id != 0) id else R.drawable.ic_launcher_foreground
-                            }
-                            Image(
-                                painter = painterResource(id = avatarResId),
-                                contentDescription = "Profile Photo",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
+                        val context = LocalContext.current
+                        val avatarResId = remember {
+                            val resourceId = context.resources.getIdentifier(
+                                "img_sarah_avatar_1791616150174",
+                                "drawable",
+                                context.packageName
                             )
+                            if (resourceId != 0) resourceId
+                            else R.drawable.ic_launcher_foreground
                         }
 
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Image(
+                            painter = painterResource(id = avatarResId),
+                            contentDescription = "Profile image",
+                            modifier = Modifier
+                                .size(58.dp)
+                                .clip(CircleShape)
+                                .background(DeepTealContainer)
+                                .border(2.dp, Color(0xFFFFD76A), CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
 
-                        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                            // Masked User ID / Username
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = maskedUserId,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = DeepTealDark
-                                )
-                            }
+                        Spacer(Modifier.width(10.dp))
 
-                            // Contact number (masked)
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(
-                                text = maskedPhone,
+                                maskedUserId,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = DeepTealDark
+                            )
+                            Text(
+                                maskedPhone,
                                 fontSize = 11.sp,
                                 color = TextSecondary
                             )
-
-                            // Country / Location
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(6.dp)
-                                        .clip(CircleShape)
-                                        .background(StatusGreen)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = userProfile?.district ?: "Uganda",
-                                    fontSize = 11.sp,
-                                    color = TextSecondary
-                                )
-                            }
+                            Text(
+                                userProfile?.district?.takeIf { it.isNotBlank() }
+                                    ?: "Location not available",
+                                fontSize = 11.sp,
+                                color = TextSecondary
+                            )
                         }
                     }
 
-                    // Right Side: Prominent Package Name & Status Pill
+                    Spacer(Modifier.width(8.dp))
+
                     Column(
                         horizontalAlignment = Alignment.End,
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        // Prominent Package Badge (e.g. 👑 PLUS, STANDARD, STARTER)
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(
-                                    if (isExpired) WarningRedContainer else Color(0xFF007A65)
-                                )
-                                .padding(horizontal = 14.dp, vertical = 8.dp)
+                                .background(DeepTeal)
+                                .padding(horizontal = 10.dp, vertical = 8.dp)
                                 .testTag("prominent_package_badge")
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                if (visualTier.name.contains("PLUS", ignoreCase = true)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (visualTier.displayTitle.contains("PLUS", true)) {
                                     RoyalCrownIcon(
                                         modifier = Modifier.size(15.dp),
                                         crownColor = PlusCrownGold,
@@ -457,37 +387,55 @@ fun HomeScreen(
                                     )
                                 } else {
                                     Icon(
-                                        imageVector = Icons.Default.CheckCircle,
+                                        Icons.Default.CheckCircle,
                                         contentDescription = null,
                                         tint = Color.White,
                                         modifier = Modifier.size(15.dp)
                                     )
                                 }
+
+                                Spacer(Modifier.width(4.dp))
+
                                 Text(
-                                    text = visualTier.displayTitle.uppercase(),
-                                    fontSize = 14.sp,
+                                    visualTier.displayTitle.uppercase(),
+                                    fontSize = 12.sp,
                                     fontWeight = FontWeight.ExtraBold,
-                                    color = Color.White,
-                                    letterSpacing = 0.5.sp
+                                    color = Color.White
                                 )
                             }
                         }
 
-                        // Status Pill (ACTIVE or EXPIRED)
+                        val statusText = when {
+                            !hasProfile -> "ACCOUNT UNKNOWN"
+                            isExpired -> "EXPIRED"
+                            !hasExpiryTimestamp -> "UNCONFIRMED"
+                            else -> "ACTIVE"
+                        }
+
+                        val statusBackground = when {
+                            isExpired -> WarningRedContainer
+                            isPackageActive -> StatusGreenContainer
+                            else -> Color(0xFFFFF3CD)
+                        }
+
+                        val statusTextColor = when {
+                            isExpired -> WarningRedText
+                            isPackageActive -> StatusGreenText
+                            else -> Color(0xFF795500)
+                        }
+
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(
-                                    if (isExpired) WarningRedContainer else StatusGreenContainer
-                                )
-                                .padding(horizontal = 10.dp, vertical = 3.dp)
+                                .background(statusBackground)
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
                                 .testTag("package_status_pill")
                         ) {
                             Text(
-                                text = if (isExpired) "EXPIRED" else "ACTIVE",
-                                fontSize = 10.sp,
+                                statusText,
+                                fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isExpired) WarningRedText else StatusGreenText
+                                color = statusTextColor
                             )
                         }
                     }
@@ -495,66 +443,52 @@ fun HomeScreen(
             }
         }
 
-        // ==========================================
-        // C. PACKAGE EXPIRY CARD
-        // Activation Date, Expiry Date, Remaining Days / Countdown, Status Indicator
-        // ==========================================
         item {
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("package_expiry_card"),
+                modifier = Modifier.fillMaxWidth().testTag("package_expiry_card"),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = if (isExpired) Color(0xFFFFF5F5) else Color(0xFFE8F6F3)
                 ),
                 border = androidx.compose.foundation.BorderStroke(
                     1.dp,
-                    if (isExpired) WarningRed.copy(alpha = 0.4f) else Color(0xFFB2DFDB)
+                    if (isExpired) WarningRed.copy(alpha = 0.4f)
+                    else Color(0xFFB2DFDB)
                 )
             ) {
-                Column(modifier = Modifier.padding(14.dp)) {
+                Column(Modifier.padding(14.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Left: Calendar icon + Expiry Dates
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.weight(1.1f)
+                            modifier = Modifier.weight(1f),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(Color(0xFF00796B).copy(alpha = 0.15f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.DateRange,
-                                    contentDescription = "Package Expiry",
-                                    tint = DeepTeal,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
+                            Icon(
+                                Icons.Default.DateRange,
+                                contentDescription = "Package dates",
+                                tint = DeepTeal,
+                                modifier = Modifier.size(30.dp)
+                            )
 
-                            Spacer(modifier = Modifier.width(10.dp))
+                            Spacer(Modifier.width(8.dp))
 
                             Column {
                                 Text(
-                                    text = "Package Expiry",
+                                    "Package Expiry",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = DeepTealDark
                                 )
                                 Text(
-                                    text = "Activated: $activationFormatted",
+                                    "Activated: $activationFormatted",
                                     fontSize = 10.sp,
                                     color = TextSecondary
                                 )
                                 Text(
-                                    text = "Expires: $expiryFormatted",
+                                    "Expires: $expiryFormatted",
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = TextPrimary
@@ -562,132 +496,79 @@ fun HomeScreen(
                             }
                         }
 
-                        // Right: Remaining Days + Detailed Countdown
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.End,
-                            modifier = Modifier.weight(0.9f)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(WarmWhite)
-                                    .padding(horizontal = 10.dp, vertical = 6.dp),
-                                contentAlignment = Alignment.CenterEnd
-                            ) {
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            imageVector = Icons.Default.Schedule,
-                                            contentDescription = null,
-                                            tint = if (isExpired) WarningRed else DeepTeal,
-                                            modifier = Modifier.size(13.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(
-                                            text = if (isExpired) "Expired" else "Remaining",
-                                            fontSize = 10.sp,
-                                            color = TextSecondary
-                                        )
-                                    }
-                                    Text(
-                                        text = if (isExpired) "0 Days" else "$daysLeft Days",
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = if (isExpired) WarningRedText else DeepTealDark
-                                    )
-                                    if (!isExpired && timeRemainingMs > 0) {
-                                        Text(
-                                            text = "${hoursLeft}h ${minutesLeft}m ${secondsLeft}s",
-                                            fontSize = 10.sp,
-                                            color = TextSecondary,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                    }
-                                }
-                            }
+                        Spacer(Modifier.width(6.dp))
 
-                            Spacer(modifier = Modifier.width(6.dp))
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                when {
+                                    isExpired -> "Expired"
+                                    isPackageActive -> "Remaining"
+                                    else -> "Unconfirmed"
+                                },
+                                fontSize = 10.sp,
+                                color = TextSecondary
+                            )
+                            Text(
+                                when {
+                                    isExpired -> "0 days"
+                                    isPackageActive -> "$daysLeft days"
+                                    else -> "—"
+                                },
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = if (isExpired) WarningRedText else DeepTealDark
+                            )
 
-                            // Status Indicator
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(
-                                        if (isExpired) WarningRedContainer else Color(0xFF00796B)
-                                    )
-                                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                            ) {
+                            if (isPackageActive && timeRemainingMs > 0L) {
                                 Text(
-                                    text = if (isExpired) "EXPIRED" else "ACTIVE",
+                                    "${hoursLeft}h ${minutesLeft}m ${secondsLeft}s",
                                     fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isExpired) WarningRedText else Color.White
+                                    color = TextSecondary
                                 )
                             }
                         }
                     }
 
-                    // If expired, show clear Reactivate Call to Action
                     if (isExpired) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Button(
-                                onClick = onReactivateClick,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .testTag("btn_reactivate_home"),
-                                colors = ButtonDefaults.buttonColors(containerColor = DeepTeal),
-                                shape = RoundedCornerShape(10.dp),
-                                contentPadding = PaddingValues(vertical = 8.dp)
-                            ) {
-                                Icon(Icons.Default.Autorenew, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Reactivate Package", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                            }
+                        Spacer(Modifier.height(10.dp))
 
-                            OutlinedButton(
-                                onClick = onToggleSimulateExpiry,
-                                modifier = Modifier.testTag("btn_toggle_expiry"),
-                                shape = RoundedCornerShape(10.dp),
-                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp)
-                            ) {
-                                Text("Restore Active", fontSize = 11.sp, color = DeepTeal)
-                            }
+                        Button(
+                            onClick = onReactivateClick,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("btn_reactivate_home"),
+                            colors = ButtonDefaults.buttonColors(containerColor = DeepTeal),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Autorenew,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text("Reactivate Package")
                         }
                     }
                 }
             }
         }
 
-        // ==========================================
-        // D. FINANCIAL SUMMARY (3 Clear Separate Cards)
-        // 1. Total Income Earned
-        // 2. Paid Capital (Informational, non-withdrawable)
-        // 3. Withdrawable Balance (Available to cash out)
-        // ==========================================
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = "Your Financial Summary",
+                    "Your Financial Summary",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = DeepTealDark,
-                    modifier = Modifier.padding(start = 2.dp)
+                    color = DeepTealDark
                 )
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(7.dp)
                 ) {
-                    // Card 1: Total Income Earned (Blue)
                     FinancialSummaryCard(
-                        title = "Total Income Earned",
-                        amountUgx = userProfile?.totalEarnedUgx ?: 185000L,
+                        title = "Total Income",
+                        amountUgx = userProfile?.totalEarnedUgx,
                         icon = Icons.Default.MonetizationOn,
                         iconBgColor = Color(0xFF1E88E5),
                         containerColor = Color(0xFFF0F7FF),
@@ -697,10 +578,9 @@ fun HomeScreen(
                         testTag = "card_total_income"
                     )
 
-                    // Card 2: Paid Capital (Purple)
                     FinancialSummaryCard(
                         title = "Paid Capital",
-                        amountUgx = userProfile?.paidCapitalUgx ?: 100000L,
+                        amountUgx = userProfile?.paidCapitalUgx,
                         icon = Icons.Default.Savings,
                         iconBgColor = Color(0xFF8E24AA),
                         containerColor = Color(0xFFFBF4FF),
@@ -710,10 +590,9 @@ fun HomeScreen(
                         testTag = "card_paid_capital"
                     )
 
-                    // Card 3: Withdrawable Balance (Green)
                     FinancialSummaryCard(
-                        title = "Withdrawable Balance",
-                        amountUgx = userProfile?.walletBalanceUgx ?: 42500L,
+                        title = "Withdrawable",
+                        amountUgx = userProfile?.walletBalanceUgx,
                         icon = Icons.Default.AccountBalanceWallet,
                         iconBgColor = Color(0xFF00897B),
                         containerColor = Color(0xFFE8F6F3),
@@ -726,116 +605,78 @@ fun HomeScreen(
             }
         }
 
-        // ==========================================
-        // E. TASK SUMMARY CARD
-        // Available Tasks, Completed Tasks, [▶ START TASKS] Button
-        // ==========================================
         item {
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("home_task_summary_card"),
+                modifier = Modifier.fillMaxWidth().testTag("home_task_summary_card"),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E7)), // Warm peach/gold
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFE0B2)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E7)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFE0B2))
             ) {
-                Column(modifier = Modifier.padding(14.dp)) {
+                Column(Modifier.padding(14.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Title with Clipboard Icon
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(Color(0xFFE65100).copy(alpha = 0.15f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Kitchen,
-                                    contentDescription = null,
-                                    tint = Color(0xFFE65100),
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                Icons.Default.Kitchen,
+                                contentDescription = null,
+                                tint = Color(0xFFE65100),
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
                             Text(
-                                text = "Task Summary",
+                                "Task Summary",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFD84315)
                             )
                         }
 
-                        // Prominent START TASKS Button
                         Button(
                             onClick = { onNavigateTab(AppNavTab.TASKS) },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFFF4511E)
                             ),
                             shape = RoundedCornerShape(20.dp),
-                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                             modifier = Modifier.testTag("btn_start_tasks_home")
                         ) {
                             Icon(
-                                imageVector = Icons.Default.PlayArrow,
+                                Icons.Default.PlayArrow,
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp)
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "START TASKS",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                letterSpacing = 0.5.sp
-                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text("START TASKS", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(Modifier.height(12.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        // Available Tasks Stat
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Available Tasks", fontSize = 11.sp, color = TextSecondary)
                             Text(
-                                text = "Available Tasks",
-                                fontSize = 11.sp,
-                                color = TextSecondary
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "$availableCount",
+                                availableCount.toString(),
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = DeepTealDark
                             )
                         }
 
-                        // Divider
                         Box(
-                            modifier = Modifier
-                                .width(1.dp)
-                                .height(32.dp)
-                                .background(Color(0xFFFFCC80))
+                            Modifier.width(1.dp).height(34.dp).background(Color(0xFFFFCC80))
                         )
 
-                        // Completed Tasks Stat
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Completed Tasks", fontSize = 11.sp, color = TextSecondary)
                             Text(
-                                text = "Completed Tasks",
-                                fontSize = 11.sp,
-                                color = TextSecondary
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "$completedTaskCount",
+                                completedTaskCount.toString(),
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = DeepTealDark
@@ -846,22 +687,14 @@ fun HomeScreen(
             }
         }
 
-        // ==========================================
-        // F. LIVE ACTIVITY (Genuine Platform Events)
-        // Compact list of recent events with View All link
-        // ==========================================
         item {
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("home_live_activity_card"),
+                modifier = Modifier.fillMaxWidth().testTag("home_live_activity_card"),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = WarmWhite),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0))
             ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    // Header Row
+                Column(Modifier.padding(14.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -869,14 +702,13 @@ fun HomeScreen(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                imageVector = Icons.Default.Schedule,
+                                Icons.Default.Schedule,
                                 contentDescription = null,
-                                tint = DeepTeal,
-                                modifier = Modifier.size(18.dp)
+                                tint = DeepTeal
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(Modifier.width(6.dp))
                             Text(
-                                text = "Live Activity",
+                                "Live Activity",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = DeepTealDark
@@ -884,34 +716,29 @@ fun HomeScreen(
                         }
 
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .clickable { showAllLiveActivityDialog = true }
                                 .padding(4.dp)
-                                .testTag("btn_view_all_live_activity")
+                                .testTag("btn_view_all_live_activity"),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "View All",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = DeepTeal
-                            )
+                            Text("View All", fontSize = 11.sp, color = DeepTeal)
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = "View All",
+                                Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = "View all activity",
                                 tint = DeepTeal,
-                                modifier = Modifier.size(12.dp)
+                                modifier = Modifier.size(13.dp)
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(Modifier.height(8.dp))
 
-                    // Genuine Activity Events (Up to 5)
                     val displayedEvents = liveActivityEvents.take(5)
+
                     if (displayedEvents.isEmpty()) {
                         Text(
-                            text = "No recent activity recorded yet.",
+                            "No recent activity recorded yet.",
                             fontSize = 11.sp,
                             color = TextSecondary,
                             modifier = Modifier.padding(vertical = 8.dp)
@@ -921,111 +748,43 @@ fun HomeScreen(
                             if (index > 0) {
                                 HorizontalDivider(
                                     color = Color(0xFFF1F5F9),
-                                    thickness = 0.8.dp,
                                     modifier = Modifier.padding(vertical = 6.dp)
                                 )
                             }
-                            LiveActivityRowItem(event = event)
+                            LiveActivityRowItem(event)
                         }
                     }
                 }
             }
         }
 
-        // ==========================================
-        // G. EXPANDABLE DETAILS / QUICK LINKS
-        // View Package Details, View Transaction History, Agent Payment Details
-        // ==========================================
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // View Package Details Link Card
-                Card(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { showPackageDetailsDialog = true }
-                        .testTag("btn_view_package_details"),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFEBF8FF)),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBEE3F8))
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Info,
-                                contentDescription = null,
-                                tint = Color(0xFF2B6CB0),
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "View Package Details",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF2B6CB0)
-                            )
-                        }
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = null,
-                            tint = Color(0xFF2B6CB0),
-                            modifier = Modifier.size(12.dp)
-                        )
-                    }
-                }
+                QuickLinkCard(
+                    title = "Package Details",
+                    icon = Icons.Default.Info,
+                    background = Color(0xFFEBF8FF),
+                    foreground = Color(0xFF2B6CB0),
+                    modifier = Modifier.weight(1f),
+                    testTag = "btn_view_package_details",
+                    onClick = { showPackageDetailsDialog = true }
+                )
 
-                // View Transaction History Link Card
-                Card(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { onNavigateTab(AppNavTab.WALLET) }
-                        .testTag("btn_view_transaction_history"),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFAF5FF)),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE9D8FD))
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.ReceiptLong,
-                                contentDescription = null,
-                                tint = Color(0xFF6B46C1),
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "View Transactions",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF6B46C1)
-                            )
-                        }
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = null,
-                            tint = Color(0xFF6B46C1),
-                            modifier = Modifier.size(12.dp)
-                        )
-                    }
-                }
+                QuickLinkCard(
+                    title = "Transactions",
+                    icon = Icons.Default.ReceiptLong,
+                    background = Color(0xFFFAF5FF),
+                    foreground = Color(0xFF6B46C1),
+                    modifier = Modifier.weight(1f),
+                    testTag = "btn_view_transaction_history",
+                    onClick = { onNavigateTab(AppNavTab.WALLET) }
+                )
             }
         }
 
-        // Secondary Link: View Agent Payment Details / Find Agent (Clean expandable button)
         item {
             Card(
                 modifier = Modifier
@@ -1037,41 +796,34 @@ fun HomeScreen(
                 border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0))
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    modifier = Modifier.fillMaxWidth().padding(14.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Default.SupportAgent,
+                            Icons.Default.SupportAgent,
                             contentDescription = null,
-                            tint = DeepTeal,
-                            modifier = Modifier.size(18.dp)
+                            tint = DeepTeal
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(Modifier.width(8.dp))
                         Text(
-                            text = "Agent Payment & Protection Details",
-                            fontSize = 11.sp,
+                            "Agent Services & Help",
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = DeepTealDark
                         )
                     }
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
-                        tint = TextSecondary,
-                        modifier = Modifier.size(14.dp)
+                        tint = TextSecondary
                     )
                 }
             }
         }
     }
 
-    // ==========================================
-    // DIALOGS: Full Live Activity, Package Details, Agent Protection Details
-    // ==========================================
     if (showAllLiveActivityDialog) {
         AllLiveActivityDialog(
             events = liveActivityEvents,
@@ -1117,13 +869,10 @@ fun HomeScreen(
     }
 }
 
-/**
- * Clean Single Financial Card for Income, Capital, and Balance
- */
 @Composable
 private fun FinancialSummaryCard(
     title: String,
-    amountUgx: Long,
+    amountUgx: Long?,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     iconBgColor: Color,
     containerColor: Color,
@@ -1133,88 +882,128 @@ private fun FinancialSummaryCard(
     testTag: String = ""
 ) {
     Card(
-        modifier = modifier
-            .clickable { onClick() }
-            .testTag(testTag),
+        modifier = modifier.clickable { onClick() }.testTag(testTag),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = containerColor),
         border = androidx.compose.foundation.BorderStroke(1.dp, borderColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
+            modifier = Modifier.fillMaxWidth().padding(9.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Box(
+                modifier = Modifier
+                    .size(26.dp)
+                    .clip(CircleShape)
+                    .background(iconBgColor),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(26.dp)
-                        .clip(CircleShape)
-                        .background(iconBgColor),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(14.dp)
-                    )
-                }
-
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = "Details",
-                    tint = TextSecondary,
-                    modifier = Modifier.size(12.dp)
+                    icon,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(14.dp)
                 )
             }
 
             Text(
-                text = title,
+                title,
                 fontSize = 10.sp,
                 color = TextSecondary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                minLines = 2
             )
 
             Text(
-                text = formatUgx(amountUgx),
-                fontSize = 13.sp,
+                text = amountUgx?.let { formatUgx(it) } ?: "Not available",
+                fontSize = 12.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = DeepTealDark,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
         }
     }
 }
 
-/**
- * Single Live Activity Row Item matching user reference layout
- */
+@Composable
+private fun QuickLinkCard(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    background: Color,
+    foreground: Color,
+    modifier: Modifier = Modifier,
+    testTag: String,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = modifier.clickable(onClick = onClick).testTag(testTag),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = background),
+        border = androidx.compose.foundation.BorderStroke(1.dp, foreground.copy(alpha = 0.2f))
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = foreground,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    title,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = foreground,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = null,
+                tint = foreground,
+                modifier = Modifier.size(12.dp)
+            )
+        }
+    }
+}
+
 @Composable
 private fun LiveActivityRowItem(event: LiveActivityEvent) {
-    val timeAgo = remember(event.timestamp) {
-        val diffMs = System.currentTimeMillis() - event.timestamp
-        val minutes = diffMs / (1000 * 60)
-        val hours = minutes / 60
-        val days = hours / 24
-        when {
-            minutes < 1 -> "Just now"
-            minutes < 60 -> "$minutes min ago"
-            hours < 24 -> "$hours hours ago"
-            days == 1L -> "1 day ago"
-            else -> "$days days ago"
+    var currentTimeMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
+
+    LaunchedEffect(event.timestamp) {
+        while (true) {
+            delay(60_000L)
+            currentTimeMs = System.currentTimeMillis()
         }
     }
 
-    val (icon, iconBg) = when (event.eventType) {
+    val diffMs = (currentTimeMs - event.timestamp).coerceAtLeast(0L)
+    val minutes = diffMs / 60_000L
+    val hours = minutes / 60L
+    val days = hours / 24L
+
+    val timeAgo = when {
+        minutes < 1L -> "Just now"
+        minutes < 60L -> "$minutes min ago"
+        hours < 24L -> "$hours hours ago"
+        days == 1L -> "1 day ago"
+        else -> "$days days ago"
+    }
+
+    val iconAndColor = when (event.eventType) {
         "TASK_REWARD" -> Pair(Icons.Default.Kitchen, Color(0xFF00897B))
         "REFERRAL_BONUS" -> Pair(Icons.Default.GroupAdd, Color(0xFF1E88E5))
         "PACKAGE_ACTIVATION" -> Pair(Icons.Default.CheckCircle, Color(0xFF8E24AA))
@@ -1223,80 +1012,77 @@ private fun LiveActivityRowItem(event: LiveActivityEvent) {
         else -> Pair(Icons.Default.Check, DeepTeal)
     }
 
-    val isPositive = event.eventType != "P2P_TRANSFER" && event.eventType != "WITHDRAWAL"
-
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
                     .size(34.dp)
                     .clip(CircleShape)
-                    .background(iconBg.copy(alpha = 0.15f)),
+                    .background(iconAndColor.second.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = icon,
+                    iconAndColor.first,
                     contentDescription = null,
-                    tint = iconBg,
+                    tint = iconAndColor.second,
                     modifier = Modifier.size(18.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(Modifier.width(10.dp))
 
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = event.title,
+                    event.title,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = event.detail,
+                    event.detail,
                     fontSize = 10.sp,
                     color = TextSecondary,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
             }
         }
 
+        Spacer(Modifier.width(8.dp))
+
         Column(horizontalAlignment = Alignment.End) {
             val amountRegex = remember { Regex("UGX\\s*([0-9,]+)") }
             val match = remember(event.detail) { amountRegex.find(event.detail) }
-            if (match != null) {
-                val amountStr = match.groupValues[1].replace(",", "")
-                val amt = amountStr.toLongOrNull() ?: 0L
-                if (amt > 0) {
-                    Text(
-                        text = (if (isPositive) "+ " else "- ") + formatUgx(amt),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = if (isPositive) StatusGreenText else WarningRedText
-                    )
-                }
+            val amount = match?.groupValues?.getOrNull(1)
+                ?.replace(",", "")
+                ?.toLongOrNull()
+
+            if (amount != null && amount > 0L) {
+                val isOutgoing = event.eventType == "P2P_TRANSFER" ||
+                    event.eventType == "WITHDRAWAL"
+
+                Text(
+                    text = (if (isOutgoing) "− " else "+ ") + formatUgx(amount),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = if (isOutgoing) WarningRedText else StatusGreenText
+                )
             }
-            Text(
-                text = timeAgo,
-                fontSize = 10.sp,
-                color = TextSecondary
-            )
+
+            Text(timeAgo, fontSize = 10.sp, color = TextSecondary)
         }
     }
 }
 
-/**
- * Expandable Modal Dialog for detailed package terms & history
- */
 @Composable
 private fun PackageDetailsModalDialog(
     userProfile: UserProfileEntity?,
@@ -1305,14 +1091,18 @@ private fun PackageDetailsModalDialog(
     onUpgrade: () -> Unit,
     onReactivate: () -> Unit
 ) {
-    androidx.compose.material3.AlertDialog(
+    AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                PackageTierIcon(tier = tier, modifier = Modifier.size(24.dp), iconSize = 24.dp)
-                Spacer(modifier = Modifier.width(8.dp))
+                PackageTierIcon(
+                    tier = tier,
+                    modifier = Modifier.size(24.dp),
+                    iconSize = 24.dp
+                )
+                Spacer(Modifier.width(8.dp))
                 Text(
-                    text = "${tier.displayTitle} Package",
+                    "${tier.displayTitle} Package",
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     color = DeepTealDark
@@ -1321,11 +1111,24 @@ private fun PackageDetailsModalDialog(
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("• Paid Capital: ${formatUgx(userProfile?.paidCapitalUgx ?: tier.priceUgx)} (Safely recorded working capital)", fontSize = 12.sp)
-                Text("• Task Reward: ${tier.taskRewardDisplay} per verified utensil review", fontSize = 12.sp)
-                Text("• Package Duration: 30 active days per cycle", fontSize = 12.sp)
-                Text("• P2P Transfers: Supported 24/7 with zero waiting time", fontSize = 12.sp)
-                Text("• Withdrawals: Monday–Saturday, 6:00 AM–8:00 PM (UGX 10,000 minimum)", fontSize = 12.sp)
+                Text(
+                    "Recorded paid capital: ${
+                        userProfile?.paidCapitalUgx?.let { formatUgx(it) } ?: "Not available"
+                    }",
+                    fontSize = 12.sp
+                )
+                Text(
+                    "Task reward: ${tier.taskRewardDisplay} per eligible utensil review.",
+                    fontSize = 12.sp
+                )
+                Text(
+                    "Package duration and expiry depend on the activation recorded for your account.",
+                    fontSize = 12.sp
+                )
+                Text(
+                    "Check the Wallet screen for current transaction and withdrawal information.",
+                    fontSize = 12.sp
+                )
             }
         },
         confirmButton = {
@@ -1337,16 +1140,20 @@ private fun PackageDetailsModalDialog(
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss) {
-                Text("Close", fontSize = 12.sp)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                if (userProfile?.isPackageExpired == true) {
+                    OutlinedButton(onClick = onReactivate) {
+                        Text("Reactivate", fontSize = 12.sp)
+                    }
+                }
+                OutlinedButton(onClick = onDismiss) {
+                    Text("Close", fontSize = 12.sp)
+                }
             }
         }
     )
 }
 
-/**
- * Expandable Modal Dialog for Agent payment protection instructions & links
- */
 @Composable
 private fun AgentDetailsModalDialog(
     userProfile: UserProfileEntity?,
@@ -1358,23 +1165,52 @@ private fun AgentDetailsModalDialog(
     onOpenAgentPortal: () -> Unit
 ) {
     val isPlus = userProfile?.packageName?.contains("PLUS", ignoreCase = true) == true
+    val isApproved = agentApplication?.status == "APPROVED"
 
-    androidx.compose.material3.AlertDialog(
+    AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.SupportAgent, contentDescription = null, tint = DeepTeal, modifier = Modifier.size(24.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Agent Services & Protection", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = DeepTealDark)
+                Icon(
+                    Icons.Default.SupportAgent,
+                    contentDescription = null,
+                    tint = DeepTeal,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    "Agent Services & Help",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = DeepTealDark
+                )
             }
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("• 0% fee on all agent-facilitated package activations & reactivations.", fontSize = 12.sp)
-                Text("• Full Agent Payment Protection guarantees your funds are safely accounted for.", fontSize = 12.sp)
-                Text("• Certified field agents operate across all Uganda districts.", fontSize = 12.sp)
+                Text(
+                    "Use the agent service to get assistance with package activation or account questions.",
+                    fontSize = 12.sp
+                )
+                Text(
+                    "Confirm any agent fees, payment instructions, and protection terms through official platform support before sending money.",
+                    fontSize = 12.sp
+                )
+                Text(
+                    "Pending activation requests: ${activeRequests.size}",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
                 if (isPlus) {
-                    Text("• As a Plus Package member, you are eligible to apply to become an authorized regional Field Agent.", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = DeepTeal)
+                    Text(
+                        if (isApproved) {
+                            "Your agent application is approved."
+                        } else {
+                            "You may submit an agent application for review."
+                        },
+                        fontSize = 12.sp,
+                        color = DeepTeal
+                    )
                 }
             }
         },
@@ -1387,16 +1223,17 @@ private fun AgentDetailsModalDialog(
             }
         },
         dismissButton = {
-            if (isPlus) {
-                OutlinedButton(
-                    onClick = if (agentApplication?.status == "APPROVED") onOpenAgentPortal else onApplyAgent
-                ) {
-                    Text(
-                        if (agentApplication?.status == "APPROVED") "Agent Center" else "Apply as Agent",
-                        fontSize = 12.sp
-                    )
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                if (isPlus) {
+                    OutlinedButton(
+                        onClick = if (isApproved) onOpenAgentPortal else onApplyAgent
+                    ) {
+                        Text(
+                            if (isApproved) "Agent Center" else "Apply as Agent",
+                            fontSize = 12.sp
+                        )
+                    }
                 }
-            } else {
                 OutlinedButton(onClick = onDismiss) {
                     Text("Close", fontSize = 12.sp)
                 }
