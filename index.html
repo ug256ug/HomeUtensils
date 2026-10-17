@@ -166,7 +166,6 @@ footer { padding:22px 16px; text-align:center; color:var(--muted); font-size:12p
     <div class="detail-row"><span>Expired packages</span><strong>Records not connected</strong></div>
   </div>
 
-  <!-- P2P TRANSFER PREVIEW -->
   <h3 class="section-title" id="p2p">P2P Transfers</h3>
   <div class="card">
     <p class="small">
@@ -187,7 +186,6 @@ footer { padding:22px 16px; text-align:center; color:var(--muted); font-size:12p
     <p class="small">Real transfers will require authenticated members, server-side fee calculations, balance checks, package eligibility, transaction limits and a secure transaction PIN flow.</p>
   </div>
 
-  <!-- AGENT ACTIVATION PREVIEW -->
   <h3 class="section-title" id="agent-activation">AGENT Activation Workflow</h3>
   <div class="card">
     <p class="small">
@@ -225,19 +223,24 @@ footer { padding:22px 16px; text-align:center; color:var(--muted); font-size:12p
     </p>
   </div>
 
-  <!-- FIND AN AGENT -->
   <h3 class="section-title" id="find-agent">Find an Agent</h3>
   <div class="card">
-    <p class="small">Agent search will work after a verified agent directory is connected.</p>
+    <p class="small">Choose a region to preview example agents. These demonstration entries are not real or verified agents.</p>
     <form id="agent-form">
-      <label for="agent-location">Your area</label>
-      <input id="agent-location" placeholder="e.g. Kampala">
+      <label for="agent-location">Select region</label>
+      <select id="agent-location" required>
+        <option value="">Choose a region</option>
+        <option value="Central">Central</option>
+        <option value="Eastern">Eastern</option>
+        <option value="Northern">Northern</option>
+        <option value="Western">Western</option>
+      </select>
       <button class="primary-button" type="submit">Search Agents</button>
     </form>
-    <p id="agent-result" class="small" role="status"></p>
+    <div id="agent-result" class="small" role="status" aria-live="polite"></div>
+    <p class="small">DEMO ONLY — these sample entries are not available for transactions. A real agent directory must be connected and verified before launch.</p>
   </div>
 
-  <!-- ADMIN REVIEW PREVIEW -->
   <h3 class="section-title" id="admin-review">Administrator Review</h3>
   <div class="card">
     <p class="small">
@@ -320,16 +323,60 @@ document.getElementById("activation-form").addEventListener("submit", function(e
 document.getElementById("agent-form").addEventListener("submit", function(event) {
   event.preventDefault();
 
-  const area = document.getElementById("agent-location").value.trim();
+  const region = document.getElementById("agent-location").value;
   const result = document.getElementById("agent-result");
+  result.replaceChildren();
 
-  result.textContent = area
-    ? "Agent search is not connected yet. No verified agents are available to display for " + area + "."
-    : "Please enter your area. Agent search will work after the directory is connected.";
+  if (!region) {
+    result.textContent = "Please select a region.";
+    return;
+  }
+
+  const demoAgents = {
+    "Central": [
+      { name: "Central Demo Agent 1", area: "Kampala", status: "Demo listing" },
+      { name: "Central Demo Agent 2", area: "Mukono", status: "Demo listing" }
+    ],
+    "Eastern": [
+      { name: "Eastern Demo Agent 1", area: "Jinja", status: "Demo listing" },
+      { name: "Eastern Demo Agent 2", area: "Mbale", status: "Demo listing" }
+    ],
+    "Northern": [
+      { name: "Northern Demo Agent 1", area: "Gulu", status: "Demo listing" },
+      { name: "Northern Demo Agent 2", area: "Lira", status: "Demo listing" }
+    ],
+    "Western": [
+      { name: "Western Demo Agent 1", area: "Mbarara", status: "Demo listing" },
+      { name: "Western Demo Agent 2", area: "Fort Portal", status: "Demo listing" }
+    ]
+  };
+
+  const heading = document.createElement("p");
+  heading.textContent = "DEMO RESULTS — " + region + " Region";
+  result.appendChild(heading);
+
+  demoAgents[region].forEach(function(agent) {
+    const item = document.createElement("div");
+    item.className = "detail-row";
+
+    const details = document.createElement("span");
+    details.textContent = agent.name + " · " + agent.area;
+
+    const status = document.createElement("strong");
+    status.textContent = agent.status;
+
+    item.append(details, status);
+    result.appendChild(item);
+  });
+
+  const note = document.createElement("p");
+  note.textContent = "These sample entries are not real, verified, or available for transactions.";
+  result.appendChild(note);
 });
 </script>
 
-<!-- HomeUtensils Firebase connection -->
+<!-- Firebase setup: this initializes services only.
+     It does not yet connect accounts, payments, or agent records. -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
   import { getAuth } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
@@ -341,7 +388,7 @@ document.getElementById("agent-form").addEventListener("submit", function(event)
     projectId: "homeutensils-5b3cf",
     storageBucket: "homeutensils-5b3cf.firebasestorage.app",
     messagingSenderId: "976309566737",
-    appId: "1:976309566737:web:e65365b6df2d15ce6060b0"
+    appId: "1:309566737:web:e65365b6df2d15ce6060b0"
   };
 
   try {
@@ -350,8 +397,7 @@ document.getElementById("agent-form").addEventListener("submit", function(event)
     const db = getFirestore(app);
 
     window.homeUtensilsFirebase = { app, auth, db };
-
-    console.log("HomeUtensils Firebase connected successfully.");
+    console.log("HomeUtensils Firebase initialized.");
   } catch (error) {
     console.error("Firebase setup error:", error);
   }
