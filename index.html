@@ -229,7 +229,8 @@ footer {
 }
 </style>
 </head>
-<body><header>
+<body>
+<header>
   <div class="top">
     <div>
       <h1>HomeUtensils</h1>
@@ -255,7 +256,8 @@ footer {
     This page is not connected to real member records, wallets, payments,
     agents or administrator accounts. No money is transferred here.
     Do not enter a real PIN or confidential payment information.
-  </div>  <h3 class="section-title" id="portal-access">Choose Your Portal</h3>  <div class="grid">
+  </div>  <h3 class="section-title" id="portal-access">Choose Your Portal</h3>
+  <div class="grid">
     <div class="card">
       <h4>Member Login / Registration</h4>
       <p class="small">
@@ -263,12 +265,12 @@ footer {
         Approved agents also use their member account to sign in.
       </p>
       <a class="agent-button" href="#member-access">Member Portal</a>
-    </div><div class="card">
-  <h4>Administrator Login</h4>
-  <p class="small">A separate entry point for authorized administrators only.</p>
-  <a class="agent-button secondary-button" href="#admin-access">Admin Portal</a>
-</div>
-
+    </div>
+    <div class="card">
+      <h4>Administrator Login</h4>
+      <p class="small">A separate entry point for authorized administrators only.</p>
+      <a class="agent-button secondary-button" href="#admin-access">Admin Portal</a>
+    </div>
   </div>  <div class="card" id="member-access">
     <h3>Member Registration</h3>
     <p class="small">
@@ -380,9 +382,22 @@ footer {
 
   </div>  <h3 class="section-title" id="account">Account Overview</h3>
   <div class="card details">
-    <div class="detail-row"><span>Member name</span><strong>Not connected</strong></div>
-    <div class="detail-row"><span>Member ID</span><strong>Not assigned</strong></div>
-    <div class="detail-row"><span>Account status</span><strong>Awaiting secure connection</strong></div>
+    <div class="detail-row">
+      <span>Member name</span>
+      <strong id="account-member-name">Sign in to view</strong>
+    </div>
+    <div class="detail-row">
+      <span>Account email</span>
+      <strong id="account-member-email">Not signed in</strong>
+    </div>
+    <div class="detail-row">
+      <span>Member ID</span>
+      <strong>Not assigned</strong>
+    </div>
+    <div class="detail-row">
+      <span>Account status</span>
+      <strong id="account-member-status">Not signed in</strong>
+    </div>
     <div class="detail-row"><span>Package</span><strong>Not connected</strong></div>
     <div class="detail-row"><span>Activation date</span><strong>Not available</strong></div>
     <div class="detail-row"><span>Expiry date</span><strong>Not available</strong></div>
@@ -842,11 +857,13 @@ get("login-form").addEventListener("submit", async event => {
       get("login-password").value
     );
 
+    const displayName = credential.user.displayName || credential.user.email || "Member";
+
     showMessage(
       "login-result",
       "Signed in successfully as " +
-      (credential.user.displayName || credential.user.email) +
-      ". Package, wallet, agent, and admin permissions still need verified backend records."
+      displayName +
+      ". Your name and email appear in Account Overview. Package, wallet, agent, and admin permissions still need verified backend records."
     );
   } catch (error) {
     console.error("Login error:", error);
@@ -893,13 +910,27 @@ get("sign-out").addEventListener("click", async () => {
 onAuthStateChanged(auth, user => {
   get("sign-out").hidden = !user;
 
+  const memberName = get("account-member-name");
+  const memberEmail = get("account-member-email");
+  const memberStatus = get("account-member-status");
+
   if (user) {
+    const displayName = user.displayName || user.email || "Member";
+
+    if (memberName) memberName.textContent = displayName;
+    if (memberEmail) memberEmail.textContent = user.email || "Not available";
+    if (memberStatus) memberStatus.textContent = "Signed in";
+
     showMessage(
       "login-result",
-      "Signed in as " +
-      (user.displayName || user.email) +
-      ". Real package, wallet, agent, and admin permissions are not yet connected."
+      "Signed in successfully as " +
+      displayName +
+      ". Your name and email appear in Account Overview. Package, wallet, agent, and admin permissions still need verified backend records."
     );
+  } else {
+    if (memberName) memberName.textContent = "Sign in to view";
+    if (memberEmail) memberEmail.textContent = "Not signed in";
+    if (memberStatus) memberStatus.textContent = "Not signed in";
   }
 });
 
