@@ -1,30 +1,381 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HomeUtensils</title>
+  <meta name="theme-color" content="#176b45">
+  <title>HomeUtensils | Member Portal</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #fff8f0; color: #333; }
-    header { background: #176b45; color: white; padding: 28px 16px; text-align: center; }
-    main { max-width: 700px; margin: auto; padding: 24px 16px; }
-    h2 { color: #176b45; }
-    .item { background: white; padding: 16px; margin: 12px 0; border-radius: 10px; box-shadow: 0 2px 6px #ddd; }
-    footer { text-align: center; padding: 20px; color: #666; }
+    :root {
+      --green: #176b45;
+      --dark: #104b32;
+      --cream: #f6f8f5;
+      --white: #ffffff;
+      --muted: #69766d;
+      --border: #e3e9e3;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--cream);
+      color: #24352a;
+    }
+    header {
+      background: linear-gradient(135deg, var(--dark), var(--green));
+      color: white;
+      padding: 25px 18px;
+    }
+    .header-inner, main {
+      max-width: 950px;
+      margin: auto;
+    }
+    .brand { font-size: 25px; font-weight: 800; }
+    header p { margin-bottom: 0; color: #e0f0e5; }
+    main { padding: 20px 14px 35px; }
+    .notice {
+      background: #fff4d7;
+      border: 1px solid #f0d99b;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+    h2 { margin: 8px 0; font-size: 23px; }
+    .muted { color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .balance {
+      margin: 18px 0;
+      padding: 22px;
+      border-radius: 16px;
+      color: white;
+      background: linear-gradient(135deg, #176b45, #238b5b);
+      box-shadow: 0 5px 16px #176b4520;
+    }
+    .balance-label { font-size: 14px; color: #e1f3e6; }
+    .amount { font-size: 32px; font-weight: 800; margin: 10px 0; }
+    .balance small { color: #e1f3e6; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin: 16px 0 22px;
+    }
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 16px;
+      min-width: 0;
+      box-shadow: 0 2px 8px #102c1710;
+    }
+    .card h3 { margin: 0 0 9px; font-size: 15px; }
+    .value { font-weight: 800; font-size: 20px; overflow-wrap: anywhere; }
+    .icon { font-size: 23px; margin-bottom: 10px; }
+    .section {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 17px;
+      margin: 16px 0;
+    }
+    .section h2 { font-size: 19px; margin-top: 0; }
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+    .row:last-child { border-bottom: 0; }
+    .tag {
+      display: inline-block;
+      background: #edf5ee;
+      color: var(--green);
+      padding: 5px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+    .button {
+      display: inline-block;
+      background: var(--green);
+      color: white;
+      text-decoration: none;
+      border: 0;
+      border-radius: 9px;
+      padding: 12px 15px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .button.secondary {
+      background: white;
+      color: var(--green);
+      border: 1px solid var(--green);
+    }
+    .button:focus, a:focus { outline: 2px solid #e3b94f; }
+    .actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 15px; }
+    .nav {
+      display: flex;
+      overflow-x: auto;
+      gap: 8px;
+      padding: 4px 0 12px;
+      margin-bottom: 8px;
+    }
+    .nav button {
+      flex: 0 0 auto;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--green);
+      border-radius: 20px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .nav button.active { background: var(--green); color: white; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    label { display: block; font-size: 13px; font-weight: bold; margin: 13px 0 6px; }
+    input, select {
+      width: 100%;
+      border: 1px solid #ccd8ce;
+      border-radius: 9px;
+      padding: 12px;
+      background: white;
+      font: inherit;
+    }
+    .form-note { font-size: 12px; line-height: 1.5; color: var(--muted); }
+    footer { text-align: center; padding: 25px 15px; color: var(--muted); font-size: 12px; }
+    @media (min-width: 650px) {
+      .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      header { padding: 32px 22px; }
+      main { padding: 26px 20px 40px; }
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>HomeUtensils</h1>
-    <p>Useful essentials for every home</p>
+    <div class="header-inner">
+      <div class="brand">🏡 HomeUtensils</div>
+      <p>Member Portal · Your account at a glance</p>
+    </div>
   </header>
+
   <main>
-    <h2>Welcome!</h2>
-    <p>Discover everyday utensils and essentials for your home.</p>
-    <div class="item"><h3>Kitchen Utensils</h3><p>Tools to help make cooking easier.</p></div>
-    <div class="item"><h3>Home Essentials</h3><p>Useful items to make your home comfortable.</p></div>
-    <div class="item"><h3>Contact Us</h3><p>Contact us to learn more about our products.</p></div>
+    <div class="notice">
+      <strong>Website preview:</strong> This page is a visual dashboard.
+      It does not log you into an account or connect to real financial records.
+      Do not enter passwords, PINs, or payment details here.
+    </div>
+
+    <nav class="nav" aria-label="Dashboard sections">
+      <button class="active" data-panel="overview">Overview</button>
+      <button data-panel="deposits">Deposits</button>
+      <button data-panel="tasks">Tasks & Earnings</button>
+      <button data-panel="transfers">Transfers</button>
+      <button data-panel="withdrawals">Withdrawals</button>
+      <button data-panel="profile">My Profile</button>
+      <button data-panel="access">Agent / Admin</button>
+    </nav>
+
+    <section id="overview" class="panel active">
+      <h2>Welcome, Member!</h2>
+      <p class="muted">Here is your HomeUtensils account overview.</p>
+
+      <div class="balance">
+        <div class="balance-label">Available balance · Preview only</div>
+        <div class="amount">UGX 0</div>
+        <small>Real balance will appear after secure account integration.</small>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="icon">💰</div>
+          <h3>Total Earnings</h3>
+          <div class="value">UGX 0</div>
+          <p class="muted">Preview</p>
+        </div>
+        <div class="card">
+          <div class="icon">📥</div>
+          <h3>Total Deposits</h3>
+          <div class="value">UGX 0</div>
+          <p class="muted">Preview</p>
+        </div>
+        <div class="card">
+          <div class="icon">✅</div>
+          <h3>Completed Tasks</h3>
+          <div class="value">0</div>
+          <p class="muted">Preview</p>
+        </div>
+        <div class="card">
+          <div class="icon">🔄</div>
+          <h3>Transfers</h3>
+          <div class="value">0</div>
+          <p class="muted">Preview</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Quick Actions</h2>
+        <p class="muted">Choose a section to explore the dashboard.</p>
+        <div class="actions">
+          <button class="button" data-go="deposits">View Deposits</button>
+          <button class="button" data-go="tasks">View Tasks</button>
+          <button class="button" data-go="transfers">View Transfers</button>
+          <button class="button secondary" data-go="withdrawals">Withdrawals</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Recent Activity</h2>
+        <p class="muted">No real account activity is connected yet.</p>
+        <div class="row">
+          <span>Account setup</span><span class="tag">Preview</span>
+        </div>
+        <div class="row">
+          <span>Financial history</span><span class="tag">Not connected</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="deposits" class="panel">
+      <div class="section">
+        <h2>📥 Deposits</h2>
+        <p class="muted">View deposit information and the intended payment workflow.</p>
+        <div class="row"><span>Deposit balance</span><strong>UGX 0</strong></div>
+        <div class="row"><span>Deposit records</span><span class="tag">Not connected</span></div>
+        <label for="depositAmount">Example deposit amount (UGX)</label>
+        <input id="depositAmount" type="number" min="0" placeholder="Enter an example amount">
+        <p class="form-note">Preview only. This form does not initiate a payment or update your account.</p>
+        <div class="actions"><button class="button" data-demo="deposit">Preview Deposit</button></div>
+        <p id="depositMessage" class="muted" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section id="tasks" class="panel">
+      <div class="section">
+        <h2>✅ Tasks & Earnings</h2>
+        <p class="muted">Task submissions and rewards will require verified account records.</p>
+        <div class="row"><span>Completed tasks</span><strong>0</strong></div>
+        <div class="row"><span>Approved rewards</span><strong>UGX 0</strong></div>
+        <div class="row"><span>Pending reviews</span><strong>0</strong></div>
+        <p class="form-note">No task reward is issued by this demonstration page.</p>
+      </div>
+    </section>
+
+    <section id="transfers" class="panel">
+      <div class="section">
+        <h2>🔄 Transfers</h2>
+        <p class="muted">The intended transfer area for sending money to another member.</p>
+        <label for="recipientId">Recipient member ID</label>
+        <input id="recipientId" type="text" placeholder="Example: HU-DEMO-002">
+        <label for="transferAmount">Example amount (UGX)</label>
+        <input id="transferAmount" type="number" min="0" placeholder="Enter an example amount">
+        <p class="form-note">Preview only. No money will be sent and no recipient will be credited.</p>
+        <div class="actions"><button class="button" data-demo="transfer">Preview Transfer</button></div>
+        <p id="transferMessage" class="muted" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section id="withdrawals" class="panel">
+      <div class="section">
+        <h2>💸 Withdrawals</h2>
+        <p class="muted">A real withdrawal workflow must verify identity, available funds, and payment status.</p>
+        <div class="row"><span>Available to withdraw</span><strong>UGX 0</strong></div>
+        <div class="row"><span>Withdrawal requests</span><span class="tag">Not connected</span></div>
+        <label for="withdrawAmount">Example withdrawal amount (UGX)</label>
+        <input id="withdrawAmount" type="number" min="0" placeholder="Enter an example amount">
+        <p class="form-note">Preview only. No withdrawal request or payment will be made.</p>
+        <div class="actions"><button class="button" data-demo="withdrawal">Preview Withdrawal</button></div>
+        <p id="withdrawalMessage" class="muted" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section id="profile" class="panel">
+      <div class="section">
+        <h2>👤 My Profile</h2>
+        <div class="row"><span>Member name</span><strong>Member</strong></div>
+        <div class="row"><span>Member ID</span><strong>Not assigned</strong></div>
+        <div class="row"><span>Phone number</span><strong>Not connected</strong></div>
+        <div class="row"><span>Account status</span><span class="tag">Preview</span></div>
+        <p class="form-note">Personal details will be displayed here after secure sign-in is implemented.</p>
+      </div>
+    </section>
+
+    <section id="access" class="panel">
+      <div class="section">
+        <h2>🛡️ Agent & Admin Portal</h2>
+        <p class="muted">Dedicated access for authorized agents and administrators.</p>
+        <div class="row"><span>Agent applications</span><span class="tag">Not connected</span></div>
+        <div class="row"><span>Member management</span><span class="tag">Not connected</span></div>
+        <div class="row"><span>Payment verification</span><span class="tag">Not connected</span></div>
+        <div class="row"><span>Withdrawal approvals</span><span class="tag">Not connected</span></div>
+        <p class="form-note">This page does not authenticate agents or administrators. A secure permission system must be implemented before use.</p>
+      </div>
+    </section>
   </main>
-  <footer>HomeUtensils &copy; 2026</footer>
+
+  <footer>
+    HomeUtensils © 2026 · Member Portal Preview<br>
+    Secure account services are not yet connected.
+  </footer>
+
+  <script>
+    const navButtons = document.querySelectorAll("[data-panel]");
+    const panels = document.querySelectorAll(".panel");
+
+    function showPanel(id) {
+      panels.forEach(panel => {
+        panel.classList.toggle("active", panel.id === id);
+      });
+      navButtons.forEach(button => {
+        button.classList.toggle("active", button.dataset.panel === id);
+      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    navButtons.forEach(button => {
+      button.addEventListener("click", () => showPanel(button.dataset.panel));
+    });
+
+    document.querySelectorAll("[data-go]").forEach(button => {
+      button.addEventListener("click", () => showPanel(button.dataset.go));
+    });
+
+    document.querySelectorAll("[data-demo]").forEach(button => {
+      button.addEventListener("click", () => {
+        const type = button.dataset.demo;
+        const amountIds = {
+          deposit: "depositAmount",
+          transfer: "transferAmount",
+          withdrawal: "withdrawAmount"
+        };
+        const messageIds = {
+          deposit: "depositMessage",
+          transfer: "transferMessage",
+          withdrawal: "withdrawalMessage"
+        };
+        const amount = document.getElementById(amountIds[type]).value;
+        const message = document.getElementById(messageIds[type]);
+
+        if (!amount || Number(amount) <= 0) {
+          message.textContent = "Enter a positive example amount to preview this form.";
+          return;
+        }
+        if (type === "transfer" &&
+            !document.getElementById("recipientId").value.trim()) {
+          message.textContent = "Enter an example recipient ID to preview this form.";
+          return;
+        }
+        message.textContent =
+          "Preview only: no payment, transfer, or withdrawal was submitted.";
+      });
+    });
+  </script>
 </body>
 </html>
