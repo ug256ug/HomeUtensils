@@ -1,3 +1,4 @@
+
 package com.example.ui
 
 import androidx.activity.compose.BackHandler
@@ -354,8 +355,8 @@ private fun MemberPortalAppContent(
                     HomeScreen(
                         userProfile = userProfile,
                         tasks = tasks,
-                        completedTaskCount = 12 + approvedCount,
-                        taskIncomeUgx = userProfile?.walletBalanceUgx ?: 18500L,
+                        completedTaskCount = approvedCount,
+                        taskIncomeUgx = userProfile?.walletBalanceUgx ?: 0L,
                         onNavigateTab = { viewModel.selectTab(it) },
                         onTaskClicked = { viewModel.openTaskDetail(it) },
                         onOpenGiftCode = {
