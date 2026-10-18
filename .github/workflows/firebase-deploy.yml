@@ -25,6 +25,23 @@ jobs:
         with:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
+      - name: Check authenticated service account
+        run: |
+          python - <<'PY'
+          import json
+          import os
+
+          path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+          if not path:
+              raise SystemExit("Google credentials file was not created.")
+
+          with open(path, encoding="utf-8") as f:
+              credentials = json.load(f)
+
+          print("Credential type:", credentials.get("type", "unknown"))
+          print("Service account:", credentials.get("client_email", "not found"))
+          PY
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -68,4 +85,3 @@ jobs:
           npx --yes firebase-tools deploy \
             --only firestore:rules \
             --project homeutensils-5b3cf
-            
