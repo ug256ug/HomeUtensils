@@ -848,8 +848,14 @@ get("register-form").addEventListener("submit", async event => {
       );
     }
   } catch (error) {
-    console.error("Registration error:", error);
-    showMessage("register-result", friendlyError(error), true);
+    
+console.error("Registration error:", error);
+showMessage(
+  "register-result",
+  "Registration failed (" + (error.code || "unknown") + "): " + (error.message || "No additional details were provided."),
+  true
+);
+
   } finally {
     if (submitButton) submitButton.disabled = false;
   }
