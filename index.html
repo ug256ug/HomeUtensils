@@ -907,30 +907,87 @@ get("sign-out").addEventListener("click", async () => {
   }
 });
 
-onAuthStateChanged(auth, user => {
+
+onAuthStateChanged(auth, async user => {
   get("sign-out").hidden = !user;
 
   const memberName = get("account-member-name");
   const memberEmail = get("account-member-email");
+  const memberPhone = get("account-member-phone");
+  const memberRegion = get("account-member-region");
   const memberStatus = get("account-member-status");
 
-  if (user) {
-    const displayName = user.displayName || user.email || "Member";
+  if (!user) {
+    if (memberName) memberName.textContent = "Sign in to view";
+    if (memberEmail) memberEmail.textContent = "Not signed in";
+    if (memberPhone) memberPhone.textContent = "Not available";
+    if (memberRegion) memberRegion.textContent = "Not available";
+    if (memberStatus) memberStatus.textContent = "Not signed in";
+    return;
+  }
 
-    if (memberName) memberName.textContent = displayName;
-    if (memberEmail) memberEmail.textContent = user.email || "Not available";
-    if (memberStatus) memberStatus.textContent = "Signed in";
+  const displayName = user.displayName || user.email || "Member";
+
+  if (memberName) memberName.textContent = displayName;
+  if (memberEmail) memberEmail.textContent = user.email || "Not available";
+  if (memberPhone) memberPhone.textContent = "Loading...";
+  if (memberRegion) memberRegion.textContent = "Loading...";
+  if (memberStatus) memberStatus.textContent = "Signed in — checking profile";
+
+  try {
+    const profileSnapshot = await getDoc(
+      doc(db, "memberProfiles", user.uid)
+    );
+
+    if (!profileSnapshot.exists()) {
+      if (memberPhone) memberPhone.textContent = "Not saved";
+      if (memberRegion) memberRegion.textContent = "Not saved";
+      if (memberStatus) memberStatus.textContent = "Profile missing";
+
+      showMessage(
+        "login-result",
+        "You are signed in, but your saved member profile was not found. Do not register again. Please contact the website administrator to check your profile.",
+        true
+      );
+      return;
+    }
+
+    const profile = profileSnapshot.data();
+
+    if (memberName) {
+      memberName.textContent = profile.fullName || displayName;
+    }
+    if (memberEmail) {
+      memberEmail.textContent = profile.email || user.email || "Not available";
+    }
+    if (memberPhone) {
+      memberPhone.textContent = profile.phoneNumber || "Not provided";
+    }
+    if (memberRegion) {
+      memberRegion.textContent = profile.region || "Not provided";
+    }
+    if (memberStatus) {
+      memberStatus.textContent = "Signed in — profile loaded";
+    }
 
     showMessage(
       "login-result",
       "Signed in successfully as " +
-      displayName +
-      ". Your name and email appear in Account Overview. Package, wallet, agent, and admin permissions still need verified backend records."
+        (profile.fullName || displayName) +
+        ". Your saved member profile has loaded. Wallet, package, agent and administrator features are not yet connected to verified records."
     );
-  } else {
-    if (memberName) memberName.textContent = "Sign in to view";
-    if (memberEmail) memberEmail.textContent = "Not signed in";
-    if (memberStatus) memberStatus.textContent = "Not signed in";
+  } catch (error) {
+    console.error("Member profile could not be loaded:", error);
+
+    if (memberPhone) memberPhone.textContent = "Unavailable";
+    if (memberRegion) memberRegion.textContent = "Unavailable";
+    if (memberStatus) memberStatus.textContent = "Profile could not load";
+
+    showMessage(
+      "login-result",
+      "You are signed in, but your member profile could not be loaded. The website administrator needs to check Firestore access and configuration.",
+      true
+    );
   }
 });
 
