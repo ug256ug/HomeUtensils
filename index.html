@@ -100,11 +100,25 @@ footer{text-align:center;padding:20px;color:#647067}
 <div id="activationMessage" aria-live="polite"></div>
 </div>
 
-<div class="card">
-<h2>My activation requests</h2>
-<div id="requestHistory">Your requests will appear here.</div>
-</div>
+
+<section id="adminSection" class="hidden">
+  <div class="card">
+    <h2>Administrator dashboard</h2>
+    <p>Manage activation requests and review member profiles.</p>
+    <div id="adminSummary" class="notice">Loading…</div>
+  </div>
+
+  <div class="card">
+    <h2>Activation requests</h2>
+    <div id="adminRequests">Loading requests…</div>
+  </div>
+
+  <div class="card">
+    <h2>Registered members</h2>
+    <div id="adminMembers">Loading members…</div>
+  </div>
 </section>
+
 </main>
 
 <footer>HomeUtensils · Keep your password private.</footer>
@@ -307,7 +321,68 @@ show($("globalMessage"),"Firebase failed to start. Check the configuration and i
 return;
 }
 
-auth.onAuthStateChanged(async user=>{
+
+async function checkAdmin(user) {
+  try {
+    const doc = await db.collection("admins").doc(user.uid).get();
+    return doc.exists &&
+      doc.data().role === "admin" &&
+      doc.data().enabled === true;
+  } catch (err) {
+    console.error("Admin check failed:", err);
+    return false;
+  }
+}
+
+async function loadAdmin() {
+  try {
+    const [requests, members] = await Promise.all([
+      db.collection("activationRequests").get(),
+      db.collection("memberProfiles").get()
+    ]);
+
+    $("adminSummary").textContent =
+      "Members: " + members.size +
+      " · Requests: " + requests.size +
+      " · Pending: " +
+      requests.docs.filter(d => d.data().status === "pending").length;
+
+    const requestBox = $("adminRequests");
+    requestBox.replaceChildren();
+
+    requests.forEach(doc => {
+      const d = doc.data();
+      const box = document.createElement("div");
+      box.className = "request";
+      box.textContent =
+        "Package: " + (d.packageRequested || "Not set") +
+        " · Status: " + (d.status || "pending") +
+        " · Area: " + (d.area || "Not set") +
+        " · Member UID: " + (d.uid || "Not set");
+
+      requestBox.appendChild(box);
+    });
+
+    const memberBox = $("adminMembers");
+    memberBox.replaceChildren();
+
+    members.forEach(doc => {
+      const d = doc.data();
+      const box = document.createElement("div");
+      box.className = "request";
+      box.textContent =
+        "Name: " + (d.name || "Not set") +
+        " · Email: " + (d.email || "Not set") +
+        " · Status: " + (d.accountStatus || "pending") +
+        " · Package: " + (d.package || "Not assigned");
+
+      memberBox.appendChild(box);
+    });
+  } catch (err) {
+    show($("adminSummary"), "Could not load admin data: " + errorMessage(err), true);
+  }
+}
+
 currentUser=user||null;
 if(unsubscribe){unsubscribe();unsubscribe=null;}
 $("authCard").classList.toggle("hidden",!!user);
@@ -325,6 +400,14 @@ $("packageDetails").replaceChildren();
 renderProfile(doc.data());
 }
 listenRequests(user);
+
+const admin = await checkAdmin(user);
+
+if (admin) {
+  $("adminSection").classList.remove("hidden");
+  await loadAdmin();
+}
+
 }catch(err){
 show($("profileMessage"),"Could not load account: "+errorMessage(err),true);
 }
