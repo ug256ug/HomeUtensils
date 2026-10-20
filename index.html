@@ -2,379 +2,334 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#14532d">
-  <title>HomeUtensils</title>
-
-  <style>
-    :root {
-      --green: #14532d;
-      --green2: #166534;
-      --light: #f0fdf4;
-      --border: #d1d5db;
-      --text: #17211b;
-      --muted: #647067;
-      --danger: #b91c1c;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #f6f8f6;
-      color: var(--text);
-      line-height: 1.5;
-    }
-
-    header {
-      background: var(--green);
-      color: white;
-      padding: 22px 16px;
-      text-align: center;
-    }
-
-    header h1 {
-      margin: 0 0 5px;
-      font-size: 1.8rem;
-    }
-
-    header p {
-      margin: 0;
-    }
-
-    main {
-      max-width: 850px;
-      margin: 22px auto;
-      padding: 0 14px 40px;
-    }
-
-    .card {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 18px;
-      margin-bottom: 16px;
-      box-shadow: 0 2px 8px #00000008;
-    }
-
-    h2 {
-      margin: 0 0 12px;
-      font-size: 1.25rem;
-    }
-
-    h3 {
-      margin: 12px 0 6px;
-      font-size: 1.05rem;
-    }
-
-    label {
-      display: block;
-      font-weight: bold;
-      margin: 12px 0 5px;
-    }
-
-    input, select, button {
-      width: 100%;
-      font: inherit;
-      border-radius: 9px;
-      padding: 11px 12px;
-    }
-
-    input, select {
-      border: 1px solid #9ca3af;
-      background: white;
-      color: var(--text);
-    }
-
-    button {
-      border: 0;
-      background: var(--green2);
-      color: white;
-      font-weight: bold;
-      margin-top: 12px;
-      cursor: pointer;
-    }
-
-    button.secondary {
-      background: #e5e7eb;
-      color: #17211b;
-    }
-
-    button:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
-
-    .row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .muted {
-      color: var(--muted);
-      font-size: 0.93rem;
-    }
-
-    .notice {
-      padding: 11px 12px;
-      background: var(--light);
-      border: 1px solid #bbf7d0;
-      border-radius: 9px;
-      margin: 10px 0;
-      overflow-wrap: anywhere;
-    }
-
-    .error {
-      padding: 11px 12px;
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      color: #991b1b;
-      border-radius: 9px;
-      margin: 10px 0;
-      overflow-wrap: anywhere;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    .pill {
-      display: inline-block;
-      border-radius: 99px;
-      background: #e5e7eb;
-      padding: 3px 10px;
-      font-size: 0.85rem;
-      font-weight: bold;
-    }
-
-    .request {
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      padding: 12px;
-      margin: 9px 0;
-      overflow-wrap: anywhere;
-    }
-
-    footer {
-      text-align: center;
-      color: var(--muted);
-      padding: 10px 16px 30px;
-      font-size: 0.9rem;
-    }
-
-    @media (max-width: 560px) {
-      .row {
-        grid-template-columns: 1fr;
-        gap: 0;
-      }
-
-      main {
-        margin-top: 14px;
-      }
-
-      .card {
-        padding: 15px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HomeUtensils</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f5f7f5;color:#17211b;line-height:1.5}
+header{background:#14532d;color:white;text-align:center;padding:25px 12px}
+main{max-width:800px;margin:20px auto;padding:0 14px}
+.card{background:white;border:1px solid #d1d5db;border-radius:12px;padding:18px;margin-bottom:16px}
+label{display:block;font-weight:bold;margin:12px 0 5px}
+input,select,button{width:100%;padding:12px;font:inherit;border-radius:8px}
+input,select{border:1px solid #9ca3af;background:white}
+button{border:0;background:#166534;color:white;font-weight:bold;margin-top:12px;cursor:pointer}
+.secondary{background:#e5e7eb;color:#17211b}
+.hidden{display:none!important}
+.notice,.error{padding:12px;border-radius:8px;margin:12px 0;overflow-wrap:anywhere}
+.notice{background:#f0fdf4;border:1px solid #bbf7d0}
+.error{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+.muted{color:#647067;font-size:.94rem}
+.request{padding:12px;border:1px solid #d1d5db;border-radius:8px;margin:10px 0}
+footer{text-align:center;padding:20px;color:#647067}
+</style>
 </head>
-
 <body>
-  <header>
-    <h1>HomeUtensils</h1>
-    <p>Simple, clear and secure account access</p>
-  </header>
+<header>
+<h1>HomeUtensils</h1>
+<p>Simple, clear and secure account access</p>
+</header>
 
-  <main>
-    <div id="globalMessage" aria-live="polite"></div>
+<main>
+<div id="globalMessage" aria-live="polite"></div>
 
-    <!-- SIGN IN AND REGISTRATION -->
-    <section id="authCard" class="card">
-      <h2>Welcome</h2>
-      <p class="muted">
-        Create an account or sign in to view your HomeUtensils account.
-      </p>
+<section id="authCard" class="card">
+<h2>Welcome</h2>
+<p class="muted">Create an account or sign in.</p>
 
-      <div id="signInPanel">
-        <h3>Sign in</h3>
+<div id="signInPanel">
+<h3>Sign in</h3>
+<form id="signInForm">
+<label for="loginEmail">Email address</label>
+<input id="loginEmail" type="email" autocomplete="email" required>
+<label for="loginPassword">Password</label>
+<input id="loginPassword" type="password" autocomplete="current-password" required>
+<button type="submit">Sign in</button>
+</form>
+<button id="showRegister" type="button" class="secondary">Create a new account</button>
+<button id="resetPassword" type="button" class="secondary">Reset password by email</button>
+</div>
 
-        <form id="signInForm">
-          <label for="loginEmail">Email address</label>
-          <input
-            id="loginEmail"
-            type="email"
-            autocomplete="email"
-            required
-          >
+<div id="registerPanel" class="hidden">
+<h3>Create account</h3>
+<form id="registerForm">
+<label for="fullName">Full name</label>
+<input id="fullName" maxlength="100" autocomplete="name" required>
+<label for="registerEmail">Email address</label>
+<input id="registerEmail" type="email" autocomplete="email" required>
+<label for="registerPassword">Password (at least 6 characters)</label>
+<input id="registerPassword" type="password" minlength="6" autocomplete="new-password" required>
+<button type="submit">Register</button>
+</form>
+<button id="showSignIn" type="button" class="secondary">Back to sign in</button>
+</div>
+</section>
 
-          <label for="loginPassword">Password</label>
-          <input
-            id="loginPassword"
-            type="password"
-            autocomplete="current-password"
-            required
-          >
+<section id="dashboard" class="hidden">
+<div class="card">
+<h2>Account overview</h2>
+<p id="memberEmail" class="muted"></p>
+<button id="signOut" type="button" class="secondary">Sign out</button>
+<div id="profileMessage" class="notice">Loading account…</div>
+<div id="packageDetails"></div>
+</div>
 
-          <button type="submit">Sign in</button>
-        </form>
+<div class="card">
+<h2>Request package activation</h2>
+<p class="muted">A request does not activate a package. Wait for an authorised review and follow official payment instructions.</p>
+<form id="activationForm">
+<label for="area">Area / district</label>
+<input id="area" maxlength="100" required placeholder="For example, Wakiso">
+<label for="packageRequested">Package</label>
+<select id="packageRequested" required>
+<option value="">Select package</option>
+<option value="Starter">Starter — UGX 5,000 (60 days)</option>
+<option value="Standard">Standard — UGX 10,000 (60 days)</option>
+<option value="Plus">Plus — UGX 20,000 (90 days)</option>
+</select>
+<label for="paymentMethod">Proposed payment method</label>
+<select id="paymentMethod" required>
+<option value="">Select method</option>
+<option value="Mobile money">Mobile money</option>
+<option value="Bank payment">Bank payment</option>
+<option value="Other approved method">Other approved method</option>
+</select>
+<button type="submit">Submit activation request</button>
+</form>
+<div id="activationMessage" aria-live="polite"></div>
+</div>
 
-        <button id="showRegister" type="button" class="secondary">
-          Create a new account
-        </button>
+<div class="card">
+<h2>My activation requests</h2>
+<div id="requestHistory">Your requests will appear here.</div>
+</div>
+</section>
+</main>
 
-        <button id="resetPassword" type="button" class="secondary">
-          Send password reset email
-        </button>
-      </div>
+<footer>HomeUtensils · Keep your password private.</footer>
 
-      <div id="registerPanel" class="hidden">
-        <h3>Create account</h3>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
-        <form id="registerForm">
-          <label for="fullName">Full name</label>
-          <input
-            id="fullName"
-            type="text"
-            autocomplete="name"
-            maxlength="100"
-            required
-          >
+<script>
+(function(){
+"use strict";
 
-          <label for="registerEmail">Email address</label>
-          <input
-            id="registerEmail"
-            type="email"
-            autocomplete="email"
-            required
-          >
+const firebaseConfig={
+apiKey:"AIzaSyBllLCn_TmD9iAYz6kkIqmGwQy_Wfbk_Sc",
+authDomain:"homeutensils-5b3cf.firebaseapp.com",
+projectId:"homeutensils-5b3cf",
+storageBucket:"homeutensils-5b3cf.firebasestorage.app",
+messagingSenderId:"976309566737",
+appId:"1:976309566737:web:e65365b6df2d15ce6060b0"
+};
 
-          <label for="registerPassword">
-            Create password (at least 6 characters)
-          </label>
-          <input
-            id="registerPassword"
-            type="password"
-            autocomplete="new-password"
-            minlength="6"
-            required
-          >
+const $=id=>document.getElementById(id);
+let auth,db,currentUser=null,unsubscribe=null;
 
-          <button type="submit">Register</button>
-        </form>
+function show(el,text,error=false){
+el.textContent=text||"";
+el.className=text?(error?"error":"notice"):"";
+}
 
-        <button id="showSignIn" type="button" class="secondary">
-          Back to sign in
-        </button>
-      </div>
-    </section>
+function errorMessage(e){
+const messages={
+"auth/email-already-in-use":"This email already has an account. Please sign in.",
+"auth/invalid-email":"Enter a valid email address.",
+"auth/weak-password":"Use at least 6 characters for your password.",
+"auth/invalid-credential":"The email or password is incorrect.",
+"auth/user-not-found":"No account was found for that email.",
+"auth/wrong-password":"The password is incorrect.",
+"auth/too-many-requests":"Too many attempts. Please wait and retry.",
+"auth/network-request-failed":"Check your internet connection.",
+"permission-denied":"Firebase database rules blocked this action."
+};
+return messages[e.code]||e.message||"An error occurred.";
+}
 
-    <!-- MEMBER DASHBOARD -->
-    <section id="dashboard" class="hidden">
-      <div class="card">
-        <div class="row" style="align-items:center">
-          <div>
-            <h2>Account overview</h2>
-            <div id="memberEmail" class="muted"></div>
-          </div>
+function dateText(v){
+if(!v)return "Not set";
+const d=v.toDate?v.toDate():new Date(v);
+return Number.isNaN(d.getTime())?"Not set":d.toLocaleDateString();
+}
 
-          <div>
-            <button id="signOut" type="button" class="secondary">
-              Sign out
-            </button>
-          </div>
-        </div>
+$("showRegister").addEventListener("click",()=>{
+$("signInPanel").classList.add("hidden");
+$("registerPanel").classList.remove("hidden");
+show($("globalMessage"),"");
+});
 
-        <div id="profileMessage" class="notice">
-          Loading your account…
-        </div>
+$("showSignIn").addEventListener("click",()=>{
+$("registerPanel").classList.add("hidden");
+$("signInPanel").classList.remove("hidden");
+show($("globalMessage"),"");
+});
 
-        <div id="packageDetails"></div>
-      </div>
+$("signInForm").addEventListener("submit",async e=>{
+e.preventDefault();
+try{
+await auth.signInWithEmailAndPassword(
+$("loginEmail").value.trim(),
+$("loginPassword").value
+);
+show($("globalMessage"),"");
+}catch(err){
+show($("globalMessage"),errorMessage(err),true);
+}
+});
 
-      <!-- PACKAGE ACTIVATION REQUEST -->
-      <div class="card">
-        <h2>Request package activation</h2>
+$("registerForm").addEventListener("submit",async e=>{
+e.preventDefault();
+const name=$("fullName").value.trim();
+const email=$("registerEmail").value.trim();
+const password=$("registerPassword").value;
+const btn=$("registerForm").querySelector("button[type=submit]");
+if(!name){show($("globalMessage"),"Enter your full name.",true);return;}
+btn.disabled=true;
+try{
+const result=await auth.createUserWithEmailAndPassword(email,password);
+await db.collection("memberProfiles").doc(result.user.uid).set({
+uid:result.user.uid,
+name:name,
+email:email,
+accountStatus:"pending",
+createdAt:firebase.firestore.FieldValue.serverTimestamp()
+});
+show($("globalMessage"),"Account created. Your account is pending review.");
+}catch(err){
+show($("globalMessage"),"Registration failed: "+errorMessage(err)+". If the account was created but profile saving failed, do not register again.",true);
+}finally{btn.disabled=false;}
+});
 
-        <p class="muted">
-          Submitting a request does not activate a package.
-          Follow official payment instructions and do not send
-          money to an unverified person.
-        </p>
+$("resetPassword").addEventListener("click",async()=>{
+const email=$("loginEmail").value.trim();
+if(!email){
+show($("globalMessage"),"Enter your email in the sign-in email field first.",true);
+return;
+}
+try{
+await auth.sendPasswordResetEmail(email);
+show($("globalMessage"),"Password reset email requested. Check your inbox and spam folder.");
+}catch(err){
+show($("globalMessage"),errorMessage(err),true);
+}
+});
 
-        <form id="activationForm">
-          <label for="area">Your area / district</label>
-          <input
-            id="area"
-            type="text"
-            maxlength="100"
-            required
-            placeholder="For example, Wakiso"
-          >
+$("signOut").addEventListener("click",async()=>{
+try{await auth.signOut();}
+catch(err){show($("globalMessage"),errorMessage(err),true);}
+});
 
-          <label for="packageRequested">Choose a package</label>
-          <select id="packageRequested" required>
-            <option value="">Select package</option>
-            <option value="Starter">
-              Starter — UGX 5,000 (60 days)
-            </option>
-            <option value="Standard">
-              Standard — UGX 10,000 (60 days)
-            </option>
-            <option value="Plus">
-              Plus — UGX 20,000 (90 days)
-            </option>
-          </select>
+$("activationForm").addEventListener("submit",async e=>{
+e.preventDefault();
+if(!currentUser){
+show($("activationMessage"),"Please sign in first.",true);
+return;
+}
+const area=$("area").value.trim();
+const packageRequested=$("packageRequested").value;
+const proposedPaymentMethod=$("paymentMethod").value;
+if(!area||!packageRequested||!proposedPaymentMethod){
+show($("activationMessage"),"Complete all fields.",true);
+return;
+}
+const btn=$("activationForm").querySelector("button[type=submit]");
+btn.disabled=true;
+try{
+await db.collection("activationRequests").add({
+uid:currentUser.uid,
+area:area,
+packageRequested:packageRequested,
+proposedPaymentMethod:proposedPaymentMethod,
+status:"pending",
+createdAt:firebase.firestore.FieldValue.serverTimestamp()
+});
+$("activationForm").reset();
+show($("activationMessage"),"Request submitted. Your package is not active until an authorised reviewer approves it.");
+}catch(err){
+show($("activationMessage"),errorMessage(err),true);
+}finally{btn.disabled=false;}
+});
 
-          <label for="paymentMethod">Proposed payment method</label>
-          <select id="paymentMethod" required>
-            <option value="">Select method</option>
-            <option value="Mobile money">Mobile money</option>
-            <option value="Bank payment">Bank payment</option>
-            <option value="Other approved method">
-              Other approved method
-            </option>
-          </select>
+function renderProfile(data){
+show($("profileMessage"),"Account status: "+(data.accountStatus||"pending")+". Package activation requires authorised review.");
+const details=$("packageDetails");
+details.replaceChildren();
+const title=document.createElement("h3");
+title.textContent="Package details";
+details.appendChild(title);
+[
+["Name",data.name],
+["Package",data.package],
+["Package status",data.packageStatus],
+["Activation date",dateText(data.activationDate)],
+["Expiry date",dateText(data.expiryDate)]
+].forEach(([label,value])=>{
+const p=document.createElement("p");
+p.textContent=label+": "+(value||"Not set");
+details.appendChild(p);
+});
+}
 
-          <button type="submit">
-            Submit activation request
-          </button>
-        </form>
+function listenRequests(user){
+if(unsubscribe)unsubscribe();
+$("requestHistory").textContent="Loading requests…";
+unsubscribe=db.collection("activationRequests")
+.where("uid","==",user.uid)
+.onSnapshot(snapshot=>{
+const history=$("requestHistory");
+history.replaceChildren();
+if(snapshot.empty){
+history.textContent="You have not submitted any requests.";
+return;
+}
+snapshot.forEach(doc=>{
+const d=doc.data();
+const box=document.createElement("div");
+box.className="request";
+box.textContent=(d.packageRequested||"Package")+
+" · Status: "+(d.status||"pending")+
+" · Area: "+(d.area||"Not provided")+
+" · Date: "+dateText(d.createdAt);
+history.appendChild(box);
+});
+},err=>show($("requestHistory"),errorMessage(err),true));
+}
 
-        <div id="activationMessage" aria-live="polite"></div>
-      </div>
+try{
+firebase.initializeApp(firebaseConfig);
+auth=firebase.auth();
+db=firebase.firestore();
+}catch(e){
+show($("globalMessage"),"Firebase failed to start. Check the configuration and internet connection.",true);
+return;
+}
 
-      <!-- REQUEST HISTORY -->
-      <div class="card">
-        <h2>My activation requests</h2>
-        <p class="muted">
-          Only your own requests are shown here.
-        </p>
-        <div id="requestHistory">Loading requests…</div>
-      </div>
+auth.onAuthStateChanged(async user=>{
+currentUser=user||null;
+if(unsubscribe){unsubscribe();unsubscribe=null;}
+$("authCard").classList.toggle("hidden",!!user);
+$("dashboard").classList.toggle("hidden",!user);
+if(!user)return;
 
-      <!-- FUTURE SERVICES -->
-      <div class="card">
-        <h2>Other services</h2>
-        <p>
-          Agent applications, tasks, earnings and administrator
-          approvals will be added after the account and activation
-          request flow is tested.
-        </p>
-        <p class="muted">
-          Package activation and payment verification must be
-          handled by an authorised reviewer.
-        </p>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    HomeUtensils · Please keep your sign-in details private.
-  </footer>
+$("memberEmail").textContent=user.email||"";
+show($("profileMessage"),"Loading account…");
+try{
+const doc=await db.collection("memberProfiles").doc(user.uid).get();
+if(!doc.exists){
+show($("profileMessage"),"Your login exists, but your member profile is missing. Contact support.",true);
+$("packageDetails").replaceChildren();
+}else{
+renderProfile(doc.data());
+}
+listenRequests(user);
+}catch(err){
+show($("profileMessage"),"Could not load account: "+errorMessage(err),true);
+}
+});
+})();
+</script>
 </body>
 </html>
