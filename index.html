@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en">
+
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -6,218 +8,70 @@
 <title>HomeUtensils | Member Dashboard</title>
 <style>
 :root {
-  --green:#176b45;
-  --dark:#104b32;
-  --cream:#fff8f0;
-  --blue:#1976d2;
-  --muted:#667085;
-  --border:#e7e9ed;
+  --green:#176b45; --dark:#104b32; --cream:#fff8f0;
+  --blue:#1976d2; --muted:#667085; --border:#e7e9ed;
 }
 * { box-sizing:border-box; }
 body {
-  margin:0;
-  font-family:Arial,sans-serif;
-  background:var(--cream);
-  color:#27332d;
+  margin:0; font-family:Arial,sans-serif;
+  background:var(--cream); color:#27332d;
 }
-header {
-  background:var(--green);
-  color:white;
-  padding:16px;
-}
-.top, main, footer {
-  max-width:1000px;
-  margin:auto;
-}
-.top {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-}
+header { background:var(--green); color:white; padding:16px; }
+.top, main, footer { max-width:1000px; margin:auto; }
+.top { display:flex; justify-content:space-between; align-items:center; gap:12px; }
 header h1 { margin:0; font-size:23px; }
 header p { margin:5px 0 0; font-size:13px; }
-.tag {
-  background:#e2f7e9;
-  color:var(--green);
-  border-radius:25px;
-  padding:7px 10px;
-  font-size:11px;
-  font-weight:bold;
-}
+.tag { background:#e2f7e9; color:var(--green); border-radius:25px; padding:7px 10px; font-size:11px; font-weight:bold; }
 main { padding:20px 16px 36px; }
 h2 { margin:0 0 8px; color:var(--dark); }
-h3 { color:var(--dark); }
-h4 { margin:8px 0; }
 .intro,.small { color:var(--muted); line-height:1.5; }
 .intro { font-size:14px; }
-.notice {
-  background:#fff0c2;
-  border:1px solid #f2d780;
-  border-radius:10px;
-  padding:11px;
-  margin:14px 0;
-  font-size:12px;
-  line-height:1.5;
-}
-.section-title {
-  margin:25px 0 11px;
-  font-size:18px;
-  color:var(--dark);
-}
-.grid {
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:10px;
-  margin:12px 0;
-}
-.card {
-  background:white;
-  padding:14px;
-  border:1px solid var(--border);
-  border-radius:12px;
-  box-shadow:0 2px 5px #183b2510;
-  min-width:0;
-}
-.label {
-  color:var(--muted);
-  font-size:12px;
-  display:block;
-  margin-bottom:6px;
-}
-.value {
-  font-size:20px;
-  font-weight:bold;
-  margin:8px 0;
-  overflow-wrap:anywhere;
-}
+.notice { background:#fff0c2; border:1px solid #f2d780; border-radius:10px; padding:11px; margin:14px 0; font-size:12px; line-height:1.5; }
+.section-title { margin:25px 0 11px; font-size:18px; color:var(--dark); }
+.grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:12px 0; }
+.card { background:white; padding:14px; border:1px solid var(--border); border-radius:12px; box-shadow:0 2px 5px #183b2510; min-width:0; }
+.label { color:var(--muted); font-size:12px; display:block; margin-bottom:6px; }
+.value { font-size:20px; font-weight:bold; margin:8px 0; overflow-wrap:anywhere; }
 .small { font-size:12px; }
 .details { display:grid; gap:0; }
-.detail-row {
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
-  padding:12px 0;
-  border-bottom:1px solid var(--border);
-  font-size:13px;
-}
+.detail-row { display:flex; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); font-size:13px; }
 .detail-row:last-child { border-bottom:0; }
 .detail-row span:first-child { color:var(--muted); }
 .detail-row strong { text-align:right; overflow-wrap:anywhere; }
 .ledger { border-left:4px solid var(--green); }
 .ledger h3 { margin:0 0 7px; font-size:15px; }
-.ledger p {
-  margin:0;
-  font-size:12px;
-  line-height:1.5;
-  color:var(--muted);
-}
+.ledger p { margin:0; font-size:12px; line-height:1.5; color:var(--muted); }
 .blue { border-left-color:var(--blue); }
 .gold { border-left-color:#d69e16; }
 .purple { border-left-color:#7b61a8; }
 .green-text { color:#16834a; }
 .red-text { color:#c0392b; }
 .agent-button,.primary-button {
-  display:block;
-  width:100%;
-  padding:14px;
-  margin:14px 0;
-  background:var(--blue);
-  color:white;
-  text-decoration:none;
-  text-align:center;
-  border:0;
-  border-radius:10px;
-  font-weight:bold;
-  font-size:14px;
-  cursor:pointer;
+  display:block; width:100%; padding:14px; margin:14px 0;
+  background:var(--blue); color:white; text-decoration:none;
+  text-align:center; border:0; border-radius:10px;
+  font-weight:bold; font-size:14px; cursor:pointer;
 }
 .secondary-button { background:#eef5ff; color:#174d86; }
 .warning-button { background:#fff0c2; color:#694d00; }
 input,select,textarea {
-  width:100%;
-  padding:12px;
-  border:1px solid #cfd5d2;
-  border-radius:8px;
-  font:inherit;
-  margin:5px 0 12px;
+  width:100%; padding:12px; border:1px solid #cfd5d2;
+  border-radius:8px; font:inherit; margin:5px 0 12px;
   background:white;
-}
-.password-row {
-  display:flex;
-  align-items:stretch;
-  gap:8px;
-}
-.password-row input {
-  flex:1;
-  min-width:0;
-}
-.password-toggle {
-  align-self:flex-start;
-  margin:5px 0 12px;
-  padding:12px 10px;
-  border:1px solid #cfd5d2;
-  border-radius:8px;
-  background:#eef5ff;
-  color:#174d86;
-  font:inherit;
-  cursor:pointer;
-  white-space:nowrap;
 }
 textarea { min-height:75px; resize:vertical; }
 form { display:grid; gap:3px; }
-.result {
-  background:#f0f8f2;
-  border:1px solid #cce8d4;
-  padding:12px;
-  border-radius:9px;
-  margin-top:10px;
-  font-size:13px;
-  line-height:1.5;
-  overflow-wrap:anywhere;
-}
+.result { background:#f0f8f2; border:1px solid #cce8d4; padding:12px; border-radius:9px; margin-top:10px; font-size:13px; line-height:1.5; overflow-wrap:anywhere; }
 .notice-result { background:#fff8e5; border-color:#f0dfaa; }
 .activity-card { padding:0; overflow:hidden; }
 .activity-heading { margin:0; padding:14px 14px 0; font-size:16px; }
-.ticker {
-  min-height:60px;
-  display:flex;
-  align-items:center;
-  padding:12px 14px;
-}
+.ticker { min-height:60px; display:flex; align-items:center; padding:12px 14px; }
 .ticker-message { margin:0; font-size:13px; line-height:1.5; }
-.live-dot {
-  display:inline-block;
-  width:8px;
-  height:8px;
-  background:#20a464;
-  border-radius:50%;
-  margin-right:7px;
-}
-nav {
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:8px;
-  margin:20px 0;
-}
-nav a {
-  text-align:center;
-  padding:12px 4px;
-  background:white;
-  color:var(--dark);
-  text-decoration:none;
-  border:1px solid var(--border);
-  border-radius:9px;
-  font-size:12px;
-  font-weight:bold;
-}
+.live-dot { display:inline-block; width:8px; height:8px; background:#20a464; border-radius:50%; margin-right:7px; }
+nav { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:20px 0; }
+nav a { text-align:center; padding:12px 4px; background:white; color:var(--dark); text-decoration:none; border:1px solid var(--border); border-radius:9px; font-size:12px; font-weight:bold; }
 hr { border:0; border-top:1px solid var(--border); margin:16px 0; }
-footer {
-  padding:22px 16px;
-  text-align:center;
-  color:var(--muted);
-  font-size:12px;
-}
+footer { padding:22px 16px; text-align:center; color:var(--muted); font-size:12px; }
 @media(min-width:650px) {
   .grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
   .ledgers { grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -230,6 +84,7 @@ footer {
 </style>
 </head>
 <body>
+
 <header>
   <div class="top">
     <div>
@@ -238,358 +93,158 @@ footer {
     </div>
     <span class="tag">PREVIEW</span>
   </div>
-</header><main>
+</header>
+
+<main>
   <h2>Member Dashboard</h2>
-  <p class="intro">
-    Your account, tasks, salary, package details and ledgers in one place.
-  </p>  <nav aria-label="Main sections">
-    <a href="#portal-access">Login Portals</a>
-    <a href="#account">Account</a>
-    <a href="#wallet">Wallet</a>
-    <a href="#tasks">Tasks</a>
-    <a href="#p2p">P2P Transfers</a>
-    <a href="#find-agent">Find an Agent</a>
-  </nav><a class="agent-button" href="#find-agent">👥 Find an Agent →</a>
+  <p class="intro">Your account, tasks, salary, package details and ledgers in one place.</p>
+
+  <a class="agent-button" href="#find-agent">👥 Find an Agent →</a>
 
   <div class="notice">
     <strong>Website preview:</strong>
     This page is not connected to real member records, wallets, payments,
-    agents or administrator accounts. No money is transferred here.
-    Do not enter a real PIN or confidential payment information.
-  </div>  <h3 class="section-title" id="portal-access">Choose Your Portal</h3>
-  <div class="grid">
-    <div class="card">
-      <h4>Member Login / Registration</h4>
-      <p class="small">
-        For Starter, Standard and Plus members.
-        Approved agents also use their member account to sign in.
-      </p>
-      <a class="agent-button" href="#member-access">Member Portal</a>
-    </div>
-    <div class="card">
-      <h4>Administrator Login</h4>
-      <p class="small">A separate entry point for authorized administrators only.</p>
-      <a class="agent-button secondary-button" href="#admin-access">Admin Portal</a>
-    </div>
-  </div>  <div class="card" id="member-access">
-    <h3>Member Registration</h3>
-    <p class="small">
-      Create a member account using your real details and an email address you can access.
-      Approved agents also use their member account.
-    </p><form id="register-form">
-  <label for="register-name">Full names</label>
-  <input id="register-name" type="text" autocomplete="name" maxlength="100" required>
-
-  <label for="register-phone">Phone number</label>
-  <input id="register-phone" type="tel" autocomplete="tel"
-         placeholder="e.g. 07XXXXXXXX" maxlength="25" required>
-
-  <label for="register-region">Region</label>
-  <select id="register-region" required>
-    <option value="">Choose your region</option>
-    <option value="Central">Central</option>
-    <option value="Eastern">Eastern</option>
-    <option value="Northern">Northern</option>
-    <option value="Western">Western</option>
-  </select>
-
-  <label for="register-email">Email address</label>
-  <input id="register-email" type="email" autocomplete="email" maxlength="254" required>
-
-  <label for="register-password">Password (at least 8 characters)</label>
-  <div class="password-row">
-    <input id="register-password" type="password" autocomplete="new-password" minlength="8" required>
-    <button class="password-toggle" type="button"
-            data-toggle-password="register-password">👁️ Show</button>
+    agents or administrator accounts. Do not enter a real PIN, password,
+    or confidential payment information. No money is transferred here.
   </div>
 
-  <label for="register-confirm">Confirm password</label>
-  <div class="password-row">
-    <input id="register-confirm" type="password" autocomplete="new-password" minlength="8" required>
-    <button class="password-toggle" type="button"
-            data-toggle-password="register-confirm">👁️ Show</button>
-  </div>
-
-  <button class="primary-button" type="submit">Create Member Account</button>
-</form>
-
-<div id="register-result" class="result" role="status" aria-live="polite" hidden></div>
-
-<hr>
-
-<h3>Member Login</h3>
-<form id="login-form">
-  <label for="login-email">Email address</label>
-  <input id="login-email" type="email" autocomplete="email" required>
-
-  <label for="login-password">Password</label>
-  <div class="password-row">
-    <input id="login-password" type="password" autocomplete="current-password" required>
-    <button class="password-toggle" type="button"
-            data-toggle-password="login-password">👁️ Show</button>
-  </div>
-
-  <button class="primary-button" type="submit">Sign In</button>
-</form>
-
-<button class="primary-button secondary-button" id="forgot-password" type="button">
-  Forgot password? Send reset email
-</button>
-
-<button class="primary-button warning-button" id="sign-out" type="button" hidden>
-  Sign Out
-</button>
-
-<div id="login-result" class="result" role="status" aria-live="polite" hidden></div>
-
-<p class="small">
-  Sign in with email and password. Your phone number is saved as profile information;
-  SMS sign-in is not used.
-</p>
-<p class="small">
-  Signing in does not by itself activate a package, wallet, agent privileges,
-  or administrator permissions. Those require verified server-side records.
-</p>
-
-  </div>  <div class="card" id="admin-access">
-    <h3>Administrator Sign-in</h3>
-    <p class="small">
-      This is an information section, not an active administrator login.
-      No administrator can sign in through this preview.
-    </p>
-    <p class="small">
-      Real admin access must be authorized by secure server-side roles.
-      A browser button or hidden section is not sufficient security.
-    </p>
-  </div>  <h3 class="section-title" id="agent-eligibility">Request to Become an Agent</h3>
-  <div class="card">
-    <p class="small">
-      Intended rule: only a member with an active Plus package may apply to become an agent.
-      An administrator must approve the application before agent tools are unlocked.
-    </p><label for="preview-package">Preview package eligibility</label>
-<select id="preview-package">
-  <option value="starter">Starter</option>
-  <option value="standard">Standard</option>
-  <option value="plus">Plus</option>
-</select>
-
-<div id="agent-eligibility-result" class="result" role="status" aria-live="polite"></div>
-
-<p class="small">
-  Demonstration only. This selector does not verify a real member, payment,
-  package expiry or admin approval. Production eligibility must be verified on the server.
-</p>
-
-  </div>  <h3 class="section-title" id="account">Account Overview</h3>
+  <h3 class="section-title" id="account">Account Overview</h3>
   <div class="card details">
-    <div class="detail-row">
-      <span>Member name</span>
-      <strong id="account-member-name">Sign in to view</strong>
-    </div>
-    
-<div class="detail-row">
-  <span>Account email</span>
-  <strong id="account-member-email">Not signed in</strong>
-</div>
-<div class="detail-row">
-  <span>Phone number</span>
-  <strong id="account-member-phone">Not available</strong>
-</div>
-<div class="detail-row">
-  <span>Region</span>
-  <strong id="account-member-region">Not available</strong>
-</div>
-<div class="detail-row">
-  <span>Member ID</span>
-  <strong>Not assigned</strong>
-</div>
-
-    <div class="detail-row">
-      <span>Account status</span>
-      <strong id="account-member-status">Not signed in</strong>
-    </div>
+    <div class="detail-row"><span>Member name</span><strong>Not connected</strong></div>
+    <div class="detail-row"><span>Member ID</span><strong>Not assigned</strong></div>
+    <div class="detail-row"><span>Account status</span><strong>Awaiting secure connection</strong></div>
     <div class="detail-row"><span>Package</span><strong>Not connected</strong></div>
     <div class="detail-row"><span>Activation date</span><strong>Not available</strong></div>
     <div class="detail-row"><span>Expiry date</span><strong>Not available</strong></div>
-  </div>  <h3 class="section-title" id="wallet">Wallet Summary</h3>
-  <div class="grid">
-    <div class="card">
-      <div class="label">Withdrawable balance</div>
-      <div class="value">UGX —</div>
-      <div class="small">Verified wallet data required</div>
-    </div>
-    <div class="card">
-      <div class="label">Paid capital</div>
-      <div class="value">UGX —</div>
-      <div class="small">Verified account data required</div>
-    </div>
-    <div class="card">
-      <div class="label">Total income earned</div>
-      <div class="value">UGX —</div>
-      <div class="small">Verified records required</div>
-    </div>
-    <div class="card">
-      <div class="label">Monthly salary earned</div>
-      <div class="value">UGX —</div>
-      <div class="small">Monthly historical total</div>
-    </div>
-  </div>  <h3 class="section-title" id="tasks">Task Performance</h3>
-  <div class="grid">
-    <div class="card">
-      <div class="label">Total tasks performed</div>
-      <div class="value">—</div>
-      <div class="small">Completed task records</div>
-    </div>
-    <div class="card">
-      <div class="label">Correct tasks</div>
-      <div class="value green-text">—</div>
-      <div class="small">Verified submissions</div>
-    </div>
-    <div class="card">
-      <div class="label">Incorrect tasks</div>
-      <div class="value red-text">—</div>
-      <div class="small">Verified submissions</div>
-    </div>
-    <div class="card">
-      <div class="label">Pending review</div>
-      <div class="value">—</div>
-      <div class="small">Awaiting a decision</div>
-    </div>
   </div>
-  <p class="small">Task totals require verified task records from the connected system.</p>  <h3 class="section-title" id="ledgers">Your Ledgers</h3>
+
+  <h3 class="section-title" id="wallet">Wallet Summary</h3>
+  <div class="grid">
+    <div class="card"><div class="label">Withdrawable balance</div><div class="value">UGX —</div><div class="small">Verified wallet data required</div></div>
+    <div class="card"><div class="label">Paid capital</div><div class="value">UGX —</div><div class="small">Verified account data required</div></div>
+    <div class="card"><div class="label">Total income earned</div><div class="value">UGX —</div><div class="small">Verified records required</div></div>
+    <div class="card"><div class="label">Monthly salary earned</div><div class="value">UGX —</div><div class="small">Monthly historical total</div></div>
+  </div>
+
+  <h3 class="section-title" id="tasks">Task Performance</h3>
+  <div class="grid">
+    <div class="card"><div class="label">Total tasks performed</div><div class="value">—</div><div class="small">Completed task records</div></div>
+    <div class="card"><div class="label">Correct tasks</div><div class="value green-text">—</div><div class="small">Verified submissions</div></div>
+    <div class="card"><div class="label">Incorrect tasks</div><div class="value red-text">—</div><div class="small">Verified submissions</div></div>
+    <div class="card"><div class="label">Pending review</div><div class="value">—</div><div class="small">Awaiting a decision</div></div>
+  </div>
+  <p class="small">Task totals will require verified task records from the connected system.</p>
+
+  <h3 class="section-title" id="ledgers">Your Ledgers</h3>
   <div class="grid ledgers">
-    <div class="card ledger">
-      <h3>Capital Ledger</h3>
-      <p>Capital records, contributions and package dates.</p>
-    </div>
-    <div class="card ledger blue">
-      <h3>Marketing Ledger</h3>
-      <p>Marketing entries and verified earnings records.</p>
-    </div>
-    <div class="card ledger gold">
-      <h3>Monthly Salary Ledger</h3>
-      <p>Monthly earnings history, withdrawals and payment dates.</p>
-    </div>
-    <div class="card ledger purple">
-      <h3>Annuity Money Ledger</h3>
-      <p>Annuity entries, payment dates and recorded balances.</p>
-    </div>
-  </div>  <h3 class="section-title">Monthly Salary History</h3>
+    <div class="card ledger"><h3>Capital Ledger</h3><p>Capital records, contributions and package dates.</p></div>
+    <div class="card ledger blue"><h3>Marketing Ledger</h3><p>Marketing entries and verified earnings records.</p></div>
+    <div class="card ledger gold"><h3>Monthly Salary Ledger</h3><p>Monthly earnings history, withdrawals and payment dates.</p></div>
+    <div class="card ledger purple"><h3>Annuity Money Ledger</h3><p>Annuity entries, payment dates and recorded balances.</p></div>
+  </div>
+
+  <h3 class="section-title">Monthly Salary History</h3>
   <div class="card details">
     <div class="detail-row"><span>Month</span><strong>Not connected</strong></div>
     <div class="detail-row"><span>Total salary earned this month</span><strong>UGX —</strong></div>
     <div class="detail-row"><span>Withdrawals recorded this month</span><strong>UGX —</strong></div>
     <div class="detail-row"><span>Remaining payable amount</span><strong>UGX —</strong></div>
   </div>
-  <p class="small">
-    Historical salary and remaining payable balance are different figures
-    and must be calculated from verified records.
-  </p>  <h3 class="section-title">Live Activity</h3>
+  <p class="small">Historical salary and remaining payable balance are different figures and must be calculated from verified records.</p>
+
+  <h3 class="section-title">Live Activity</h3>
   <div class="card activity-card" aria-live="polite">
     <h4 class="activity-heading"><span class="live-dot"></span>Activity ticker</h4>
-    <div class="ticker">
-      <p class="ticker-message">Live activity will appear after secure connection.</p>
-    </div>
-    <div class="small" style="padding:0 14px 14px">
-      No real member activity is displayed in this preview.
-    </div>
-  </div>  <h3 class="section-title">Package Expiry</h3>
+    <div class="ticker"><p class="ticker-message">Live activity will appear after secure connection.</p></div>
+    <div class="small" style="padding:0 14px 14px">No real member activity is displayed in this preview.</div>
+  </div>
+
+  <h3 class="section-title">Package Expiry</h3>
   <div class="card details">
     <div class="detail-row"><span>Package expiry</span><strong>Not connected</strong></div>
     <div class="detail-row"><span>Days remaining</span><strong>—</strong></div>
     <div class="detail-row"><span>Expired packages</span><strong>Records not connected</strong></div>
-  </div>  <h3 class="section-title" id="p2p">P2P Transfers</h3>
+  </div>
+
+  <!-- P2P TRANSFER PREVIEW -->
+  <h3 class="section-title" id="p2p">P2P Transfers</h3>
   <div class="card">
     <p class="small">
-      Preview the transfer fee calculation. The fee is 10% of the amount the recipient receives.
-      For example, a recipient amount of UGX 10,000 means a sender total of UGX 11,000.
-      This calculator does not send money.
-    </p><form id="p2p-form">
-  <label for="p2p-recipient">Recipient member ID</label>
-  <input id="p2p-recipient" placeholder="Demo only — no lookup is performed" autocomplete="off">
+      Preview the transfer fee calculation. The total amount includes a 10%
+      fee on the amount received by the recipient. The minimum total is UGX 1,000.
+      This calculator does not look up members, check wallet balances, or send money.
+    </p>
+    <form id="p2p-form">
+      <label for="p2p-recipient">Recipient member ID</label>
+      <input id="p2p-recipient" placeholder="Demo only — no lookup is performed" autocomplete="off">
 
-  <label for="p2p-total">Total amount to deduct (UGX)</label>
-  <input id="p2p-total" type="number" min="1000" step="1" placeholder="e.g. 11000" required>
+      <label for="p2p-total">Total amount to deduct (UGX)</label>
+      <input id="p2p-total" type="number" min="1000" step="1" placeholder="e.g. 11000" required>
 
-  <button class="primary-button" type="submit">Calculate Preview</button>
-</form>
+      <button class="primary-button" type="submit">Calculate Preview</button>
+    </form>
+    <div id="p2p-result" class="result" role="status" hidden></div>
+    <p class="small">Real transfers will require authenticated members, server-side fee calculations, balance checks, package eligibility, transaction limits and a secure transaction PIN flow.</p>
+  </div>
 
-<div id="p2p-result" class="result" role="status" hidden></div>
-
-<p class="small">
-  Real transfers require authenticated members, server-side fee calculations,
-  balance checks, package eligibility, transaction limits and secure authorization.
-</p>
-
-  </div>  <h3 class="section-title" id="agent-activation">AGENT Activation Workflow</h3>
+  <!-- AGENT ACTIVATION PREVIEW -->
+  <h3 class="section-title" id="agent-activation">AGENT Activation Workflow</h3>
   <div class="card">
     <p class="small">
       This form illustrates the information an activation request may need.
-      It does not contact an agent, upload payment proof or activate an account.
+      It does not collect or upload payment proof, contact an agent, or activate an account.
       Do not enter private or real payment details here.
-    </p><form id="activation-form">
-  <label for="activation-area">Area</label>
-  <input id="activation-area" placeholder="e.g. Kampala" required>
+    </p>
+    <form id="activation-form">
+      <label for="activation-area">Area</label>
+      <input id="activation-area" placeholder="e.g. Kampala" required>
 
-  <label for="activation-package">Package requested</label>
-  <select id="activation-package" required>
-    <option value="">Choose a package</option>
-    <option value="Starter — UGX 5,000">Starter — UGX 5,000 (60 days)</option>
-    <option value="Standard — UGX 10,000">Standard — UGX 10,000 (60 days)</option>
-    <option value="Plus — UGX 20,000">Plus — UGX 20,000 (90 days)</option>
-  </select>
+      <label for="activation-package">Package requested</label>
+      <select id="activation-package" required>
+        <option value="">Choose a package</option>
+        <option value="Starter — UGX 5,000">Starter — UGX 5,000 (60 days)</option>
+        <option value="Standard — UGX 10,000">Standard — UGX 10,000 (60 days)</option>
+        <option value="Plus — UGX 20,000">Plus — UGX 20,000 (90 days)</option>
+      </select>
 
-  <label for="activation-method">Proposed payment method</label>
-  <select id="activation-method" required>
-    <option value="">Choose a method</option>
-    <option>Mobile money</option>
-    <option>Bank payment</option>
-    <option>Other approved method</option>
-  </select>
+      <label for="activation-method">Proposed payment method</label>
+      <select id="activation-method" required>
+        <option value="">Choose a method</option>
+        <option>Mobile money</option>
+        <option>Bank payment</option>
+        <option>Other approved method</option>
+      </select>
 
-  <button class="primary-button" type="submit">Preview Activation Request</button>
-</form>
-
-<div id="activation-result" class="result notice-result" role="status" hidden></div>
-
-<p class="small">
-  A real workflow must securely record the request, provide a reference,
-  route it to an authorized agent, verify payment independently, check agent float
-  and record the final decision.
-</p>
-
-  </div>  <h3 class="section-title" id="find-agent">Find an Agent</h3>
-  <div class="card">
+      <button class="primary-button" type="submit">Preview Activation Request</button>
+    </form>
+    <div id="activation-result" class="result notice-result" role="status" hidden></div>
     <p class="small">
-      Choose a region to preview example agents. These entries are demonstrations,
-      not real or verified agents.
-    </p><form id="agent-form">
-  <label for="agent-location">Select region</label>
-  <select id="agent-location" required>
-    <option value="">Choose a region</option>
-    <option value="Central">Central</option>
-    <option value="Eastern">Eastern</option>
-    <option value="Northern">Northern</option>
-    <option value="Western">Western</option>
-  </select>
-  <button class="primary-button" type="submit">Search Agents</button>
-</form>
+      A real workflow must securely record the request, provide a reference,
+      route it to an authorized agent, verify the payment independently,
+      check the agent's available float, and record the final decision.
+    </p>
+  </div>
 
-<div id="agent-result" class="small" role="status" aria-live="polite"></div>
+  <!-- FIND AN AGENT -->
+  <h3 class="section-title" id="find-agent">Find an Agent</h3>
+  <div class="card">
+    <p class="small">Agent search will work after a verified agent directory is connected.</p>
+    <form id="agent-form">
+      <label for="agent-location">Your area</label>
+      <input id="agent-location" placeholder="e.g. Kampala">
+      <button class="primary-button" type="submit">Search Agents</button>
+    </form>
+    <p id="agent-result" class="small" role="status"></p>
+  </div>
 
-<p class="small">
-  DEMO ONLY — these sample entries are not available for transactions.
-  The real agent directory must be connected and verified before launch.
-</p>
-
-  </div>  <h3 class="section-title" id="admin-review">Administrator Review</h3>
+  <!-- ADMIN REVIEW PREVIEW -->
+  <h3 class="section-title" id="admin-review">Administrator Review</h3>
   <div class="card">
     <p class="small">
       This is a preview of an administrator review area, not a real admin console.
-      It contains no real requests and cannot approve, reject or change an account.
+      It contains no real requests and does not approve, reject, or change any account.
     </p>
     <div class="detail-row"><span>Pending activation requests</span><strong>Not connected</strong></div>
-    <div class="detail-row"><span>Agent applications</span><strong>Not connected</strong></div>
     <div class="detail-row"><span>Payment disputes</span><strong>Not connected</strong></div>
     <div class="detail-row"><span>Transfer disputes</span><strong>Not connected</strong></div>
     <div class="detail-row"><span>Audit history</span><strong>Not connected</strong></div>
@@ -598,38 +253,28 @@ footer {
       Hiding an admin section in the browser is not security.
     </div>
   </div>
-</main><footer>HomeUtensils &copy; 2026 · Website preview</footer><script>
+
+  <nav aria-label="Dashboard sections">
+    <a href="#account">Account</a>
+    <a href="#wallet">Wallet</a>
+    <a href="#ledgers">Ledgers</a>
+  </nav>
+</main>
+
+<footer>HomeUtensils &copy; 2026 · Website preview</footer>
+
+<script>
 "use strict";
 
 // This page is a front-end preview only.
-// Never treat browser-side results as proof of payment or a transaction.
-
-function updateAgentEligibilityPreview() {
-  const packageChoice = document.getElementById("preview-package").value;
-  const result = document.getElementById("agent-eligibility-result");
-  result.replaceChildren();
-
-  const message = document.createElement("strong");
-
-  if (packageChoice === "plus") {
-    message.textContent =
-      "Plus selected. In the real system, an active Plus package would allow an application, subject to verification and admin approval.";
-  } else {
-    message.textContent =
-      "Agent application unavailable for this package. The real system requires an active Plus package.";
-  }
-
-  result.appendChild(message);
-}
-
-document.getElementById("preview-package").addEventListener("change", updateAgentEligibilityPreview);
-updateAgentEligibilityPreview();
+// Never treat browser-side results as proof of a payment or transaction.
 
 document.getElementById("p2p-form").addEventListener("submit", function(event) {
   event.preventDefault();
 
-  const total = Number(document.getElementById("p2p-total").value);
+  const totalInput = document.getElementById("p2p-total");
   const result = document.getElementById("p2p-result");
+  const total = Number(totalInput.value);
   result.hidden = false;
 
   if (!Number.isSafeInteger(total) || total < 1000) {
@@ -637,12 +282,13 @@ document.getElementById("p2p-form").addEventListener("submit", function(event) {
     return;
   }
 
+  // Preview rule: recipient amount = rounded total / 1.10.
   const recipientAmount = Math.round(total / 1.10);
   const fee = total - recipientAmount;
 
   result.textContent =
-    "PREVIEW ONLY — No money was sent. Total entered: UGX " +
-    total.toLocaleString("en-UG") +
+    "PREVIEW ONLY — No money was sent. " +
+    "Total entered: UGX " + total.toLocaleString("en-UG") +
     ". Estimated recipient amount: UGX " +
     recipientAmount.toLocaleString("en-UG") +
     ". Estimated fee: UGX " + fee.toLocaleString("en-UG") +
@@ -656,6 +302,7 @@ document.getElementById("activation-form").addEventListener("submit", function(e
   const packageChoice = document.getElementById("activation-package").value;
   const method = document.getElementById("activation-method").value;
   const result = document.getElementById("activation-result");
+
   result.hidden = false;
 
   if (!area || !packageChoice || !method) {
@@ -664,8 +311,8 @@ document.getElementById("activation-form").addEventListener("submit", function(e
   }
 
   result.textContent =
-    "PREVIEW ONLY — No request was sent and no payment was recorded. Area: " +
-    area + ". Package: " + packageChoice +
+    "PREVIEW ONLY — No request was sent and no payment was recorded. " +
+    "Area: " + area + ". Package: " + packageChoice +
     ". Proposed payment method: " + method +
     ". A real request needs a secure backend and authorized agent review.";
 });
@@ -673,341 +320,14 @@ document.getElementById("activation-form").addEventListener("submit", function(e
 document.getElementById("agent-form").addEventListener("submit", function(event) {
   event.preventDefault();
 
-  const region = document.getElementById("agent-location").value;
+  const area = document.getElementById("agent-location").value.trim();
   const result = document.getElementById("agent-result");
-  result.replaceChildren();
 
-  if (!region) {
-    result.textContent = "Please select a region.";
-    return;
-  }
-
-  const demoAgents = {
-    "Central": [
-      { name: "Central Demo Agent 1", area: "Kampala" },
-      { name: "Central Demo Agent 2", area: "Mukono" }
-    ],
-    "Eastern": [
-      { name: "Eastern Demo Agent 1", area: "Jinja" },
-      { name: "Eastern Demo Agent 2", area: "Mbale" }
-    ],
-    "Northern": [
-      { name: "Northern Demo Agent 1", area: "Gulu" },
-      { name: "Northern Demo Agent 2", area: "Lira" }
-    ],
-    "Western": [
-      { name: "Western Demo Agent 1", area: "Mbarara" },
-      { name: "Western Demo Agent 2", area: "Fort Portal" }
-    ]
-  };
-
-  const heading = document.createElement("p");
-  heading.textContent = "DEMO RESULTS — " + region + " Region";
-  result.appendChild(heading);
-
-  demoAgents[region].forEach(function(agent) {
-    const item = document.createElement("div");
-    item.className = "detail-row";
-
-    const details = document.createElement("span");
-    details.textContent = agent.name + " · " + agent.area;
-
-    const status = document.createElement("strong");
-    status.textContent = "Demo listing";
-
-    item.append(details, status);
-    result.appendChild(item);
-  });
-
-  const note = document.createElement("p");
-  note.textContent = "These sample entries are not real, verified or available for transactions.";
-  result.appendChild(note);
+  result.textContent = area
+    ? "Agent search is not connected yet. No verified agents are available to display for " + area + "."
+    : "Please enter your area. Agent search will work after the directory is connected.";
 });
-</script><script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  sendPasswordResetEmail,
-  updateProfile,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+</script>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBllLCn_TmD9iAYz6kkIqmGwQy_Wfbk_Sc",
-  authDomain: "homeutensils-5b3cf.firebaseapp.com",
-  projectId: "homeutensils-5b3cf",
-  storageBucket: "homeutensils-5b3cf.firebasestorage.app",
-  messagingSenderId: "976309566737",
-  appId: "1:976309566737:web:e65365b6df2d15ce6060b"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-window.homeUtensilsFirebase = { app, auth, db };
-
-const get = id => document.getElementById(id);
-
-function showMessage(id, message, isError = false) {
-  const box = get(id);
-  if (!box) return;
-  box.textContent = message;
-  box.hidden = false;
-  box.classList.toggle("notice-result", isError);
-}
-
-function friendlyError(error) {
-  const messages = {
-    "auth/email-already-in-use": "This email already has an account. Please use Member Login.",
-    "auth/invalid-email": "Please enter a valid email address.",
-    "auth/weak-password": "Choose a password with at least 8 characters.",
-    "auth/invalid-credential": "Email or password is incorrect. Check your details and try again.",
-    "auth/user-not-found": "No account was found for that email address.",
-    "auth/wrong-password": "The password is incorrect. Try again or reset it.",
-    "auth/too-many-requests": "There have been too many attempts. Please wait and try again later.",
-    "auth/network-request-failed": "The internet connection failed. Check your connection and try again.",
-    "auth/operation-not-allowed": "Email/Password sign-in is not enabled in Firebase Authentication.",
-    "auth/unauthorized-domain": "This website domain is not authorized in Firebase Authentication settings.",
-    "permission-denied": "Your sign-in account may have been created, but Firestore blocked the profile save. Do not register again; the website administrator must configure secure Firestore rules."
-  };
-
-  return messages[error && error.code] ||
-    "The request could not be completed. Check your details and internet connection. If it continues, the website administrator must check Firebase settings.";
-}
-
-document.querySelectorAll("[data-toggle-password]").forEach(button => {
-  button.addEventListener("click", () => {
-    const input = get(button.dataset.togglePassword);
-    const show = input.type === "password";
-    input.type = show ? "text" : "password";
-    button.textContent = show ? "🙈 Hide" : "👁️ Show";
-  });
-});
-
-get("register-form").addEventListener("submit", async event => {
-  event.preventDefault();
-
-  const submitButton = event.submitter;
-  const fullName = get("register-name").value.trim();
-  const phoneNumber = get("register-phone").value.trim();
-  const region = get("register-region").value;
-  const email = get("register-email").value.trim();
-  const password = get("register-password").value;
-  const confirmPassword = get("register-confirm").value;
-
-  if (fullName.length < 2) {
-    showMessage("register-result", "Please enter your full names.", true);
-    return;
-  }
-
-  if (password.length < 8) {
-    showMessage("register-result", "Your password must contain at least 8 characters.", true);
-    return;
-  }
-
-  if (password !== confirmPassword) {
-    showMessage("register-result", "The passwords do not match. Please check them.", true);
-    return;
-  }
-
-  if (submitButton) submitButton.disabled = true;
-
-  try {
-    const credential = await createUserWithEmailAndPassword(auth, email, password);
-    await updateProfile(credential.user, { displayName: fullName });
-
-    try {
-      await setDoc(doc(db, "memberProfiles", credential.user.uid), {
-        uid: credential.user.uid,
-        fullName: fullName,
-        phoneNumber: phoneNumber,
-        region: region,
-        email: email,
-        createdAt: serverTimestamp()
-      });
-
-      showMessage("register-result", "Your member account was created and you are signed in.");
-      get("register-form").reset();
-      get("login-result").hidden = true;
-    } catch (profileError) {
-      console.error("Member profile could not be saved:", profileError);
-      showMessage(
-        "register-result",
-        "Your sign-in account was created, but the profile could not be saved. Do not register again. The website administrator must configure secure Firestore rules.",
-        true
-      );
-    }
-  } catch (error) {
-    
-console.error("Registration error:", error);
-showMessage(
-  "register-result",
-  "Registration failed (" + (error.code || "unknown") + "): " + (error.message || "No additional details were provided."),
-  true
-);
-
-  } finally {
-    if (submitButton) submitButton.disabled = false;
-  }
-});
-
-get("login-form").addEventListener("submit", async event => {
-  event.preventDefault();
-
-  const button = event.submitter;
-  if (button) button.disabled = true;
-
-  try {
-    const credential = await signInWithEmailAndPassword(
-      auth,
-      get("login-email").value.trim(),
-      get("login-password").value
-    );
-
-    const displayName = credential.user.displayName || credential.user.email || "Member";
-
-    showMessage(
-      "login-result",
-      "Signed in successfully as " +
-      displayName +
-      ". Your name and email appear in Account Overview. Package, wallet, agent, and admin permissions still need verified backend records."
-    );
-  } catch (error) {
-    console.error("Login error:", error);
-    showMessage("login-result", friendlyError(error), true);
-  } finally {
-    if (button) button.disabled = false;
-  }
-});
-
-get("forgot-password").addEventListener("click", async () => {
-  const email = get("login-email").value.trim();
-
-  if (!email) {
-    showMessage(
-      "login-result",
-      "First enter your email address in the Member Login email field, then tap Forgot password again.",
-      true
-    );
-    return;
-  }
-
-  try {
-    await sendPasswordResetEmail(auth, email);
-    showMessage(
-      "login-result",
-      "If an account exists for that email, a password reset link will be sent. Check your inbox and spam folder."
-    );
-  } catch (error) {
-    console.error("Password reset error:", error);
-    showMessage("login-result", friendlyError(error), true);
-  }
-});
-
-get("sign-out").addEventListener("click", async () => {
-  try {
-    await signOut(auth);
-    showMessage("login-result", "You have signed out.");
-  } catch (error) {
-    console.error("Sign-out error:", error);
-    showMessage("login-result", friendlyError(error), true);
-  }
-});
-
-
-onAuthStateChanged(auth, async user => {
-  get("sign-out").hidden = !user;
-
-  const memberName = get("account-member-name");
-  const memberEmail = get("account-member-email");
-  const memberPhone = get("account-member-phone");
-  const memberRegion = get("account-member-region");
-  const memberStatus = get("account-member-status");
-
-  if (!user) {
-    if (memberName) memberName.textContent = "Sign in to view";
-    if (memberEmail) memberEmail.textContent = "Not signed in";
-    if (memberPhone) memberPhone.textContent = "Not available";
-    if (memberRegion) memberRegion.textContent = "Not available";
-    if (memberStatus) memberStatus.textContent = "Not signed in";
-    return;
-  }
-
-  const displayName = user.displayName || user.email || "Member";
-
-  if (memberName) memberName.textContent = displayName;
-  if (memberEmail) memberEmail.textContent = user.email || "Not available";
-  if (memberPhone) memberPhone.textContent = "Loading...";
-  if (memberRegion) memberRegion.textContent = "Loading...";
-  if (memberStatus) memberStatus.textContent = "Signed in — checking profile";
-
-  try {
-    const profileSnapshot = await getDoc(
-      doc(db, "memberProfiles", user.uid)
-    );
-
-    if (!profileSnapshot.exists()) {
-      if (memberPhone) memberPhone.textContent = "Not saved";
-      if (memberRegion) memberRegion.textContent = "Not saved";
-      if (memberStatus) memberStatus.textContent = "Profile missing";
-
-      showMessage(
-        "login-result",
-        "You are signed in, but your saved member profile was not found. Do not register again. Please contact the website administrator to check your profile.",
-        true
-      );
-      return;
-    }
-
-    const profile = profileSnapshot.data();
-
-    if (memberName) {
-      memberName.textContent = profile.fullName || displayName;
-    }
-    if (memberEmail) {
-      memberEmail.textContent = profile.email || user.email || "Not available";
-    }
-    if (memberPhone) {
-      memberPhone.textContent = profile.phoneNumber || "Not provided";
-    }
-    if (memberRegion) {
-      memberRegion.textContent = profile.region || "Not provided";
-    }
-    if (memberStatus) {
-      memberStatus.textContent = "Signed in — profile loaded";
-    }
-
-    showMessage(
-      "login-result",
-      "Signed in successfully as " +
-        (profile.fullName || displayName) +
-        ". Your saved member profile has loaded. Wallet, package, agent and administrator features are not yet connected to verified records."
-    );
-  } catch (error) {
-    console.error("Member profile could not be loaded:", error);
-
-    if (memberPhone) memberPhone.textContent = "Unavailable";
-    if (memberRegion) memberRegion.textContent = "Unavailable";
-    if (memberStatus) memberStatus.textContent = "Profile could not load";
-
-    showMessage(
-      "login-result",
-      "You are signed in, but your member profile could not be loaded. The website administrator needs to check Firestore access and configuration.",
-      true
-    );
-  }
-});
-
-console.log("HomeUtensils Firebase member authentication loaded.");
-</script></body>
+</body>
 </html>
