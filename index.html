@@ -383,6 +383,7 @@ async function loadAdmin() {
   }
 }
 
+auth.onAuthStateChanged(async user=>{
 currentUser=user||null;
 if(unsubscribe){unsubscribe();unsubscribe=null;}
 $("authCard").classList.toggle("hidden",!!user);
