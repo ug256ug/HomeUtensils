@@ -416,7 +416,7 @@ show($("profileMessage"),"Account status: "+(data.accountStatus||"pending")+". P
 const details=$("packageDetails");details.replaceChildren();
 const h=document.createElement("h3");h.textContent="Package details";details.appendChild(h);
 [
-["Name",data.name],["Package",data.package],["Package status",data.packageStatus],
+["Name",data.fullName||data.name],["Package",data.package],["Package status",data.packageStatus],
 ["Activation date",dateText(data.activationDate)],["Expiry date",dateText(data.expiryDate)]
 ].forEach(([label,value])=>{
 const p=document.createElement("p");p.textContent=label+": "+(value||"Not set");details.appendChild(p);
