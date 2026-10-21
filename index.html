@@ -689,7 +689,7 @@ const memberBox=$("adminMembers");memberBox.replaceChildren();
 if(members.empty)memberBox.textContent="No registered member profiles.";
 members.forEach(doc=>{
 const d=doc.data(),item=document.createElement("div");item.className="request";
-item.textContent="Name: "+(d.name||"Not set")+" · Email: "+(d.email||"Not set")+" · Status: "+(d.accountStatus||"pending")+" · Package: "+(d.package||"Not assigned");
+item.textContent="Name: "+(d.fullName||d.name||"Not set")+" · Email: "+(d.email||"Not set")+" · Status: "+(d.accountStatus||"pending")+" · Package: "+(d.package||"Not assigned");
 memberBox.appendChild(item);
 });
 
