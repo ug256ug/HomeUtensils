@@ -406,6 +406,7 @@ const doc=await db.collection("admins").doc(user.uid).get();
 return doc.exists&&doc.data().role==="admin"&&doc.data().enabled===true;
 }catch(e){console.error(e);return false;}
 }
+
 async function loadAdmin(){
 try{
 const [requests,members,applications]=await Promise.all([
@@ -440,335 +441,336 @@ item.textContent="Name: "+(d.name||"Not set")+" · Email: "+(d.email||"Not set")
 memberBox.appendChild(item);
 });
 
-
-const agentBox = $("adminAgentApplications");
+const agentBox=$("adminAgentApplications");
 agentBox.replaceChildren();
 
-if (applications.empty) {
-  agentBox.textContent = "No agent applications yet.";
+if(applications.empty){
+agentBox.textContent="No agent applications yet.";
 }
 
-applications.forEach(doc => {
-  const d = doc.data();
-  const item = document.createElement("div");
-  item.className = "request";
+applications.forEach(doc=>{
+const d=doc.data(),item=document.createElement("div");
+item.className="request";
 
-  const info = document.createElement("p");
-  const nin = d.nin || "";
-  const maskedNin = nin.length > 4
-    ? "••••••" + nin.slice(-4)
-    : "Hidden";
+const info=document.createElement("p");
+const nin=d.nin||"";
+const maskedNin=nin.length>4?"••••••"+nin.slice(-4):"Hidden";
 
-  info.textContent =
-    "Applicant: " + (d.name || "Not set") +
-    " · Email: " + (d.email || "Not set") +
-    " · Region: " + (d.region || "Not set") +
-    " · Town: " + (d.town || "Not set") +
-    " · Phone: " + (d.phone || "Not set") +
-    " · NIN: " + maskedNin +
-    " · Declared capital: UGX " + (d.capitalDeclared || 0) +
-    " · Application status: " + (d.status || "pending");
+info.textContent=
+"Applicant: "+(d.name||"Not set")+
+" · Email: "+(d.email||"Not set")+
+" · Region: "+(d.region||"Not set")+
+" · Town: "+(d.town||"Not set")+
+" · Phone: "+(d.phone||"Not set")+
+" · NIN: "+maskedNin+
+" · Declared capital: UGX "+(d.capitalDeclared||0)+
+" · Application status: "+(d.status||"pending");
 
-  item.appendChild(info);
+item.appendChild(info);
 
-  if ((d.status || "pending") === "pending") {
-    const approve = document.createElement("button");
-    approve.type = "button";
-    approve.textContent = "Approve agent";
-    approve.addEventListener("click", () => {
-      reviewAgentApplication(doc.id, "approved");
-    });
+if((d.status||"pending")==="pending"){
+const approve=document.createElement("button");
+approve.type="button";
+approve.textContent="Approve agent";
+approve.addEventListener("click",()=>reviewAgentApplication(doc.id,"approved"));
 
-    const reject = document.createElement("button");
-    reject.type = "button";
-    reject.className = "secondary";
-    reject.textContent = "Reject application";
-    reject.addEventListener("click", () => {
-      reviewAgentApplication(doc.id, "rejected");
-    });
+const reject=document.createElement("button");
+reject.type="button";
+reject.className="secondary";
+reject.textContent="Reject application";
+reject.addEventListener("click",()=>reviewAgentApplication(doc.id,"rejected"));
 
-    item.append(approve, reject);
-  }
+item.append(approve,reject);
+}
 
-  agentBox.appendChild(item);
+agentBox.appendChild(item);
 });
-
 
 }catch(err){
 show($("adminSummary"),"Admin dashboard failed: "+messageFromError(err),true);
 }
 }
 
-
-
-async function reviewAgentApplication(id, status) {
-  if (!isAdminUser || !currentUser) {
-    show($("globalMessage"), "Administrator access required.", true);
-    return;
-  }
-
-  if (!["approved", "rejected"].includes(status)) {
-    show($("globalMessage"), "Invalid review decision.", true);
-    return;
-  }
-
-  if (status === "approved") {
-    const confirmed = confirm(
-      "Before approving, independently verify all of the following:\n\n" +
-      "1. The applicant has an active Plus package.\n" +
-      "2. You have actually received and verified UGX 50,000 starting capital.\n" +
-      "3. The applicant's identity and contact details have been checked.\n\n" +
-      "Approval will publish this agent in the public directory. " +
-      "It will NOT create the UGX 57,500 float.\n\nContinue?"
-    );
-
-    if (!confirmed) return;
-  } else if (!confirm("Reject this agent application?")) {
-    return;
-  }
-
-  try {
-    await db.runTransaction(async transaction => {
-      const applicationRef =
-        db.collection("agentApplications").doc(id);
-
-      const applicationSnap = await transaction.get(applicationRef);
-
-      if (!applicationSnap.exists) {
-        throw new Error("Agent application not found.");
-      }
-
-      const app = applicationSnap.data();
-
-      if (app.status !== "pending") {
-        throw new Error(
-          "This application has already been reviewed. Refresh the dashboard."
-        );
-      }
-
-      if (!app.uid) {
-        throw new Error("Application has no member UID.");
-      }
-
-      if (status === "rejected") {
-        transaction.update(applicationRef, {
-          status: "rejected",
-          reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          reviewedBy: currentUser.uid
-        });
-        return;
-      }
-
-      if (
-        app.capitalDeclared !== 50000 ||
-        !app.name ||
-        !app.phone ||
-        !app.region ||
-        !app.town
-      ) {
-        throw new Error(
-          "Application details are incomplete or capital declaration is invalid."
-        );
-      }
-
-      const validTowns = {
-        Central: ["Kampala", "Mukono"],
-        Western: ["Mbarara", "Fort Portal"],
-        Northern: ["Gulu", "Lira"]
-      };
-
-      if (
-        !validTowns[app.region] ||
-        !validTowns[app.region].includes(app.town)
-      ) {
-        throw new Error("The region and town combination is invalid.");
-      }
-
-      const profileRef =
-        db.collection("memberProfiles").doc(app.uid);
-
-      const directoryRef =
-        db.collection("agentDirectory").doc(app.uid);
-
-      // Read all documents before writing any documents.
-      const profileSnap = await transaction.get(profileRef);
-      const directorySnap = await transaction.get(directoryRef);
-
-      if (!profileSnap.exists) {
-        throw new Error("Member profile not found.");
-      }
-
-      const profile = profileSnap.data();
-
-      if (
-        profile.package !== "Plus" ||
-        profile.packageStatus !== "active"
-      ) {
-        throw new Error(
-          "The applicant must have an active Plus package at approval time."
-        );
-      }
-
-      if (directorySnap.exists) {
-        throw new Error(
-          "An agent directory entry already exists for this member. Check it before proceeding."
-        );
-      }
-
-      // Publish only approved public contact details.
-      // Never publish NIN, email, capital records, or wallet details.
-      transaction.set(directoryRef, {
-        uid: app.uid,
-        name: app.name,
-        region: app.region,
-        town: app.town,
-        phone: app.phone,
-        status: "approved",
-        approvedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      transaction.update(applicationRef, {
-        status: "approved",
-        capitalVerified: true,
-        reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        reviewedBy: currentUser.uid
-      });
-    });
-
-    show(
-      $("globalMessage"),
-      status === "approved"
-        ? "Agent approved and added to the public directory. The restricted float has NOT been issued."
-        : "Agent application rejected."
-    );
-
-    await loadAdmin();
-
-    if (typeof loadMyAgentStatus === "function") {
-      await loadMyAgentStatus();
-    }
-  } catch (err) {
-    show(
-      $("globalMessage"),
-      "Could not review agent application: " + messageFromError(err),
-      true
-    );
-  }
+async function reviewAgentApplication(id,status){
+if(!isAdminUser||!currentUser){
+show($("globalMessage"),"Administrator access required.",true);
+return;
 }
 
+if(!["approved","rejected"].includes(status)){
+show($("globalMessage"),"Invalid review decision.",true);
+return;
+}
+
+let verifiedName="";
+
+if(status==="approved"){
+const confirmed=confirm(
+"Before approving, independently verify all of the following:\n\n"+
+"1. The applicant has an active Plus package.\n"+
+"2. You have actually received and verified UGX 50,000 starting capital.\n"+
+"3. The applicant's identity and contact details have been checked.\n\n"+
+"Approval will publish this agent in the public directory. "+
+"It will NOT create the UGX 57,500 float.\n\nContinue?"
+);
+
+if(!confirmed)return;
+
+try{
+const existingSnap=await db.collection("agentApplications").doc(id).get();
+
+if(!existingSnap.exists)throw new Error("Agent application not found.");
+
+const existingApp=existingSnap.data();
+
+if(existingApp.status!=="pending"){
+throw new Error("This application has already been reviewed. Refresh the dashboard.");
+}
+
+if(!String(existingApp.name||"").trim()){
+const enteredName=prompt(
+"The applicant's name is missing.\n\n"+
+"Enter the applicant's VERIFIED full name exactly as checked against their identity documents. Do not guess."
+);
+
+if(enteredName===null)return;
+
+verifiedName=enteredName.trim();
+
+if(!verifiedName){
+show($("globalMessage"),"Approval cancelled. The applicant's verified full name is required.",true);
+return;
+}
+}
+}catch(err){
+show($("globalMessage"),"Could not check agent application: "+messageFromError(err),true);
+return;
+}
+}else if(!confirm("Reject this agent application?")){
+return;
+}
+
+try{
+await db.runTransaction(async transaction=>{
+const applicationRef=db.collection("agentApplications").doc(id);
+const applicationSnap=await transaction.get(applicationRef);
+
+if(!applicationSnap.exists)throw new Error("Agent application not found.");
+
+const app=applicationSnap.data();
+
+if(app.status!=="pending"){
+throw new Error("This application has already been reviewed. Refresh the dashboard.");
+}
+
+if(!app.uid)throw new Error("Application has no member UID.");
+
+if(status==="rejected"){
+transaction.update(applicationRef,{
+status:"rejected",
+reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),
+reviewedBy:currentUser.uid
+});
+return;
+}
+
+if(Number(app.capitalDeclared)!==50000){
+throw new Error("The declared starting capital must be UGX 50,000. Check the application record.");
+}
+
+const phone=String(app.phone||"").trim();
+const region=String(app.region||"").trim();
+const town=String(app.town||"").trim();
+
+if(!phone){
+throw new Error("The applicant's phone number is missing.");
+}
+
+const validTowns={
+Central:["Kampala","Mukono"],
+Western:["Mbarara","Fort Portal"],
+Northern:["Gulu","Lira"]
+};
+
+if(!validTowns[region]||!validTowns[region].includes(town)){
+throw new Error("The region and town combination is invalid. Check the application.");
+}
+
+const profileRef=db.collection("memberProfiles").doc(app.uid);
+const directoryRef=db.collection("agentDirectory").doc(app.uid);
+
+// Read every required document before writing any documents.
+const profileSnap=await transaction.get(profileRef);
+const directorySnap=await transaction.get(directoryRef);
+
+if(!profileSnap.exists)throw new Error("Member profile not found.");
+
+const profile=profileSnap.data();
+
+if(profile.package!=="Plus"||profile.packageStatus!=="active"){
+throw new Error("The applicant must have an active Plus package at approval time.");
+}
+
+if(directorySnap.exists){
+throw new Error("An agent directory entry already exists for this member. Check it before proceeding.");
+}
+
+const applicantName=String(
+app.name||profile.name||verifiedName||""
+).trim();
+
+if(!applicantName){
+throw new Error("The applicant's verified full name is required.");
+}
+
+// Publish only approved public contact details.
+// Never publish NIN, email, capital records, or wallet details.
+transaction.set(directoryRef,{
+uid:app.uid,
+name:applicantName,
+region:region,
+town:town,
+phone:phone,
+status:"approved",
+approvedAt:firebase.firestore.FieldValue.serverTimestamp()
+});
+
+transaction.update(applicationRef,{
+name:applicantName,
+status:"approved",
+capitalVerified:true,
+reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),
+reviewedBy:currentUser.uid
+});
+});
+
+show(
+$("globalMessage"),
+status==="approved"
+?"Agent approved and added to the public directory. The restricted float has NOT been issued."
+:"Agent application rejected."
+);
+
+await loadAdmin();
+
+if(typeof loadMyAgentStatus==="function"){
+await loadMyAgentStatus();
+}
+}catch(err){
+show($("globalMessage"),"Could not review agent application: "+messageFromError(err),true);
+}
+}
 
 async function reviewActivation(id,status){
-  if(!isAdminUser||!currentUser){
-    show($("globalMessage"),"Administrator access required.",true);
-    return;
-  }
-
-  if(status==="approved"&&!confirm(
-    "Verify the actual payment before activating this package. A Starter-to-Plus upgrade requires UGX 15,000."
-  ))return;
-
-  try{
-    await db.runTransaction(async transaction=>{
-      const requestRef=db.collection("activationRequests").doc(id);
-      const requestSnap=await transaction.get(requestRef);
-
-      if(!requestSnap.exists)throw new Error("Request not found.");
-
-      const request=requestSnap.data();
-      const repair=request.status==="approved"&&status==="approved";
-
-      if(request.status!=="pending"&&!repair)
-        throw new Error("This request has already been reviewed.");
-
-      if(status==="rejected"){
-        transaction.update(requestRef,{
-          status:"rejected",
-          reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),
-          reviewedBy:currentUser.uid
-        });
-        return;
-      }
-
-      const durations={Starter:60,Standard:60,Plus:90};
-      const packageName=request.packageRequested;
-
-      if(!request.uid||!durations[packageName])
-        throw new Error("Invalid request. Do not approve it.");
-
-      const profileRef=db.collection("memberProfiles").doc(request.uid);
-      const profileSnap=await transaction.get(profileRef);
-
-      if(!profileSnap.exists)throw new Error("Member profile not found.");
-
-      const profile=profileSnap.data();
-      const upgrade=packageName==="Plus"&&
-        profile.package==="Starter"&&
-        profile.packageStatus==="active";
-
-      if(profile.packageStatus==="active"&&profile.package&&!upgrade)
-        throw new Error("This member already has an active package.");
-
-      const now=new Date();
-      let extraDays=0;
-
-      if(upgrade){
-        const raw=profile.activationDate;
-        const start=raw&&(raw.toDate?raw.toDate():new Date(raw));
-
-        if(!start||Number.isNaN(start.getTime()))
-          throw new Error("Starter activation date is missing.");
-
-        const elapsed=Math.max(
-          0,Math.floor((now.getTime()-start.getTime())/86400000)
-        );
-
-        extraDays=Math.max(0,60-elapsed);
-      }
-
-      const expiry=new Date(
-        now.getTime()+(durations[packageName]+extraDays)*86400000
-      );
-
-      transaction.update(profileRef,{
-        package:packageName,
-        packageStatus:"active",
-        accountStatus:"active",
-        activationDate:firebase.firestore.Timestamp.fromDate(now),
-        expiryDate:firebase.firestore.Timestamp.fromDate(expiry),
-        activatedFromRequestId:id,
-        upgradeExtraDays:extraDays,
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      if(!repair){
-        transaction.update(requestRef,{
-          status:"approved",
-          reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),
-          reviewedBy:currentUser.uid
-        });
-      }
-    });
-
-    show($("globalMessage"),
-      "Package activation processed. Check the member profile and expiry date."
-    );
-
-    await loadAdmin();
-
-    const refreshed=await db.collection("memberProfiles")
-      .doc(currentUser.uid).get();
-
-    if(refreshed.exists)renderProfile(refreshed.data());
-
-  }catch(err){
-    show($("globalMessage"),
-      "Could not process request: "+messageFromError(err),true
-    );
-  }
+if(!isAdminUser||!currentUser){
+show($("globalMessage"),"Administrator access required.",true);
+return;
 }
 
+if(status==="approved"&&!confirm(
+"Verify the actual payment before activating this package. A Starter-to-Plus upgrade requires UGX 15,000."
+))return;
 
- 
+try{
+await db.runTransaction(async transaction=>{
+const requestRef=db.collection("activationRequests").doc(id);
+const requestSnap=await transaction.get(requestRef);
+
+if(!requestSnap.exists)throw new Error("Request not found.");
+
+const request=requestSnap.data();
+const repair=request.status==="approved"&&status==="approved";
+
+if(request.status!=="pending"&&!repair)
+throw new Error("This request has already been reviewed.");
+
+if(status==="rejected"){
+transaction.update(requestRef,{
+status:"rejected",
+reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),
+reviewedBy:currentUser.uid
+});
+return;
+}
+
+const durations={Starter:60,Standard:60,Plus:90};
+const packageName=request.packageRequested;
+
+if(!request.uid||!durations[packageName])
+throw new Error("Invalid request. Do not approve it.");
+
+const profileRef=db.collection("memberProfiles").doc(request.uid);
+const profileSnap=await transaction.get(profileRef);
+
+if(!profileSnap.exists)throw new Error("Member profile not found.");
+
+const profile=profileSnap.data();
+const upgrade=packageName==="Plus"&&
+profile.package==="Starter"&&
+profile.packageStatus==="active";
+
+if(profile.packageStatus==="active"&&profile.package&&!upgrade)
+throw new Error("This member already has an active package.");
+
+const now=new Date();
+let extraDays=0;
+
+if(upgrade){
+const raw=profile.activationDate;
+const start=raw&&(raw.toDate?raw.toDate():new Date(raw));
+
+if(!start||Number.isNaN(start.getTime()))
+throw new Error("Starter activation date is missing.");
+
+const elapsed=Math.max(
+0,Math.floor((now.getTime()-start.getTime())/86400000)
+);
+
+extraDays=Math.max(0,60-elapsed);
+}
+
+const expiry=new Date(
+now.getTime()+(durations[packageName]+extraDays)*86400000
+);
+
+transaction.update(profileRef,{
+package:packageName,
+packageStatus:"active",
+accountStatus:"active",
+activationDate:firebase.firestore.Timestamp.fromDate(now),
+expiryDate:firebase.firestore.Timestamp.fromDate(expiry),
+activatedFromRequestId:id,
+upgradeExtraDays:extraDays,
+updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+});
+
+if(!repair){
+transaction.update(requestRef,{
+status:"approved",
+reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),
+reviewedBy:currentUser.uid
+});
+}
+});
+
+show($("globalMessage"),
+"Package activation processed. Check the member profile and expiry date."
+);
+
+await loadAdmin();
+
+const refreshed=await db.collection("memberProfiles")
+.doc(currentUser.uid).get();
+
+if(refreshed.exists)renderProfile(refreshed.data());
+
+}catch(err){
+show($("globalMessage"),
+"Could not process request: "+messageFromError(err),true
+);
+}
+}
+
 firebase.initializeApp(firebaseConfig);
 auth=firebase.auth();
 db=firebase.firestore();
@@ -829,6 +831,6 @@ true
 });
 
 })();
- </script>
+</script>
 </body>
 </html>
