@@ -479,6 +479,162 @@ show($("adminSummary"),"Admin dashboard failed: "+messageFromError(err),true);
 
 
 
+async function reviewAgentApplication(id, status) {
+  if (!isAdminUser || !currentUser) {
+    show($("globalMessage"), "Administrator access required.", true);
+    return;
+  }
+
+  if (!["approved", "rejected"].includes(status)) {
+    show($("globalMessage"), "Invalid review decision.", true);
+    return;
+  }
+
+  if (status === "approved") {
+    const confirmed = confirm(
+      "Before approving, independently verify all of the following:\n\n" +
+      "1. The applicant has an active Plus package.\n" +
+      "2. You have actually received and verified UGX 50,000 starting capital.\n" +
+      "3. The applicant's identity and contact details have been checked.\n\n" +
+      "Approval will publish this agent in the public directory. " +
+      "It will NOT create the UGX 57,500 float.\n\nContinue?"
+    );
+
+    if (!confirmed) return;
+  } else if (!confirm("Reject this agent application?")) {
+    return;
+  }
+
+  try {
+    await db.runTransaction(async transaction => {
+      const applicationRef =
+        db.collection("agentApplications").doc(id);
+
+      const applicationSnap = await transaction.get(applicationRef);
+
+      if (!applicationSnap.exists) {
+        throw new Error("Agent application not found.");
+      }
+
+      const app = applicationSnap.data();
+
+      if (app.status !== "pending") {
+        throw new Error(
+          "This application has already been reviewed. Refresh the dashboard."
+        );
+      }
+
+      if (!app.uid) {
+        throw new Error("Application has no member UID.");
+      }
+
+      if (status === "rejected") {
+        transaction.update(applicationRef, {
+          status: "rejected",
+          reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          reviewedBy: currentUser.uid
+        });
+        return;
+      }
+
+      if (
+        app.capitalDeclared !== 50000 ||
+        !app.name ||
+        !app.phone ||
+        !app.region ||
+        !app.town
+      ) {
+        throw new Error(
+          "Application details are incomplete or capital declaration is invalid."
+        );
+      }
+
+      const validTowns = {
+        Central: ["Kampala", "Mukono"],
+        Western: ["Mbarara", "Fort Portal"],
+        Northern: ["Gulu", "Lira"]
+      };
+
+      if (
+        !validTowns[app.region] ||
+        !validTowns[app.region].includes(app.town)
+      ) {
+        throw new Error("The region and town combination is invalid.");
+      }
+
+      const profileRef =
+        db.collection("memberProfiles").doc(app.uid);
+
+      const directoryRef =
+        db.collection("agentDirectory").doc(app.uid);
+
+      // Read all documents before writing any documents.
+      const profileSnap = await transaction.get(profileRef);
+      const directorySnap = await transaction.get(directoryRef);
+
+      if (!profileSnap.exists) {
+        throw new Error("Member profile not found.");
+      }
+
+      const profile = profileSnap.data();
+
+      if (
+        profile.package !== "Plus" ||
+        profile.packageStatus !== "active"
+      ) {
+        throw new Error(
+          "The applicant must have an active Plus package at approval time."
+        );
+      }
+
+      if (directorySnap.exists) {
+        throw new Error(
+          "An agent directory entry already exists for this member. Check it before proceeding."
+        );
+      }
+
+      // Publish only approved public contact details.
+      // Never publish NIN, email, capital records, or wallet details.
+      transaction.set(directoryRef, {
+        uid: app.uid,
+        name: app.name,
+        region: app.region,
+        town: app.town,
+        phone: app.phone,
+        status: "approved",
+        approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      transaction.update(applicationRef, {
+        status: "approved",
+        capitalVerified: true,
+        reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        reviewedBy: currentUser.uid
+      });
+    });
+
+    show(
+      $("globalMessage"),
+      status === "approved"
+        ? "Agent approved and added to the public directory. The restricted float has NOT been issued."
+        : "Agent application rejected."
+    );
+
+    await loadAdmin();
+
+    if (typeof loadMyAgentStatus === "function") {
+      await loadMyAgentStatus();
+    }
+  } catch (err) {
+    show(
+      $("globalMessage"),
+      "Could not review agent application: " + messageFromError(err),
+      true
+    );
+  }
+}
+
+
 async function reviewActivation(id,status){
   if(!isAdminUser||!currentUser){
     show($("globalMessage"),"Administrator access required.",true);
@@ -588,6 +744,7 @@ async function reviewActivation(id,status){
     );
   }
 }
+
 
  
 firebase.initializeApp(firebaseConfig);
