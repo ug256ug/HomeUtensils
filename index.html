@@ -461,24 +461,114 @@ show($("adminSummary"),"Admin dashboard failed: "+messageFromError(err),true);
 }
 }
 
-async function reviewActivation(id,status){
-if(!isAdminUser){
-show($("globalMessage"),"Administrator access required.",true);
-return;
-}
-try{
-await db.collection("activationRequests").doc(id).update({
-status:status,
-reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),
-reviewedBy:currentUser.uid
-});
-show($("globalMessage"),"Request marked "+status+". This does not automatically activate a package.");
-await loadAdmin();
-}catch(err){
-show($("globalMessage"),"Could not update request: "+messageFromError(err),true);
-}
-}
 
+async function reviewActivation(id,status){
+  if(!isAdminUser||!currentUser){
+    show($("globalMessage"),"Administrator access required.",true);
+    return;
+  }
+
+  if(status==="approved"&&!confirm(
+    "Have you verified the required payment or UGX 15,000 upgrade top-up? Approval will activate the package."
+  ))return;
+
+  try{
+    if(status==="rejected"){
+      await db.collection("activationRequests").doc(id).update({
+        status:"rejected",
+        reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),
+        reviewedBy:currentUser.uid
+      });
+      show($("globalMessage"),"Request rejected. No package was activated.");
+      await loadAdmin();
+      return;
+    }
+
+    const durations={Starter:60,Standard:60,Plus:90};
+
+    await db.runTransaction(async transaction=>{
+      const requestRef=db.collection("activationRequests").doc(id);
+      const requestSnap=await transaction.get(requestRef);
+
+      if(!requestSnap.exists)throw new Error("Request not found.");
+
+      const request=requestSnap.data();
+
+      if(request.status!=="pending")
+        throw new Error("This request has already been reviewed.");
+
+      const packageName=request.packageRequested;
+
+      if(!request.uid||!durations[packageName])
+        throw new Error("Invalid member ID or package.");
+
+      const profileRef=db.collection("memberProfiles").doc(request.uid);
+      const profileSnap=await transaction.get(profileRef);
+
+      if(!profileSnap.exists)throw new Error("Member profile not found.");
+
+      const profile=profileSnap.data();
+      const now=new Date();
+      let extraDays=0;
+
+      const isUpgrade=
+        packageName==="Plus" &&
+        profile.package==="Starter" &&
+        profile.packageStatus==="active";
+
+      if(isUpgrade){
+        const start=profile.activationDate &&
+          (profile.activationDate.toDate
+            ? profile.activationDate.toDate()
+            : new Date(profile.activationDate));
+
+        if(!start||Number.isNaN(start.getTime()))
+          throw new Error("Starter activation date is missing.");
+
+        const elapsed=Math.max(
+          0,Math.floor((now.getTime()-start.getTime())/86400000)
+        );
+
+        extraDays=Math.max(0,60-elapsed);
+      }
+
+      const totalDays=durations[packageName]+extraDays;
+      const expiry=new Date(now.getTime()+totalDays*86400000);
+
+      transaction.update(profileRef,{
+        package:packageName,
+        packageStatus:"active",
+        accountStatus:"active",
+        activationDate:firebase.firestore.Timestamp.fromDate(now),
+        expiryDate:firebase.firestore.Timestamp.fromDate(expiry),
+        activatedFromRequestId:id,
+        upgradeExtraDays:extraDays,
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      transaction.update(requestRef,{
+        status:"approved",
+        reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),
+        reviewedBy:currentUser.uid
+      });
+    });
+
+    show(
+      $("globalMessage"),
+      "Package activated. Plus includes 90 days plus any unused Starter days. Agent approval remains separate."
+    );
+
+    await loadAdmin();
+
+  }catch(err){
+    show(
+      $("globalMessage"),
+      "Could not activate package: "+messageFromError(err),
+      true
+    );
+  }
+}
+ 
 firebase.initializeApp(firebaseConfig);
 auth=firebase.auth();
 db=firebase.firestore();
