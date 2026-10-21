@@ -440,37 +440,59 @@ item.textContent="Name: "+(d.name||"Not set")+" · Email: "+(d.email||"Not set")
 memberBox.appendChild(item);
 });
 
-const agentBox=$("adminAgentApplications");
+
+const agentBox = $("adminAgentApplications");
 agentBox.replaceChildren();
 
-if(applications.empty){
-agentBox.textContent="No agent applications yet.";
+if (applications.empty) {
+  agentBox.textContent = "No agent applications yet.";
 }
 
-applications.forEach(doc=>{
-const d=doc.data();
-const item=document.createElement("div");
-item.className="request";
+applications.forEach(doc => {
+  const d = doc.data();
+  const item = document.createElement("div");
+  item.className = "request";
 
-const info=document.createElement("p");
-const nin=d.nin||"";
-const maskedNin=nin.length>4
-? "••••••"+nin.slice(-4)
-: "Hidden";
+  const info = document.createElement("p");
+  const nin = d.nin || "";
+  const maskedNin = nin.length > 4
+    ? "••••••" + nin.slice(-4)
+    : "Hidden";
 
-info.textContent=
-"Applicant: "+(d.name||"Not set")+
-" · Email: "+(d.email||"Not set")+
-" · Region: "+(d.region||"Not set")+
-" · Town: "+(d.town||"Not set")+
-" · Phone: "+(d.phone||"Not set")+
-" · NIN: "+maskedNin+
-" · Declared capital: UGX "+(d.capitalDeclared||0)+
-" · Application status: "+(d.status||"pending");
+  info.textContent =
+    "Applicant: " + (d.name || "Not set") +
+    " · Email: " + (d.email || "Not set") +
+    " · Region: " + (d.region || "Not set") +
+    " · Town: " + (d.town || "Not set") +
+    " · Phone: " + (d.phone || "Not set") +
+    " · NIN: " + maskedNin +
+    " · Declared capital: UGX " + (d.capitalDeclared || 0) +
+    " · Application status: " + (d.status || "pending");
 
-item.appendChild(info);
-agentBox.appendChild(item);
+  item.appendChild(info);
+
+  if ((d.status || "pending") === "pending") {
+    const approve = document.createElement("button");
+    approve.type = "button";
+    approve.textContent = "Approve agent";
+    approve.addEventListener("click", () => {
+      reviewAgentApplication(doc.id, "approved");
+    });
+
+    const reject = document.createElement("button");
+    reject.type = "button";
+    reject.className = "secondary";
+    reject.textContent = "Reject application";
+    reject.addEventListener("click", () => {
+      reviewAgentApplication(doc.id, "rejected");
+    });
+
+    item.append(approve, reject);
+  }
+
+  agentBox.appendChild(item);
 });
+
 
 }catch(err){
 show($("adminSummary"),"Admin dashboard failed: "+messageFromError(err),true);
