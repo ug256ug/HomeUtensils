@@ -381,23 +381,59 @@ box.appendChild(p);
 }catch(err){show($("myAgentStatus"),"Could not load application status: "+messageFromError(err),true);}
 }
 
+
 $("searchAgents").addEventListener("click",async()=>{
-const region=$("searchRegion").value,town=$("searchTown").value,box=$("agentResults");
-box.textContent="Searching approved agents…";
-try{
-let q=db.collection("agentDirectory");
-if(region)q=q.where("region","==",region);
-if(town)q=q.where("town","==",town);
-const snap=await q.get();box.replaceChildren();
-if(snap.empty){box.textContent="No approved agents found for this selection.";return;}
-snap.forEach(doc=>{
-const d=doc.data(),item=document.createElement("div");item.className="request";
-const name=document.createElement("strong");name.textContent=d.name||"Approved agent";
-const location=document.createElement("p");location.textContent=(d.region||"")+" · "+(d.town||"");
-const contact=document.createElement("p");contact.textContent="Contact: "+(d.phone||"Contact administrator");
-item.append(name,location,contact);box.appendChild(item);
-});
-}catch(err){show(box,"Agent search failed: "+messageFromError(err),true);}
+  const region=$("searchRegion").value;
+  const town=$("searchTown").value;
+  const box=$("agentResults");
+
+  box.textContent="Searching approved agents…";
+
+  try{
+    let q=db.collection("agentDirectory")
+      .where("status","==","approved");
+
+    if(region){
+      q=q.where("region","==",region);
+    }
+
+    if(town){
+      q=q.where("town","==",town);
+    }
+
+    const snap=await q.get();
+    box.replaceChildren();
+
+    if(snap.empty){
+      box.textContent="No approved agents found for this selection.";
+      return;
+    }
+
+    snap.forEach(doc=>{
+      const d=doc.data();
+      const item=document.createElement("div");
+      item.className="request";
+
+      const name=document.createElement("strong");
+      name.textContent=d.name||"Approved agent";
+
+      const location=document.createElement("p");
+      location.textContent=(d.region||"")+" · "+(d.town||"");
+
+      const contact=document.createElement("p");
+      contact.textContent="Contact: "+(d.phone||"Contact administrator");
+
+      item.append(name,location,contact);
+      box.appendChild(item);
+    });
+
+  }catch(err){
+    show(
+      box,
+      "Agent search failed: "+messageFromError(err),
+      true
+    );
+  }
 });
 
 async function checkAdmin(user){
