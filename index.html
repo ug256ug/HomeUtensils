@@ -440,6 +440,7 @@ item.textContent="Name: "+(d.name||"Not set")+" · Email: "+(d.email||"Not set")
 memberBox.appendChild(item);
 });
 
+
 const agentBox=$("adminAgentApplications");agentBox.replaceChildren();
 if(applications.empty){agentBox.textContent="No agent applications yet.";}
 applications.forEach(doc=>{
