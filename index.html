@@ -367,74 +367,48 @@ await loadMyAgentStatus();
 finally{btn.disabled=false;}
 });
 
+
 async function loadMyAgentStatus(){
-if(!currentUser)return;
-try{
-const snap=await db.collection("agentApplications").where("uid","==",currentUser.uid).limit(1).get();
-const box=$("myAgentStatus");box.replaceChildren();
-if(snap.empty){box.textContent="No agent application found.";return;}
-const d=snap.docs[0].data(),p=document.createElement("p");
-p.className="notice";
-p.textContent="Agent application status: "+(d.status||"pending")+
-(d.status==="approved"?" · Approved agent float: UGX 57,500 (non-withdrawable).":"");
-box.appendChild(p);
-}catch(err){show($("myAgentStatus"),"Could not load application status: "+messageFromError(err),true);}
-}
-
-
-$("searchAgents").addEventListener("click",async()=>{
-  const region=$("searchRegion").value;
-  const town=$("searchTown").value;
-  const box=$("agentResults");
-
-  box.textContent="Searching approved agents…";
+  if(!currentUser)return;
 
   try{
-    let q=db.collection("agentDirectory")
-      .where("status","==","approved");
+    const snap=await db.collection("agentApplications")
+      .where("uid","==",currentUser.uid)
+      .limit(1)
+      .get();
 
-    if(region){
-      q=q.where("region","==",region);
-    }
-
-    if(town){
-      q=q.where("town","==",town);
-    }
-
-    const snap=await q.get();
+    const box=$("myAgentStatus");
     box.replaceChildren();
 
     if(snap.empty){
-      box.textContent="No approved agents found for this selection.";
+      box.textContent="No agent application found.";
       return;
     }
 
-    snap.forEach(doc=>{
-      const d=doc.data();
-      const item=document.createElement("div");
-      item.className="request";
+    const d=snap.docs[0].data();
+    const p=document.createElement("p");
+    p.className="notice";
 
-      const name=document.createElement("strong");
-      name.textContent=d.name||"Approved agent";
+    if(d.status==="approved"){
+      p.textContent=
+        "Agent application status: approved. " +
+        "The UGX 57,500 restricted float has not been verified as issued. " +
+        "Please contact the administrator to confirm its status.";
+    }else{
+      p.textContent=
+        "Agent application status: "+(d.status||"pending")+".";
+    }
 
-      const location=document.createElement("p");
-      location.textContent=(d.region||"")+" · "+(d.town||"");
-
-      const contact=document.createElement("p");
-      contact.textContent="Contact: "+(d.phone||"Contact administrator");
-
-      item.append(name,location,contact);
-      box.appendChild(item);
-    });
+    box.appendChild(p);
 
   }catch(err){
     show(
-      box,
-      "Agent search failed: "+messageFromError(err),
+      $("myAgentStatus"),
+      "Could not load application status: "+messageFromError(err),
       true
     );
   }
-});
+}
 
 async function checkAdmin(user){
 try{
