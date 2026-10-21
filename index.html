@@ -440,19 +440,34 @@ item.textContent="Name: "+(d.name||"Not set")+" · Email: "+(d.email||"Not set")
 memberBox.appendChild(item);
 });
 
+const agentBox=$("adminAgentApplications");
+agentBox.replaceChildren();
 
-const agentBox=$("adminAgentApplications");agentBox.replaceChildren();
-if(applications.empty){agentBox.textContent="No agent applications yet.";}
+if(applications.empty){
+agentBox.textContent="No agent applications yet.";
+}
+
 applications.forEach(doc=>{
-const d=doc.data(),item=document.createElement("div");item.className="request";
-const info=document.createElement("p");
-info.textContent="Applicant: "+(d.name||"Not set")+" · Email: "+(d.email||"Not set")+
-" · Region: "+(d.region||"")+" · Town: "+(d.town||"")+
-" · Phone: "+(d.phone||"")+" · NIN: "+(d.nin||"")+
-" · Declared capital: UGX "+(d.capitalDeclared||0
+const d=doc.data();
+const item=document.createElement("div");
+item.className="request";
 
-)+
+const info=document.createElement("p");
+const nin=d.nin||"";
+const maskedNin=nin.length>4
+? "••••••"+nin.slice(-4)
+: "Hidden";
+
+info.textContent=
+"Applicant: "+(d.name||"Not set")+
+" · Email: "+(d.email||"Not set")+
+" · Region: "+(d.region||"Not set")+
+" · Town: "+(d.town||"Not set")+
+" · Phone: "+(d.phone||"Not set")+
+" · NIN: "+maskedNin+
+" · Declared capital: UGX "+(d.capitalDeclared||0)+
 " · Application status: "+(d.status||"pending");
+
 item.appendChild(info);
 agentBox.appendChild(item);
 });
