@@ -449,3 +449,93 @@ info.textContent="Applicant: "+(d.name||"Not set")+" · Email: "+(d.email||"Not 
 " · Region: "+(d.region||"")+" · Town: "+(d.town||"")+
 " · Phone: "+(d.phone||"")+" · NIN: "+(d.nin||"")+
 " · Declared capital: UGX "+(d.capitalDeclared||0
+
+)+
+" · Application status: "+(d.status||"pending");
+item.appendChild(info);
+agentBox.appendChild(item);
+});
+
+}catch(err){
+show($("adminSummary"),"Admin dashboard failed: "+messageFromError(err),true);
+}
+}
+
+async function reviewActivation(id,status){
+if(!isAdminUser){
+show($("globalMessage"),"Administrator access required.",true);
+return;
+}
+try{
+await db.collection("activationRequests").doc(id).update({
+status:status,
+reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),
+reviewedBy:currentUser.uid
+});
+show($("globalMessage"),"Request marked "+status+". This does not automatically activate a package.");
+await loadAdmin();
+}catch(err){
+show($("globalMessage"),"Could not update request: "+messageFromError(err),true);
+}
+}
+
+firebase.initializeApp(firebaseConfig);
+auth=firebase.auth();
+db=firebase.firestore();
+
+auth.onAuthStateChanged(async user=>{
+currentUser=user;
+profileData=null;
+isAdminUser=false;
+
+$("authCard").classList.toggle("hidden",!!user);
+$("dashboard").classList.toggle("hidden",!user);
+$("adminSection").classList.add("hidden");
+
+if(unsubscribe){
+unsubscribe();
+unsubscribe=null;
+}
+
+if(!user){
+$("memberEmail").textContent="";
+return;
+}
+
+$("memberEmail").textContent=user.email||"Signed in";
+show($("profileMessage"),"Loading account details…");
+
+try{
+const profileDoc=await db.collection("memberProfiles")
+.doc(user.uid).get();
+
+if(profileDoc.exists){
+renderProfile(profileDoc.data());
+}else{
+profileData=null;
+show(
+$("profileMessage"),
+"Your account has no member profile yet. Please contact the administrator.",
+true
+);
+}
+
+listenRequests(user);
+await loadMyAgentStatus();
+
+isAdminUser=await checkAdmin(user);
+
+if(isAdminUser){
+$("adminSection").classList.remove("hidden");
+await loadAdmin();
+}
+}catch(err){
+show(
+$("profileMessage"),
+"Could not load your account: "+messageFromError(err),
+true
+);
+}
+});
+
+})();
