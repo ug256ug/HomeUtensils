@@ -6,7 +6,8 @@ on:
     branches:
       - withdrawal-safety-fix
     paths:
-      - ".github/workflows/firebase-deploy.yml"
+      - "firestore.rules"
+      - "firebase.json"
   workflow_dispatch:
 
 permissions:
@@ -20,68 +21,32 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Require reviewed rules files
+        run: |
+          if [ ! -f firestore.rules ]; then
+            echo "::error::firestore.rules is missing. Deployment stopped to protect existing Firebase rules."
+            exit 1
+          fi
+
+          if [ ! -f firebase.json ]; then
+            echo "::error::firebase.json is missing."
+            exit 1
+          fi
+
+          node -e "const c=require('./firebase.json'); if (!c.firestore || c.firestore.rules !== 'firestore.rules') { console.error('firebase.json must point to firestore.rules.'); process.exit(1); }"
+
       - name: Authenticate with Google Cloud
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-
-      - name: Check authenticated service account
-        run: |
-          python - <<'PY'
-          import json
-          import os
-
-          path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-          if not path:
-              raise SystemExit("Google credentials file was not created.")
-
-          with open(path, encoding="utf-8") as f:
-              credentials = json.load(f)
-
-          print("Credential type:", credentials.get("type", "unknown"))
-          print("Service account:", credentials.get("client_email", "not found"))
-          PY
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: Create Firestore configuration
-        run: |
-          cat > firebase.json <<'EOF'
-          {
-            "firestore": {
-              "rules": "firestore.rules"
-            }
-          }
-          EOF
+      - name: Install Firebase CLI
+        run: npm install --global firebase-tools
 
-          cat > firestore.rules <<'EOF'
-          rules_version = '2';
-
-          service cloud.firestore {
-            match /databases/{database}/documents {
-              match /memberProfiles/{userId} {
-                allow create: if request.auth != null
-                  && request.auth.uid == userId
-                  && request.resource.data.uid == request.auth.uid;
-
-                allow read: if request.auth != null
-                  && request.auth.uid == userId;
-
-                allow update: if request.auth != null
-                  && request.auth.uid == userId
-                  && request.resource.data.uid == resource.data.uid;
-
-                allow delete: if false;
-              }
-            }
-          }
-          EOF
-
-      - name: Deploy Firestore security rules
-        run: |
-          npx --yes firebase-tools deploy \
-            --only firestore:rules \
-            --project homeutensils-5b3cf
+      - name: Deploy reviewed Firestore rules
+        run: firebase deploy --only firestore:rules --project homeutensils-5b3cf
