@@ -1,1 +1,246 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#14532d">
+<title>HomeUtensils | Administrator Dashboard</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f3f6f4;color:#18251d}
+header{background:#14532d;color:white;padding:20px}
+header h1{margin:0 0 8px;font-size:23px}
+header p{margin:0;color:#d8eadc}
+main{max-width:1100px;margin:auto;padding:16px}
+.card{background:white;border:1px solid #dce5de;border-radius:12px;padding:16px;margin:12px 0;overflow-wrap:anywhere}
+h2{font-size:18px;margin-top:0}
+input,button{width:100%;padding:12px;margin:6px 0;border-radius:8px;font-size:15px}
+input{border:1px solid #bdc9bf}
+button{border:0;background:#176b45;color:white;font-weight:bold;cursor:pointer}
+button.secondary{background:#475569}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.metric{background:#edf6ef;padding:14px;border-radius:9px}
+.metric strong{display:block;font-size:24px;color:#14532d;margin-top:7px}
+.notice{padding:12px;background:#fff7df;border-radius:8px;overflow-wrap:anywhere}
+.small{font-size:13px;color:#59675d}
+.record{padding:12px 0;border-bottom:1px solid #e2e8e3;white-space:pre-wrap}
+.hidden{display:none}
+#message{white-space:pre-wrap}
+</style>
+</head>
+<body>
+<header>
+<h1>HomeUtensils Administration</h1>
+<p>Member oversight, package activation, agents and financial records</p>
+</header>
+<main>
+<div class="card">
+<h2>Administrator sign in</h2>
+<p class="small">Use your existing HomeUtensils administrator account.</p>
+<input id="email" type="email" autocomplete="username" placeholder="Administrator email">
+<input id="password" type="password" autocomplete="current-password" placeholder="Password">
+<button id="loginBtn" onclick="login()">Sign in securely</button>
+<button id="logoutBtn" class="secondary hidden" onclick="logout()">Sign out</button>
+<p id="message" role="status"></p>
+</div>
+
+<div id="dashboard" class="hidden">
+<div class="card">
+<h2>System overview</h2>
+<div class="grid">
+<div class="metric">Members<strong id="membersCount">—</strong></div>
+<div class="metric">Active packages<strong id="activeCount">—</strong></div>
+<div class="metric">Activation requests<strong id="activationCount">—</strong></div>
+<div class="metric">Agent applications<strong id="agentsCount">—</strong></div>
+<div class="metric">Withdrawal requests<strong id="withdrawalsCount">—</strong></div>
+</div>
+<p class="small">Counts show records this signed-in administrator is permitted to read.</p>
+<button onclick="refreshAll()">Refresh records</button>
+</div>
+
+<div class="card">
+<h2>Member records</h2>
+<input id="memberSearch" placeholder="Search member name or email" oninput="renderMembers()">
+<div id="membersList">Loading member records…</div>
+</div>
+
+<div class="card">
+<h2>Package activation requests</h2>
+<div id="activationList">Loading requests…</div>
+</div>
+
+<div class="card">
+<h2>Agent applications</h2>
+<div id="agentList">Loading applications…</div>
+</div>
+
+<div class="card">
+<h2>Withdrawal requests</h2>
+<div id="withdrawalList">Loading withdrawal records…</div>
+</div>
+
+<div class="card">
+<h2>Wallet transaction ledger</h2>
+<div id="walletList">Loading wallet records…</div>
+</div>
+
+<div class="card">
+<h2>P2P transfer ledger</h2>
+<div id="p2pList">Loading P2P records…</div>
+</div>
+
+<div class="card">
+<h2>Task submissions</h2>
+<div id="taskList">Loading task records…</div>
+</div>
+
+<div class="card">
+<h2>Administrator audit log</h2>
+<div id="auditList">Loading audit records…</div>
+</div>
+
+<div class="card">
+<h2>Important controls</h2>
+<div class="notice">This first dashboard version is read-only. It does not approve payments, alter balances, approve withdrawals, activate packages, or create audit entries. Those actions must be implemented with verified business rules and secure Firebase permissions.</div>
+</div>
+</div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig={
+apiKey:"AIzaSyBllLCn_TmD9iAYz6kkIqmGwQy_Wfbk_Sc",
+authDomain:"homeutensils-5b3cf.firebaseapp.com",
+projectId:"homeutensils-5b3cf",
+storageBucket:"homeutensils-5b3cf.firebasestorage.app",
+messagingSenderId:"976309566737",
+appId:"1:976309566737:web:e65365b6df2d15ce6060b0"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.firestore();
+const $=id=>document.getElementById(id);
+
+let memberRecords=[];
+let activeUser=null;
+
+function message(text,error=false){
+$("message").textContent=text;
+$("message").style.color=error?"#b91c1c":"#166534";
+}
+
+async function login(){
+const email=$("email").value.trim();
+const password=$("password").value;
+if(!email||!password){message("Enter your email and password.",true);return}
+$("loginBtn").disabled=true;
+message("Signing in…");
+try{
+await auth.signInWithEmailAndPassword(email,password);
+}catch(e){
+message("Sign-in failed: "+e.message,true);
+}finally{
+$("loginBtn").disabled=false;
+}
+}
+
+async function logout(){
+await auth.signOut();
+}
+
+auth.onAuthStateChanged(async user=>{
+activeUser=user;
+$("dashboard").classList.add("hidden");
+$("logoutBtn").classList.add("hidden");
+$("loginBtn").classList.remove("hidden");
+if(!user){message("Sign in with an authorized administrator account.");return}
+$("logoutBtn").classList.remove("hidden");
+$("loginBtn").classList.add("hidden");
+message("Checking administrator permissions…");
+try{
+const adminDoc=await db.collection("admins").doc(user.uid).get();
+if(!adminDoc.exists||
+adminDoc.data().role!=="admin"||
+adminDoc.data().enabled!==true){
+message("Access denied. This account is not enabled as an administrator.",true);
+await auth.signOut();
+return;
+}
+$("dashboard").classList.remove("hidden");
+message("Administrator access verified.");
+await refreshAll();
+}catch(e){
+message("Could not verify administrator access. Check Firebase rules and the admins record. "+e.message,true);
+}
+});
+
+function showRecords(id,records){
+const target=$(id);
+if(!records.length){
+target.innerHTML='<p class="small">No records found, or this collection is empty.</p>';
+return;
+}
+target.replaceChildren();
+records.forEach(record=>{
+const row=document.createElement("div");
+row.className="record";
+const data={...record};
+delete data._id;
+row.textContent="Record ID: "+record._id+"\n"+
+JSON.stringify(data,null,2);
+target.appendChild(row);
+});
+}
+
+async function readCollection(name,targetId,limit=100){
+try{
+const snap=await db.collection(name).limit(limit).get();
+const records=snap.docs.map(d=>({_id:d.id,...d.data()}));
+showRecords(targetId,records);
+return records;
+}catch(e){
+$(targetId).textContent="Cannot read '"+name+"': "+e.message;
+return null;
+}
+}
+
+function renderMembers(){
+const q=$("memberSearch").value.trim().toLowerCase();
+showRecords("membersList",memberRecords.filter(m=>
+JSON.stringify(m).toLowerCase().includes(q)
+));
+}
+
+async function refreshAll(){
+if(!activeUser)return;
+message("Refreshing system records…");
+const results=await Promise.all([
+readCollection("memberProfiles","membersList"),
+readCollection("activationRequests","activationList"),
+readCollection("agentApplications","agentList"),
+readCollection("withdrawalRequests","withdrawalList"),
+readCollection("walletTransactions","walletList"),
+readCollection("p2pTransfers","p2pList"),
+readCollection("taskSubmissions","taskList"),
+readCollection("adminAuditLogs","auditList")
+]);
+memberRecords=results[0]||[];
+renderMembers();
+$("membersCount").textContent=memberRecords.length;
+$("activeCount").textContent=memberRecords.filter(m=>
+String(m.packageStatus||"").toLowerCase()==="active"&&
+String(m.accountStatus||"").toLowerCase()!=="suspended"
+).length;
+$("activationCount").textContent=results[1]===null?"Error":results[1].length;
+$("agentsCount").textContent=results[2]===null?"Error":results[2].length;
+$("withdrawalsCount").textContent=results[3]===null?"Error":results[3].length;
+message("Refresh complete. If a section shows a permission error, its Firebase rules or collection name needs checking.");
+}
+</script>
+</body>
+  </html>
+
