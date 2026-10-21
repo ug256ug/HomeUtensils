@@ -14,10 +14,10 @@ header h1{margin:0}
 main{max-width:900px;margin:20px auto;padding:0 12px}
 .card{background:white;border:1px solid #d1d5db;border-radius:12px;padding:17px;margin-bottom:16px}
 label{display:block;font-weight:bold;margin:12px 0 5px}
-input,select,button{width:100%;padding:12px;font:inherit;border-radius:8px}
-input,select{border:1px solid #9ca3af;background:white}
+input,select,button,textarea{width:100%;padding:12px;font:inherit;border-radius:8px}
+input,select,textarea{border:1px solid #9ca3af;background:white}
 button{border:0;background:#166534;color:white;font-weight:bold;margin-top:12px;cursor:pointer}
-button:disabled{opacity:.55}
+button:disabled{opacity:.55;cursor:not-allowed}
 .secondary{background:#e5e7eb;color:#17211b}
 .danger{background:#991b1b}
 .hidden{display:none!important}
@@ -27,13 +27,14 @@ button:disabled{opacity:.55}
 .muted{color:#647067;font-size:.94rem}
 .request{padding:12px;border:1px solid #d1d5db;border-radius:8px;margin:10px 0;overflow-wrap:anywhere}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.money{font-size:1.2rem;font-weight:bold}
 footer{text-align:center;padding:20px;color:#647067}
 </style>
 </head>
 <body>
 <header>
 <h1>HomeUtensils</h1>
-<p>Member services, package activation and agent support</p>
+<p>Member services, package activation, withdrawals and agent support</p>
 </header>
 
 <main>
@@ -108,6 +109,65 @@ footer{text-align:center;padding:20px;color:#647067}
 <div id="requestHistory">Your activation requests will appear here.</div>
 </div>
 
+<div class="card" id="withdrawalCard">
+<h2>Request a withdrawal</h2>
+<p class="muted">Submit a withdrawal request for administrator review. Submitting this form does not guarantee approval or payment.</p>
+
+<div class="notice">
+<strong>Withdrawal conditions</strong>
+<ul>
+<li>Minimum request: UGX 2,000.</li>
+<li>Fee: 10% of the requested amount.</li>
+<li>The fee is deducted from the requested amount when calculating the expected payout.</li>
+<li>Processing schedule: Monday–Saturday, 6:00 AM–8:00 PM Uganda time, excluding public holidays.</li>
+<li>Only one pending withdrawal request is permitted per member.</li>
+</ul>
+The server must verify the schedule, public holidays, available balance and pending-request limit before any real withdrawal is approved.
+</div>
+
+<form id="withdrawalForm">
+<label for="withdrawalAmount">Amount to withdraw (UGX)</label>
+<input id="withdrawalAmount" type="number" min="2000" step="1" inputmode="numeric" required placeholder="Minimum 2000">
+
+<div class="grid">
+<div class="request">
+<div class="muted">Withdrawal fee (10%)</div>
+<div id="withdrawalFee" class="money">UGX 0</div>
+</div>
+<div class="request">
+<div class="muted">Estimated payout</div>
+<div id="withdrawalPayout" class="money">UGX 0</div>
+</div>
+</div>
+
+<label for="withdrawalMethod">Payout method</label>
+<select id="withdrawalMethod" required>
+<option value="">Select payout method</option>
+<option value="Mobile Money">Mobile Money</option>
+<option value="Bank Transfer">Bank Transfer</option>
+</select>
+
+<label for="withdrawalAccountName">Account holder name</label>
+<input id="withdrawalAccountName" maxlength="100" required autocomplete="name" placeholder="Name registered with your provider">
+
+<label for="withdrawalAccount">Mobile money number or bank account</label>
+<input id="withdrawalAccount" maxlength="100" required autocomplete="off" placeholder="Enter payout account details">
+
+<label for="withdrawalNote">Optional note</label>
+<textarea id="withdrawalNote" maxlength="300" rows="3" placeholder="Additional information (optional)"></textarea>
+
+<p class="muted">Check your payout details carefully. Do not enter your password, PIN or one-time verification code.</p>
+<button id="withdrawalSubmit" type="submit">Submit withdrawal request</button>
+</form>
+
+<div id="withdrawalMessage" aria-live="polite"></div>
+</div>
+
+<div class="card">
+<h2>Your withdrawal history</h2>
+<div id="withdrawalHistory">Your withdrawal requests will appear here.</div>
+</div>
+
 <div class="card">
 <h2>Apply to become an agent</h2>
 <p>An agent must be an active Plus member and must submit an application. Plus membership alone does not make you an agent.</p>
@@ -134,7 +194,7 @@ After an administrator verifies the capital and approves your application, the a
 <p class="muted">Your NIN is private and should only be accessible to you and authorised administrators. It will not be shown in public agent search results.</p>
 <label>
 <input id="capitalConfirm" type="checkbox" required style="width:auto">
- I understand that I must provide UGX 50,000 starting capital for verification.
+I understand that I must provide UGX 50,000 starting capital for verification.
 </label>
 <button type="submit">Submit agent application</button>
 </form>
@@ -163,17 +223,26 @@ After an administrator verifies the capital and approves your application, the a
 <section id="adminSection" class="hidden">
 <div class="card">
 <h2>Administrator dashboard</h2>
-<p>Review member profiles, activation requests and agent applications.</p>
+<p>Review member profiles, activation requests, withdrawal requests and agent applications.</p>
 <div id="adminSummary" class="notice">Loading…</div>
 </div>
+
 <div class="card">
 <h2>Activation requests</h2>
 <div id="adminRequests">Loading requests…</div>
 </div>
+
+<div class="card">
+<h2>Withdrawal requests</h2>
+<p class="muted">Review requests and verify the member's balance and payout details independently. The review buttons below change request status only; they do not debit or refund a wallet and do not send money.</p>
+<div id="adminWithdrawals">Loading withdrawal requests…</div>
+</div>
+
 <div class="card">
 <h2>Registered members</h2>
 <div id="adminMembers">Loading members…</div>
 </div>
+
 <div class="card">
 <h2>Agent applications</h2>
 <p class="muted">Approve an applicant only after independently verifying their active Plus membership and receipt of the UGX 50,000 capital. Approval grants a restricted UGX 57,500 float.</p>
@@ -198,7 +267,7 @@ authDomain:"homeutensils-5b3cf.firebaseapp.com",
 projectId:"homeutensils-5b3cf",
 storageBucket:"homeutensils-5b3cf.firebasestorage.app",
 messagingSenderId:"976309566737",
-appId:"1:976309566737:web:e65365b6df2d15ce6060b0"
+appId:"1:976309566737:web:e65365b6df2d15ce606b0"
 };
 
 const $=id=>document.getElementById(id);
@@ -231,7 +300,7 @@ return messages[e.code]||e.message||"An error occurred.";
 function dateText(v){
 if(!v)return "Not set";
 const d=v.toDate?v.toDate():new Date(v);
-return Number.isNaN(d.getTime())?"Not set":d.toLocaleDateString();
+return Number.isNaN(d.getTime())?"Not set":d.toLocaleString();
 }
 function makeOption(value,label){
 const o=document.createElement("option");
@@ -244,8 +313,41 @@ select.replaceChildren();
 select.appendChild(makeOption("",allLabel));
 (towns[region]||[]).forEach(t=>select.appendChild(makeOption(t,t)));
 }
+function money(amount){
+return "UGX "+Math.round(Number(amount)||0).toLocaleString("en-UG");
+}
+
 $("agentRegion").addEventListener("change",()=>setTowns("agentRegion","agentTown","Select town"));
 $("searchRegion").addEventListener("change",()=>setTowns("searchRegion","searchTown","All towns"));
+
+function updateWithdrawalQuote(){
+const amount=Number($("withdrawalAmount").value);
+const valid=Number.isFinite(amount)&&amount>=2000&&Number.isInteger(amount);
+const fee=valid?Math.round(amount*0.10):0;
+const payout=valid?amount-fee:0;
+$("withdrawalFee").textContent=money(fee);
+$("withdrawalPayout").textContent=money(payout);
+}
+$("withdrawalAmount").addEventListener("input",updateWithdrawalQuote);
+
+function withdrawalScheduleMessage(){
+try{
+const now=new Date();
+const parts=new Intl.DateTimeFormat("en-GB",{
+timeZone:"Africa/Kampala",
+weekday:"short",hour:"2-digit",minute:"2-digit",hourCycle:"h23"
+}).formatToParts(now);
+const data={};
+parts.forEach(p=>{if(p.type!=="literal")data[p.type]=p.value;});
+const minutes=Number(data.hour)*60+Number(data.minute);
+const day=data.weekday;
+if(day==="Sun")return "Withdrawal requests are not scheduled for Sundays.";
+if(minutes<360||minutes>=1200)return "The withdrawal request window is 6:00 AM to 8:00 PM Uganda time.";
+return "";
+}catch(e){
+return "The current Uganda-time schedule could not be checked. Please try again later.";
+}
+}
 
 $("showRegister").addEventListener("click",()=>{
 $("signInPanel").classList.add("hidden");
@@ -320,10 +422,10 @@ const h=document.createElement("h3");h.textContent="Package details";details.app
 const p=document.createElement("p");p.textContent=label+": "+(value||"Not set");details.appendChild(p);
 });
 }
+
 function listenRequests(user){
-if(unsubscribe)unsubscribe();
 $("requestHistory").textContent="Loading requests…";
-unsubscribe=db.collection("activationRequests").where("uid","==",user.uid).onSnapshot(snapshot=>{
+db.collection("activationRequests").where("uid","==",user.uid).onSnapshot(snapshot=>{
 const box=$("requestHistory");box.replaceChildren();
 if(snapshot.empty){box.textContent="You have not submitted any requests.";return;}
 snapshot.forEach(doc=>{
@@ -333,6 +435,96 @@ box.appendChild(item);
 });
 },err=>show($("requestHistory"),messageFromError(err),true));
 }
+
+function listenWithdrawals(user){
+$("withdrawalHistory").textContent="Loading withdrawal requests…";
+db.collection("withdrawalRequests").where("uid","==",user.uid).onSnapshot(snapshot=>{
+const box=$("withdrawalHistory");box.replaceChildren();
+if(snapshot.empty){box.textContent="You have not submitted any withdrawal requests.";return;}
+snapshot.forEach(doc=>{
+const d=doc.data(),item=document.createElement("div");item.className="request";
+const p=document.createElement("p");
+p.textContent="Request: "+doc.id;
+item.appendChild(p);
+[
+["Requested",money(d.amount)],
+["Fee estimate",money(d.fee)],
+["Estimated payout",money(d.payout)],
+["Method",d.method||"Not set"],
+["Status",d.status||"pending"],
+["Submitted",dateText(d.createdAt)],
+["Review note",d.reviewNote||"No review note"]
+].forEach(([label,value])=>{
+const line=document.createElement("p");
+line.textContent=label+": "+value;
+item.appendChild(line);
+});
+box.appendChild(item);
+});
+},err=>show($("withdrawalHistory"),"Could not load withdrawal history: "+messageFromError(err),true));
+}
+
+$("withdrawalForm").addEventListener("submit",async e=>{
+e.preventDefault();
+if(!currentUser)return show($("withdrawalMessage"),"Please sign in first.",true);
+
+const amount=Number($("withdrawalAmount").value);
+const method=$("withdrawalMethod").value;
+const accountName=$("withdrawalAccountName").value.trim();
+const account=$("withdrawalAccount").value.trim();
+const note=$("withdrawalNote").value.trim();
+
+if(!Number.isInteger(amount)||amount<2000){
+return show($("withdrawalMessage"),"The minimum withdrawal request is UGX 2,000. Enter a whole number.",true);
+}
+if(!method||!accountName||!account){
+return show($("withdrawalMessage"),"Complete the payout method, account holder name and payout account fields.",true);
+}
+
+const scheduleError=withdrawalScheduleMessage();
+if(scheduleError){
+return show($("withdrawalMessage"),scheduleError,true);
+}
+
+const fee=Math.round(amount*0.10);
+const payout=amount-fee;
+const btn=$("withdrawalSubmit");
+btn.disabled=true;
+
+try{
+const existing=await db.collection("withdrawalRequests")
+.where("uid","==",currentUser.uid)
+.where("status","==","pending")
+.limit(1).get();
+
+if(!existing.empty){
+show($("withdrawalMessage"),"You already have a pending withdrawal request. Wait for it to be reviewed before submitting another.",true);
+return;
+}
+
+await db.collection("withdrawalRequests").add({
+uid:currentUser.uid,
+amount:amount,
+fee:fee,
+payout:payout,
+currency:"UGX",
+method:method,
+accountName:accountName,
+account:account,
+note:note,
+status:"pending",
+createdAt:firebase.firestore.FieldValue.serverTimestamp()
+});
+
+$("withdrawalForm").reset();
+updateWithdrawalQuote();
+show($("withdrawalMessage"),"Withdrawal request submitted for administrator review. No wallet balance has been changed and no payment has been made. The server must verify your balance, schedule, public holidays and request eligibility before processing.");
+}catch(err){
+show($("withdrawalMessage"),"Could not submit withdrawal request: "+messageFromError(err),true);
+}finally{
+btn.disabled=false;
+}
+});
 
 $("agentForm").addEventListener("submit",async e=>{
 e.preventDefault();
@@ -367,47 +559,23 @@ await loadMyAgentStatus();
 finally{btn.disabled=false;}
 });
 
-
 async function loadMyAgentStatus(){
-  if(!currentUser)return;
-
-  try{
-    const snap=await db.collection("agentApplications")
-      .where("uid","==",currentUser.uid)
-      .limit(1)
-      .get();
-
-    const box=$("myAgentStatus");
-    box.replaceChildren();
-
-    if(snap.empty){
-      box.textContent="No agent application found.";
-      return;
-    }
-
-    const d=snap.docs[0].data();
-    const p=document.createElement("p");
-    p.className="notice";
-
-    if(d.status==="approved"){
-      p.textContent=
-        "Agent application status: approved. " +
-        "The UGX 57,500 restricted float has not been verified as issued. " +
-        "Please contact the administrator to confirm its status.";
-    }else{
-      p.textContent=
-        "Agent application status: "+(d.status||"pending")+".";
-    }
-
-    box.appendChild(p);
-
-  }catch(err){
-    show(
-      $("myAgentStatus"),
-      "Could not load application status: "+messageFromError(err),
-      true
-    );
-  }
+if(!currentUser)return;
+try{
+const snap=await db.collection("agentApplications")
+.where("uid","==",currentUser.uid).limit(1).get();
+const box=$("myAgentStatus");box.replaceChildren();
+if(snap.empty){box.textContent="No agent application found.";return;}
+const d=snap.docs[0].data(),p=document.createElement("p");p.className="notice";
+if(d.status==="approved"){
+p.textContent="Agent application status: approved. The UGX 57,500 restricted float has not been independently verified as issued. Please contact the administrator to confirm its status.";
+}else{
+p.textContent="Agent application status: "+(d.status||"pending")+".";
+}
+box.appendChild(p);
+}catch(err){
+show($("myAgentStatus"),"Could not load application status: "+messageFromError(err),true);
+}
 }
 
 async function checkAdmin(user){
@@ -417,22 +585,64 @@ return doc.exists&&doc.data().role==="admin"&&doc.data().enabled===true;
 }catch(e){console.error(e);return false;}
 }
 
+async function reviewActivation(id,status){
+if(!isAdminUser||!currentUser)return show($("globalMessage"),"Administrator access required.",true);
+if(!["approved","rejected"].includes(status))return;
+if(!confirm("Confirm "+status+" for this activation request?"))return;
+try{
+await db.collection("activationRequests").doc(id).update({
+status:status,
+reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),
+reviewedBy:currentUser.uid
+});
+show($("globalMessage"),"Activation request marked "+status+". Verify any payment and package updates separately.");
+await loadAdmin();
+}catch(err){show($("globalMessage"),"Could not review activation: "+messageFromError(err),true);}
+}
+
+async function reviewWithdrawal(id,status){
+if(!isAdminUser||!currentUser)return show($("globalMessage"),"Administrator access required.",true);
+if(!["approved","rejected"].includes(status))return;
+const note=prompt("Enter the review note. This decision changes request status only; it does not debit or refund a wallet or send money.");
+if(note===null)return;
+if(!confirm("Mark this withdrawal request "+status+"? No payment or balance change will occur."))return;
+try{
+const ref=db.collection("withdrawalRequests").doc(id);
+const snap=await ref.get();
+if(!snap.exists)throw new Error("Withdrawal request not found.");
+if(snap.data().status!=="pending")throw new Error("This request is no longer pending.");
+await ref.update({
+status:status,
+reviewNote:note.trim(),
+reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),
+reviewedBy:currentUser.uid
+});
+show($("globalMessage"),"Withdrawal request marked "+status+". No wallet balance was changed and no payment was made.");
+await loadAdmin();
+}catch(err){show($("globalMessage"),"Could not review withdrawal request: "+messageFromError(err),true);}
+}
+
 async function loadAdmin(){
 try{
-const [requests,members,applications]=await Promise.all([
+const [requests,members,applications,withdrawals]=await Promise.all([
 db.collection("activationRequests").get(),
 db.collection("memberProfiles").get(),
-db.collection("agentApplications").get()
+db.collection("agentApplications").get(),
+db.collection("withdrawalRequests").get()
 ]);
-$("adminSummary").textContent="Members: "+members.size+" · Activation requests: "+requests.size+
+$("adminSummary").textContent=
+"Members: "+members.size+
+" · Activation requests: "+requests.size+
 " · Pending activations: "+requests.docs.filter(d=>d.data().status==="pending").length+
+" · Withdrawal requests: "+withdrawals.size+
+" · Pending withdrawals: "+withdrawals.docs.filter(d=>d.data().status==="pending").length+
 " · Agent applications: "+applications.size;
 
 const reqBox=$("adminRequests");reqBox.replaceChildren();
+if(requests.empty)reqBox.textContent="No activation requests.";
 requests.forEach(doc=>{
 const d=doc.data(),item=document.createElement("div");item.className="request";
-item.textContent="Package: "+(d.packageRequested||"Not set")+" · Status: "+(d.status||"pending")+
-" · Area: "+(d.area||"Not set")+" · Member UID: "+(d.uid||"Not set");
+item.textContent="Package: "+(d.packageRequested||"Not set")+" · Status: "+(d.status||"pending")+" · Area: "+(d.area||"Not set")+" · Member UID: "+(d.uid||"Not set");
 if(d.status==="pending"){
 const approve=document.createElement("button");approve.textContent="Approve activation";
 approve.addEventListener("click",()=>reviewActivation(doc.id,"approved"));
@@ -443,296 +653,189 @@ item.append(approve,reject);
 reqBox.appendChild(item);
 });
 
+const withdrawalBox=$("adminWithdrawals");withdrawalBox.replaceChildren();
+if(withdrawals.empty)withdrawalBox.textContent="No withdrawal requests.";
+withdrawals.forEach(doc=>{
+const d=doc.data(),item=document.createElement("div");item.className="request";
+[
+["Request ID",doc.id],
+["Member UID",d.uid||"Not set"],
+["Requested amount",money(d.amount)],
+["Fee estimate",money(d.fee)],
+["Estimated payout",money(d.payout)],
+["Method",d.method||"Not set"],
+["Account holder",d.accountName||"Not set"],
+["Payout account",d.account||"Not set"],
+["Status",d.status||"pending"],
+["Submitted",dateText(d.createdAt)],
+["Note",d.note||"None"]
+].forEach(([label,value])=>{
+const p=document.createElement("p");p.textContent=label+": "+value;item.appendChild(p);
+});
+if(d.status==="pending"){
+const approve=document.createElement("button");
+approve.textContent="Mark approved for review";
+approve.addEventListener("click",()=>reviewWithdrawal(doc.id,"approved"));
+const reject=document.createElement("button");
+reject.textContent="Reject request";
+reject.className="secondary";
+reject.addEventListener("click",()=>reviewWithdrawal(doc.id,"rejected"));
+item.append(approve,reject);
+}
+withdrawalBox.appendChild(item);
+});
+
 const memberBox=$("adminMembers");memberBox.replaceChildren();
+if(members.empty)memberBox.textContent="No registered member profiles.";
 members.forEach(doc=>{
 const d=doc.data(),item=document.createElement("div");item.className="request";
-item.textContent="Name: "+(d.name||"Not set")+" · Email: "+(d.email||"Not set")+
-" · Status: "+(d.accountStatus||"pending")+" · Package: "+(d.package||"Not assigned");
+item.textContent="Name: "+(d.name||"Not set")+" · Email: "+(d.email||"Not set")+" · Status: "+(d.accountStatus||"pending")+" · Package: "+(d.package||"Not assigned");
 memberBox.appendChild(item);
 });
 
-const agentBox=$("adminAgentApplications");
-agentBox.replaceChildren();
-
-if(applications.empty){
-agentBox.textContent="No agent applications yet.";
-}
-
+const agentBox=$("adminAgentApplications");agentBox.replaceChildren();
+if(applications.empty)agentBox.textContent="No agent applications yet.";
 applications.forEach(doc=>{
-const d=doc.data(),item=document.createElement("div");
-item.className="request";
-
+const d=doc.data(),item=document.createElement("div");item.className="request";
 const info=document.createElement("p");
-const nin=d.nin||"";
-const maskedNin=nin.length>4?"••••••"+nin.slice(-4):"Hidden";
-
-info.textContent=
-"Applicant: "+(d.name||"Not set")+
-" · Email: "+(d.email||"Not set")+
-" · Region: "+(d.region||"Not set")+
-" · Town: "+(d.town||"Not set")+
-" · Phone: "+(d.phone||"Not set")+
-" · NIN: "+maskedNin+
-" · Declared capital: UGX "+(d.capitalDeclared||0)+
-" · Application status: "+(d.status||"pending");
-
+const nin=d.nin||"",maskedNin=nin.length>4?"••••••"+nin.slice(-4):"Hidden";
+info.textContent="Applicant: "+(d.name||"Not set")+" · Email: "+(d.email||"Not set")+" · Region: "+(d.region||"Not set")+" · Town: "+(d.town||"Not set")+" · Phone: "+(d.phone||"Not set")+" · NIN: "+maskedNin+" · Declared capital: UGX "+(d.capitalDeclared||0)+" · Application status: "+(d.status||"pending");
 item.appendChild(info);
-
 if((d.status||"pending")==="pending"){
-const approve=document.createElement("button");
-approve.type="button";
-approve.textContent="Approve agent";
+const approve=document.createElement("button");approve.textContent="Approve agent";
 approve.addEventListener("click",()=>reviewAgentApplication(doc.id,"approved"));
-
-const reject=document.createElement("button");
-reject.type="button";
-reject.className="secondary";
-reject.textContent="Reject application";
+const reject=document.createElement("button");reject.textContent="Reject application";reject.className="secondary";
 reject.addEventListener("click",()=>reviewAgentApplication(doc.id,"rejected"));
-
 item.append(approve,reject);
 }
-
 agentBox.appendChild(item);
 });
-
 }catch(err){
 show($("adminSummary"),"Admin dashboard failed: "+messageFromError(err),true);
 }
 }
 
-
 async function reviewAgentApplication(id,status){
-  if(!isAdminUser||!currentUser){
-    show($("globalMessage"),"Administrator access required.",true);
-    return;
-  }
-
-  if(!["approved","rejected"].includes(status)){
-    show($("globalMessage"),"Invalid review decision.",true);
-    return;
-  }
-
-  let verifiedName="";
-
-  if(status==="approved"){
-    const confirmed=confirm(
-      "Before approving, independently verify all of the following:\n\n"+
-      "1. The applicant has an active Plus package.\n"+
-      "2. You have actually received and verified UGX 50,000 starting capital.\n"+
-      "3. The applicant's identity and contact details have been checked.\n\n"+
-      "Approval will publish this agent and issue a restricted UGX 57,500 float "+
-      "(UGX 50,000 capital + UGX 7,500 bonus).\n\n"+
-      "The float will not be withdrawable. Continue only after verification."
-    );
-
-    if(!confirmed)return;
-
-    try{
-      const existingSnap=await db.collection("agentApplications").doc(id).get();
-
-      if(!existingSnap.exists){
-        throw new Error("Agent application not found.");
-      }
-
-      const existingApp=existingSnap.data();
-
-      if(existingApp.status!=="pending"){
-        throw new Error("This application has already been reviewed. Refresh the dashboard.");
-      }
-
-      if(!String(existingApp.name||"").trim()){
-        const enteredName=prompt(
-          "The applicant's name is missing.\n\n"+
-          "Enter the applicant's VERIFIED full name exactly as checked against their identity documents. Do not guess."
-        );
-
-        if(enteredName===null)return;
-
-        verifiedName=enteredName.trim();
-
-        if(!verifiedName){
-          show(
-            $("globalMessage"),
-            "Approval cancelled. The applicant's verified full name is required.",
-            true
-          );
-          return;
-        }
-      }
-    }catch(err){
-      show(
-        $("globalMessage"),
-        "Could not check agent application: "+messageFromError(err),
-        true
-      );
-      return;
-    }
-  }else if(!confirm("Reject this agent application?")){
-    return;
-  }
-
-  try{
-    await db.runTransaction(async transaction=>{
-      const applicationRef=db.collection("agentApplications").doc(id);
-      const applicationSnap=await transaction.get(applicationRef);
-
-      if(!applicationSnap.exists){
-        throw new Error("Agent application not found.");
-      }
-
-      const app=applicationSnap.data();
-
-      if(app.status!=="pending"){
-        throw new Error("This application has already been reviewed. Refresh the dashboard.");
-      }
-
-      if(!app.uid){
-        throw new Error("Application has no member UID.");
-      }
-
-      if(status==="rejected"){
-        transaction.update(applicationRef,{
-          status:"rejected",
-          reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),
-          reviewedBy:currentUser.uid
-        });
-        return;
-      }
-
-      if(Number(app.capitalDeclared)!==50000){
-        throw new Error("The declared starting capital must be UGX 50,000. Check the application record.");
-      }
-
-      const phone=String(app.phone||"").trim();
-      const region=String(app.region||"").trim();
-      const town=String(app.town||"").trim();
-
-      const validTowns={
-        Central:["Kampala","Mukono"],
-        Western:["Mbarara","Fort Portal"],
-        Northern:["Gulu","Lira"]
-      };
-
-      if(!phone){
-        throw new Error("The applicant's phone number is missing.");
-      }
-
-      if(!validTowns[region]||!validTowns[region].includes(town)){
-        throw new Error("The region and town combination is invalid. Check the application.");
-      }
-
-      const profileRef=db.collection("memberProfiles").doc(app.uid);
-      const directoryRef=db.collection("agentDirectory").doc(app.uid);
-      const floatRef=db.collection("agentFloats").doc(app.uid);
-      const issuanceRef=db.collection("agentFloatTransactions").doc(app.uid+"_initial");
-
-      // Read every required document before writing anything.
-      const profileSnap=await transaction.get(profileRef);
-      const directorySnap=await transaction.get(directoryRef);
-      const floatSnap=await transaction.get(floatRef);
-      const issuanceSnap=await transaction.get(issuanceRef);
-
-      if(!profileSnap.exists){
-        throw new Error("Member profile not found.");
-      }
-
-      const profile=profileSnap.data();
-
-      if(profile.package!=="Plus"||profile.packageStatus!=="active"){
-        throw new Error("The applicant must have an active Plus package at approval time.");
-      }
-
-      if(directorySnap.exists){
-        throw new Error("An agent directory entry already exists for this member. Check it before proceeding.");
-      }
-
-      if(floatSnap.exists||issuanceSnap.exists){
-        throw new Error("A float account or initial issuance record already exists. No duplicate float was issued. Check the existing records before proceeding.");
-      }
-
-      const applicantName=String(
-        app.name||verifiedName||profile.name||""
-      ).trim();
-
-      if(!applicantName){
-        throw new Error("The applicant's verified full name is required.");
-      }
-
-      const serverTime=firebase.firestore.FieldValue.serverTimestamp();
-
-      // Publish approved public contact details only.
-      transaction.set(directoryRef,{
-        uid:app.uid,
-        name:applicantName,
-        region:region,
-        town:town,
-        phone:phone,
-        status:"approved",
-        approvedAt:serverTime
-      });
-
-      // Create a restricted float account, not a withdrawable wallet.
-      transaction.set(floatRef,{
-        uid:app.uid,
-        currency:"UGX",
-        capitalAmount:50000,
-        bonusAmount:7500,
-        openingBalance:57500,
-        restrictedBalance:57500,
-        withdrawableBalance:0,
-        status:"active",
-        restricted:true,
-        permittedUse:"member_package_activation",
-        issuedAt:serverTime,
-        issuedBy:currentUser.uid,
-        sourceApplicationId:id
-      });
-
-      // Record the one-time initial float issuance.
-      transaction.set(issuanceRef,{
-        uid:app.uid,
-        type:"initial_float_issuance",
-        amount:57500,
-        capitalAmount:50000,
-        bonusAmount:7500,
-        currency:"UGX",
-        balanceAfter:57500,
-        withdrawable:false,
-        sourceApplicationId:id,
-        createdAt:serverTime,
-        createdBy:currentUser.uid
-      });
-
-      transaction.update(applicationRef,{
-        name:applicantName,
-        status:"approved",
-        capitalVerified:true,
-        reviewedAt:serverTime,
-        reviewedBy:currentUser.uid
-      });
-    });
-
-    show(
-      $("globalMessage"),
-      status==="approved"
-        ?"Agent approved. The restricted UGX 57,500 float issuance was recorded. Activation deductions still require the separate activation workflow update."
-        :"Agent application rejected."
-    );
-
-    await loadAdmin();
-
-    if(typeof loadMyAgentStatus==="function"){
-      await loadMyAgentStatus();
-    }
-  }catch(err){
-    show(
-      $("globalMessage"),
-      "Could not review agent application: "+messageFromError(err),
-      true
-    );
-  }
+if(!isAdminUser||!currentUser){
+show($("globalMessage"),"Administrator access required.",true);return;
 }
+if(!["approved","rejected"].includes(status))return;
+let verifiedName="";
+
+if(status==="approved"){
+const confirmed=confirm(
+"Before approving, independently verify:\n\n"+
+"1. The applicant has an active Plus package.\n"+
+"2. You have received and verified UGX 50,000 starting capital.\n"+
+"3. The applicant's identity and contact details have been checked.\n\n"+
+"Approval will create a restricted UGX 57,500 float record. Continue only after verification."
+);
+if(!confirmed)return;
+try{
+const existingSnap=await db.collection("agentApplications").doc(id).get();
+if(!existingSnap.exists)throw new Error("Agent application not found.");
+const existingApp=existingSnap.data();
+if(existingApp.status!=="pending")throw new Error("This application has already been reviewed.");
+if(!String(existingApp.name||"").trim()){
+const enteredName=prompt("Enter the applicant's VERIFIED full name.");
+if(enteredName===null)return;
+verifiedName=enteredName.trim();
+if(!verifiedName){show($("globalMessage"),"Verified full name is required.",true);return;}
+}
+}catch(err){show($("globalMessage"),"Could not check application: "+messageFromError(err),true);return;}
+}else if(!confirm("Reject this agent application?"))return;
+
+try{
+await db.runTransaction(async transaction=>{
+const applicationRef=db.collection("agentApplications").doc(id);
+const applicationSnap=await transaction.get(applicationRef);
+if(!applicationSnap.exists)throw new Error("Agent application not found.");
+const app=applicationSnap.data();
+if(app.status!=="pending")throw new Error("This application has already been reviewed.");
+if(!app.uid)throw new Error("Application has no member UID.");
+
+if(status==="rejected"){
+transaction.update(applicationRef,{
+status:"rejected",
+reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),
+reviewedBy:currentUser.uid
+});
+return;
+}
+
+if(Number(app.capitalDeclared)!==50000)throw new Error("Declared starting capital must be UGX 50,000.");
+const phone=String(app.phone||"").trim(),region=String(app.region||"").trim(),town=String(app.town||"").trim();
+const validTowns={Central:["Kampala","Mukono"],Western:["Mbarara","Fort Portal"],Northern:["Gulu","Lira"]};
+if(!phone)throw new Error("Applicant phone number is missing.");
+if(!validTowns[region]||!validTowns[region].includes(town))throw new Error("Invalid region and town.");
+
+const profileRef=db.collection("memberProfiles").doc(app.uid);
+const directoryRef=db.collection("agentDirectory").doc(app.uid);
+const floatRef=db.collection("agentFloats").doc(app.uid);
+const issuanceRef=db.collection("agentFloatTransactions").doc(app.uid+"_initial");
+const profileSnap=await transaction.get(profileRef);
+const directorySnap=await transaction.get(directoryRef);
+const floatSnap=await transaction.get(floatRef);
+const issuanceSnap=await transaction.get(issuanceRef);
+
+if(!profileSnap.exists)throw new Error("Member profile not found.");
+const profile=profileSnap.data();
+if(profile.package!=="Plus"||profile.packageStatus!=="active")throw new Error("An active Plus package is required.");
+if(directorySnap.exists)throw new Error("An agent directory entry already exists.");
+if(floatSnap.exists||issuanceSnap.exists)throw new Error("A float account or issuance record already exists.");
+
+const applicantName=String(app.name||verifiedName||profile.name||"").trim();
+if(!applicantName)throw new Error("Verified full name is required.");
+const serverTime=firebase.firestore.FieldValue.serverTimestamp();
+
+transaction.set(directoryRef,{
+uid:app.uid,name:applicantName,region,town,phone,status:"approved",approvedAt:serverTime
+});
+transaction.set(floatRef,{
+uid:app.uid,currency:"UGX",capitalAmount:50000,bonusAmount:7500,
+openingBalance:57500,restrictedBalance:57500,withdrawableBalance:0,
+status:"active",restricted:true,permittedUse:"member_package_activation",
+issuedAt:serverTime,issuedBy:currentUser.uid,sourceApplicationId:id
+});
+transaction.set(issuanceRef,{
+uid:app.uid,type:"initial_float_issuance",amount:57500,
+capitalAmount:50000,bonusAmount:7500,currency:"UGX",
+balanceAfter:57500,withdrawable:false,sourceApplicationId:id,
+createdAt:serverTime,createdBy:currentUser.uid
+});
+transaction.update(applicationRef,{
+name:applicantName,status:"approved",capitalVerified:true,
+reviewedAt:serverTime,reviewedBy:currentUser.uid
+});
+});
+
+show($("globalMessage"),status==="approved"
+?"Agent approved and the restricted float issuance record was created. Ensure all separate activation and financial workflows are configured."
+:"Agent application rejected.");
+await loadAdmin();
+await loadMyAgentStatus();
+}catch(err){
+show($("globalMessage"),"Could not review agent application: "+messageFromError(err),true);
+}
+}
+
+$("searchAgents").addEventListener("click",async()=>{
+const box=$("agentResults");
+box.textContent="Searching approved agents…";
+try{
+let query=db.collection("agentDirectory").where("status","==","approved");
+if($("searchRegion").value)query=query.where("region","==",$("searchRegion").value);
+if($("searchTown").value)query=query.where("town","==",$("searchTown").value);
+const snap=await query.get();
+box.replaceChildren();
+if(snap.empty){box.textContent="No approved agents match those filters.";return;}
+snap.forEach(doc=>{
+const d=doc.data(),item=document.createElement("div");item.className="request";
+item.textContent="Name: "+(d.name||"Not provided")+" · Region: "+(d.region||"Not set")+" · Town: "+(d.town||"Not set")+" · Contact: "+(d.phone||"Not provided");
+box.appendChild(item);
+});
+}catch(err){show(box,"Agent search failed: "+messageFromError(err),true);}
+});
 
 firebase.initializeApp(firebaseConfig);
 auth=firebase.auth();
@@ -742,15 +845,11 @@ auth.onAuthStateChanged(async user=>{
 currentUser=user;
 profileData=null;
 isAdminUser=false;
-
 $("authCard").classList.toggle("hidden",!!user);
 $("dashboard").classList.toggle("hidden",!user);
 $("adminSection").classList.add("hidden");
 
-if(unsubscribe){
-unsubscribe();
-unsubscribe=null;
-}
+if(unsubscribe){unsubscribe();unsubscribe=null;}
 
 if(!user){
 $("memberEmail").textContent="";
@@ -761,35 +860,23 @@ $("memberEmail").textContent=user.email||"Signed in";
 show($("profileMessage"),"Loading account details…");
 
 try{
-const profileDoc=await db.collection("memberProfiles")
-.doc(user.uid).get();
-
+const profileDoc=await db.collection("memberProfiles").doc(user.uid).get();
 if(profileDoc.exists){
 renderProfile(profileDoc.data());
 }else{
-profileData=null;
-show(
-$("profileMessage"),
-"Your account has no member profile yet. Please contact the administrator.",
-true
-);
+show($("profileMessage"),"Your account has no member profile yet. Please contact the administrator.",true);
 }
-
 listenRequests(user);
+listenWithdrawals(user);
 await loadMyAgentStatus();
 
 isAdminUser=await checkAdmin(user);
-
 if(isAdminUser){
 $("adminSection").classList.remove("hidden");
 await loadAdmin();
 }
 }catch(err){
-show(
-$("profileMessage"),
-"Could not load your account: "+messageFromError(err),
-true
-);
+show($("profileMessage"),"Could not load your account: "+messageFromError(err),true);
 }
 });
 
