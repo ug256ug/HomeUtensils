@@ -4,31 +4,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#14532d">
 <title>HomeUtensils</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#f5f7f5;color:#17211b;line-height:1.5}
-header{background:#14532d;color:white;text-align:center;padding:25px 12px}
-main{max-width:800px;margin:20px auto;padding:0 14px}
-.card{background:white;border:1px solid #d1d5db;border-radius:12px;padding:18px;margin-bottom:16px}
+header{background:#14532d;color:white;text-align:center;padding:22px 12px}
+header h1{margin:0}
+main{max-width:900px;margin:20px auto;padding:0 12px}
+.card{background:white;border:1px solid #d1d5db;border-radius:12px;padding:17px;margin-bottom:16px}
 label{display:block;font-weight:bold;margin:12px 0 5px}
 input,select,button{width:100%;padding:12px;font:inherit;border-radius:8px}
 input,select{border:1px solid #9ca3af;background:white}
 button{border:0;background:#166534;color:white;font-weight:bold;margin-top:12px;cursor:pointer}
+button:disabled{opacity:.55}
 .secondary{background:#e5e7eb;color:#17211b}
+.danger{background:#991b1b}
 .hidden{display:none!important}
 .notice,.error{padding:12px;border-radius:8px;margin:12px 0;overflow-wrap:anywhere}
 .notice{background:#f0fdf4;border:1px solid #bbf7d0}
 .error{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
 .muted{color:#647067;font-size:.94rem}
-.request{padding:12px;border:1px solid #d1d5db;border-radius:8px;margin:10px 0}
+.request{padding:12px;border:1px solid #d1d5db;border-radius:8px;margin:10px 0;overflow-wrap:anywhere}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
 footer{text-align:center;padding:20px;color:#647067}
 </style>
 </head>
 <body>
 <header>
 <h1>HomeUtensils</h1>
-<p>Simple, clear and secure account access</p>
+<p>Member services, package activation and agent support</p>
 </header>
 
 <main>
@@ -37,7 +42,6 @@ footer{text-align:center;padding:20px;color:#647067}
 <section id="authCard" class="card">
 <h2>Welcome</h2>
 <p class="muted">Create an account or sign in.</p>
-
 <div id="signInPanel">
 <h3>Sign in</h3>
 <form id="signInForm">
@@ -50,7 +54,6 @@ footer{text-align:center;padding:20px;color:#647067}
 <button id="showRegister" type="button" class="secondary">Create a new account</button>
 <button id="resetPassword" type="button" class="secondary">Reset password by email</button>
 </div>
-
 <div id="registerPanel" class="hidden">
 <h3>Create account</h3>
 <form id="registerForm">
@@ -77,7 +80,7 @@ footer{text-align:center;padding:20px;color:#647067}
 
 <div class="card">
 <h2>Request package activation</h2>
-<p class="muted">A request does not activate a package. Wait for an authorised review and follow official payment instructions.</p>
+<p class="muted">Submitting a request does not activate your package. An authorised administrator must verify payment and approve it.</p>
 <form id="activationForm">
 <label for="area">Area / district</label>
 <input id="area" maxlength="100" required placeholder="For example, Wakiso">
@@ -97,42 +100,94 @@ footer{text-align:center;padding:20px;color:#647067}
 </select>
 <button type="submit">Submit activation request</button>
 </form>
-  <div id="activationMessage" aria-live="polite"></div>
+<div id="activationMessage" aria-live="polite"></div>
 </div>
 
 <div class="card">
-  <h2>Your activation requests</h2>
-  <div id="requestHistory" aria-live="polite">
-    Your activation requests will appear here.
-  </div>
+<h2>Your activation requests</h2>
+<div id="requestHistory">Your activation requests will appear here.</div>
+</div>
+
+<div class="card">
+<h2>Apply to become an agent</h2>
+<p>An agent must be an active Plus member and must submit an application. Plus membership alone does not make you an agent.</p>
+<div class="notice">
+<strong>Starting capital: UGX 50,000.</strong><br>
+After an administrator verifies the capital and approves your application, the agent float becomes UGX 57,500, including a UGX 7,500 bonus. This float is non-withdrawable and is restricted to facilitating package activation.
+</div>
+<form id="agentForm">
+<label for="agentRegion">Region</label>
+<select id="agentRegion" required>
+<option value="">Select region</option>
+<option value="Central">Central</option>
+<option value="Western">Western</option>
+<option value="Northern">Northern</option>
+</select>
+<label for="agentTown">Town</label>
+<select id="agentTown" required>
+<option value="">Select region first</option>
+</select>
+<label for="agentPhone">Contact phone number</label>
+<input id="agentPhone" type="tel" maxlength="25" required placeholder="Your contact number">
+<label for="agentNin">NIN number</label>
+<input id="agentNin" type="password" maxlength="30" autocomplete="off" required>
+<p class="muted">Your NIN is private and should only be accessible to you and authorised administrators. It will not be shown in public agent search results.</p>
+<label>
+<input id="capitalConfirm" type="checkbox" required style="width:auto">
+ I understand that I must provide UGX 50,000 starting capital for verification.
+</label>
+<button type="submit">Submit agent application</button>
+</form>
+<div id="agentMessage" aria-live="polite"></div>
+<div id="myAgentStatus"></div>
+</div>
+
+<div class="card">
+<h2>Find an approved agent</h2>
+<p class="muted">Only agents approved by the administrator should appear here.</p>
+<label for="searchRegion">Region</label>
+<select id="searchRegion">
+<option value="">All regions</option>
+<option value="Central">Central</option>
+<option value="Western">Western</option>
+<option value="Northern">Northern</option>
+</select>
+<label for="searchTown">Town</label>
+<select id="searchTown">
+<option value="">All towns</option>
+</select>
+<button id="searchAgents" type="button">Search approved agents</button>
+<div id="agentResults" aria-live="polite">Select a region or town, then search.</div>
 </div>
 
 <section id="adminSection" class="hidden">
-  <div class="card">
-    <h2>Administrator dashboard</h2>
-    <p>Manage activation requests and review member profiles.</p>
-    <div id="adminSummary" class="notice">Loading…</div>
-  </div>
-
-  <div class="card">
-    <h2>Activation requests</h2>
-    <div id="adminRequests">Loading requests…</div>
-  </div>
-
-  <div class="card">
-    <h2>Registered members</h2>
-    <div id="adminMembers">Loading members…</div>
-  </div>
+<div class="card">
+<h2>Administrator dashboard</h2>
+<p>Review member profiles, activation requests and agent applications.</p>
+<div id="adminSummary" class="notice">Loading…</div>
+</div>
+<div class="card">
+<h2>Activation requests</h2>
+<div id="adminRequests">Loading requests…</div>
+</div>
+<div class="card">
+<h2>Registered members</h2>
+<div id="adminMembers">Loading members…</div>
+</div>
+<div class="card">
+<h2>Agent applications</h2>
+<p class="muted">Approve an applicant only after independently verifying their active Plus membership and receipt of the UGX 50,000 capital. Approval grants a restricted UGX 57,500 float.</p>
+<div id="adminAgentApplications">Loading agent applications…</div>
+</div>
 </section>
-
+</section>
 </main>
 
-<footer>HomeUtensils · Keep your password private.</footer>
+<footer>HomeUtensils · Keep your password and personal information private.</footer>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
 <script>
 (function(){
 "use strict";
@@ -147,14 +202,19 @@ appId:"1:976309566737:web:e65365b6df2d15ce6060b0"
 };
 
 const $=id=>document.getElementById(id);
-let auth,db,currentUser=null,unsubscribe=null;
+let auth,db,currentUser=null,profileData=null,unsubscribe=null,isAdminUser=false;
 
-function show(el,text,error=false){
-el.textContent=text||"";
-el.className=text?(error?"error":"notice"):"";
+const towns={
+Central:["Kampala","Mukono"],
+Western:["Mbarara","Fort Portal"],
+Northern:["Gulu","Lira"]
+};
+
+function show(el,message,error=false){
+el.textContent=message||"";
+el.className=message?(error?"error":"notice"):"";
 }
-
-function errorMessage(e){
+function messageFromError(e){
 const messages={
 "auth/email-already-in-use":"This email already has an account. Please sign in.",
 "auth/invalid-email":"Enter a valid email address.",
@@ -164,262 +224,228 @@ const messages={
 "auth/wrong-password":"The password is incorrect.",
 "auth/too-many-requests":"Too many attempts. Please wait and retry.",
 "auth/network-request-failed":"Check your internet connection.",
-"permission-denied":"Firebase database rules blocked this action."
+"permission-denied":"Firebase database rules blocked this action. The required security rules must be installed."
 };
 return messages[e.code]||e.message||"An error occurred.";
 }
-
 function dateText(v){
 if(!v)return "Not set";
 const d=v.toDate?v.toDate():new Date(v);
 return Number.isNaN(d.getTime())?"Not set":d.toLocaleDateString();
 }
+function makeOption(value,label){
+const o=document.createElement("option");
+o.value=value;o.textContent=label;return o;
+}
+function setTowns(regionId,townId,allLabel){
+const region=$(regionId).value;
+const select=$(townId);
+select.replaceChildren();
+select.appendChild(makeOption("",allLabel));
+(towns[region]||[]).forEach(t=>select.appendChild(makeOption(t,t)));
+}
+$("agentRegion").addEventListener("change",()=>setTowns("agentRegion","agentTown","Select town"));
+$("searchRegion").addEventListener("change",()=>setTowns("searchRegion","searchTown","All towns"));
 
 $("showRegister").addEventListener("click",()=>{
 $("signInPanel").classList.add("hidden");
 $("registerPanel").classList.remove("hidden");
 show($("globalMessage"),"");
 });
-
 $("showSignIn").addEventListener("click",()=>{
 $("registerPanel").classList.add("hidden");
 $("signInPanel").classList.remove("hidden");
 show($("globalMessage"),"");
 });
-
 $("signInForm").addEventListener("submit",async e=>{
 e.preventDefault();
 try{
-await auth.signInWithEmailAndPassword(
-$("loginEmail").value.trim(),
-$("loginPassword").value
-);
+await auth.signInWithEmailAndPassword($("loginEmail").value.trim(),$("loginPassword").value);
 show($("globalMessage"),"");
-}catch(err){
-show($("globalMessage"),errorMessage(err),true);
-}
+}catch(err){show($("globalMessage"),messageFromError(err),true);}
 });
-
 $("registerForm").addEventListener("submit",async e=>{
 e.preventDefault();
-const name=$("fullName").value.trim();
-const email=$("registerEmail").value.trim();
-const password=$("registerPassword").value;
+const name=$("fullName").value.trim(),email=$("registerEmail").value.trim(),password=$("registerPassword").value;
 const btn=$("registerForm").querySelector("button[type=submit]");
 if(!name){show($("globalMessage"),"Enter your full name.",true);return;}
 btn.disabled=true;
 try{
 const result=await auth.createUserWithEmailAndPassword(email,password);
 await db.collection("memberProfiles").doc(result.user.uid).set({
-uid:result.user.uid,
-name:name,
-email:email,
-accountStatus:"pending",
+uid:result.user.uid,name,email,accountStatus:"pending",
 createdAt:firebase.firestore.FieldValue.serverTimestamp()
 });
 show($("globalMessage"),"Account created. Your account is pending review.");
 }catch(err){
-show($("globalMessage"),"Registration failed: "+errorMessage(err)+". If the account was created but profile saving failed, do not register again.",true);
+show($("globalMessage"),"Registration failed: "+messageFromError(err)+". If your login was created, sign in instead of registering again.",true);
 }finally{btn.disabled=false;}
 });
-
 $("resetPassword").addEventListener("click",async()=>{
 const email=$("loginEmail").value.trim();
-if(!email){
-show($("globalMessage"),"Enter your email in the sign-in email field first.",true);
-return;
-}
-try{
-await auth.sendPasswordResetEmail(email);
-show($("globalMessage"),"Password reset email requested. Check your inbox and spam folder.");
-}catch(err){
-show($("globalMessage"),errorMessage(err),true);
-}
+if(!email){show($("globalMessage"),"Enter your email in the sign-in email field first.",true);return;}
+try{await auth.sendPasswordResetEmail(email);show($("globalMessage"),"Password reset email requested. Check your inbox and spam folder.");}
+catch(err){show($("globalMessage"),messageFromError(err),true);}
 });
-
 $("signOut").addEventListener("click",async()=>{
-try{await auth.signOut();}
-catch(err){show($("globalMessage"),errorMessage(err),true);}
+try{await auth.signOut();}catch(err){show($("globalMessage"),messageFromError(err),true);}
 });
 
 $("activationForm").addEventListener("submit",async e=>{
 e.preventDefault();
-if(!currentUser){
-show($("activationMessage"),"Please sign in first.",true);
-return;
-}
-const area=$("area").value.trim();
-const packageRequested=$("packageRequested").value;
-const proposedPaymentMethod=$("paymentMethod").value;
-if(!area||!packageRequested||!proposedPaymentMethod){
-show($("activationMessage"),"Complete all fields.",true);
-return;
-}
-const btn=$("activationForm").querySelector("button[type=submit]");
-btn.disabled=true;
+if(!currentUser)return show($("activationMessage"),"Please sign in first.",true);
+const area=$("area").value.trim(),packageRequested=$("packageRequested").value,proposedPaymentMethod=$("paymentMethod").value;
+if(!area||!packageRequested||!proposedPaymentMethod)return show($("activationMessage"),"Complete all fields.",true);
+const btn=$("activationForm").querySelector("button[type=submit]");btn.disabled=true;
 try{
 await db.collection("activationRequests").add({
-uid:currentUser.uid,
-area:area,
-packageRequested:packageRequested,
-proposedPaymentMethod:proposedPaymentMethod,
-status:"pending",
+uid:currentUser.uid,area,packageRequested,proposedPaymentMethod,status:"pending",
 createdAt:firebase.firestore.FieldValue.serverTimestamp()
 });
 $("activationForm").reset();
-show($("activationMessage"),"Request submitted. Your package is not active until an authorised reviewer approves it.");
-}catch(err){
-show($("activationMessage"),errorMessage(err),true);
-}finally{btn.disabled=false;}
+show($("activationMessage"),"Request submitted. Your package is not active until an authorised reviewer verifies payment and approves it.");
+}catch(err){show($("activationMessage"),messageFromError(err),true);}
+finally{btn.disabled=false;}
 });
 
 function renderProfile(data){
+profileData=data;
 show($("profileMessage"),"Account status: "+(data.accountStatus||"pending")+". Package activation requires authorised review.");
-const details=$("packageDetails");
-details.replaceChildren();
-const title=document.createElement("h3");
-title.textContent="Package details";
-details.appendChild(title);
+const details=$("packageDetails");details.replaceChildren();
+const h=document.createElement("h3");h.textContent="Package details";details.appendChild(h);
 [
-["Name",data.name],
-["Package",data.package],
-["Package status",data.packageStatus],
-["Activation date",dateText(data.activationDate)],
-["Expiry date",dateText(data.expiryDate)]
+["Name",data.name],["Package",data.package],["Package status",data.packageStatus],
+["Activation date",dateText(data.activationDate)],["Expiry date",dateText(data.expiryDate)]
 ].forEach(([label,value])=>{
-const p=document.createElement("p");
-p.textContent=label+": "+(value||"Not set");
-details.appendChild(p);
+const p=document.createElement("p");p.textContent=label+": "+(value||"Not set");details.appendChild(p);
 });
 }
-
 function listenRequests(user){
 if(unsubscribe)unsubscribe();
 $("requestHistory").textContent="Loading requests…";
-unsubscribe=db.collection("activationRequests")
-.where("uid","==",user.uid)
-.onSnapshot(snapshot=>{
-const history=$("requestHistory");
-history.replaceChildren();
-if(snapshot.empty){
-history.textContent="You have not submitted any requests.";
-return;
-}
+unsubscribe=db.collection("activationRequests").where("uid","==",user.uid).onSnapshot(snapshot=>{
+const box=$("requestHistory");box.replaceChildren();
+if(snapshot.empty){box.textContent="You have not submitted any requests.";return;}
 snapshot.forEach(doc=>{
-const d=doc.data();
-const box=document.createElement("div");
-box.className="request";
-box.textContent=(d.packageRequested||"Package")+
-" · Status: "+(d.status||"pending")+
-" · Area: "+(d.area||"Not provided")+
-" · Date: "+dateText(d.createdAt);
-history.appendChild(box);
+const d=doc.data(),item=document.createElement("div");item.className="request";
+item.textContent=(d.packageRequested||"Package")+" · Status: "+(d.status||"pending")+" · Area: "+(d.area||"Not provided")+" · Date: "+dateText(d.createdAt);
+box.appendChild(item);
 });
-},err=>show($("requestHistory"),errorMessage(err),true));
+},err=>show($("requestHistory"),messageFromError(err),true));
 }
 
+$("agentForm").addEventListener("submit",async e=>{
+e.preventDefault();
+if(!currentUser)return show($("agentMessage"),"Sign in first.",true);
+if(!profileData||profileData.package!=="Plus"||profileData.packageStatus!=="active"){
+return show($("agentMessage"),"Eligibility not met. You must have an active Plus package before applying to become an agent.",true);
+}
+const region=$("agentRegion").value,town=$("agentTown").value,phone=$("agentPhone").value.trim(),nin=$("agentNin").value.trim();
+if(!region||!town||!phone||!nin||!$("capitalConfirm").checked){
+return show($("agentMessage"),"Complete every field and confirm the starting-capital requirement.",true);
+}
+const btn=$("agentForm").querySelector("button[type=submit]");btn.disabled=true;
 try{
-firebase.initializeApp(firebaseConfig);
-auth=firebase.auth();
-db=firebase.firestore();
-}catch(e){
-show($("globalMessage"),"Firebase failed to start. Check the configuration and internet connection.",true);
-return;
+const existing=await db.collection("agentApplications").where("uid","==",currentUser.uid).get();
+if(!existing.empty){
+show($("agentMessage"),"An agent application already exists for your account. Check your application status below.",true);
+await loadMyAgentStatus();return;
 }
-
-
-async function checkAdmin(user) {
-  try {
-    const doc = await db.collection("admins").doc(user.uid).get();
-    return doc.exists &&
-      doc.data().role === "admin" &&
-      doc.data().enabled === true;
-  } catch (err) {
-    console.error("Admin check failed:", err);
-    return false;
-  }
-}
-
-async function loadAdmin() {
-  try {
-    const [requests, members] = await Promise.all([
-      db.collection("activationRequests").get(),
-      db.collection("memberProfiles").get()
-    ]);
-
-    $("adminSummary").textContent =
-      "Members: " + members.size +
-      " · Requests: " + requests.size +
-      " · Pending: " +
-      requests.docs.filter(d => d.data().status === "pending").length;
-
-    const requestBox = $("adminRequests");
-    requestBox.replaceChildren();
-
-    requests.forEach(doc => {
-      const d = doc.data();
-      const box = document.createElement("div");
-      box.className = "request";
-      box.textContent =
-        "Package: " + (d.packageRequested || "Not set") +
-        " · Status: " + (d.status || "pending") +
-        " · Area: " + (d.area || "Not set") +
-        " · Member UID: " + (d.uid || "Not set");
-
-      requestBox.appendChild(box);
-    });
-
-    const memberBox = $("adminMembers");
-    memberBox.replaceChildren();
-
-    members.forEach(doc => {
-      const d = doc.data();
-      const box = document.createElement("div");
-      box.className = "request";
-      box.textContent =
-        "Name: " + (d.name || "Not set") +
-        " · Email: " + (d.email || "Not set") +
-        " · Status: " + (d.accountStatus || "pending") +
-        " · Package: " + (d.package || "Not assigned");
-
-      memberBox.appendChild(box);
-    });
-  } catch (err) {
-    show($("adminSummary"), "Could not load admin data: " + errorMessage(err), true);
-  }
-}
-
-auth.onAuthStateChanged(async user=>{
-currentUser=user||null;
-if(unsubscribe){unsubscribe();unsubscribe=null;}
-$("authCard").classList.toggle("hidden",!!user);
-$("dashboard").classList.toggle("hidden",!user);
-if(!user)return;
-
-$("memberEmail").textContent=user.email||"";
-show($("profileMessage"),"Loading account…");
-try{
-const doc=await db.collection("memberProfiles").doc(user.uid).get();
-if(!doc.exists){
-show($("profileMessage"),"Your login exists, but your member profile is missing. Contact support.",true);
-$("packageDetails").replaceChildren();
-}else{
-renderProfile(doc.data());
-}
-listenRequests(user);
-
-const admin = await checkAdmin(user);
-
-if (admin) {
-  $("adminSection").classList.remove("hidden");
-  await loadAdmin();
-}
-
-}catch(err){
-show($("profileMessage"),"Could not load account: "+errorMessage(err),true);
-}
+await db.collection("agentApplications").add({
+uid:currentUser.uid,
+name:profileData.name||"",
+email:currentUser.email||"",
+region,town,phone,nin,
+capitalDeclared:50000,
+status:"pending",
+createdAt:firebase.firestore.FieldValue.serverTimestamp()
 });
-})();
-</script>
-</body>
-</html>
+$("agentForm").reset();setTowns("agentRegion","agentTown","Select town");
+show($("agentMessage"),"Application submitted. It is not approved yet. The administrator must verify your UGX 50,000 capital and Plus membership.");
+await loadMyAgentStatus();
+}catch(err){show($("agentMessage"),messageFromError(err),true);}
+finally{btn.disabled=false;}
+});
+
+async function loadMyAgentStatus(){
+if(!currentUser)return;
+try{
+const snap=await db.collection("agentApplications").where("uid","==",currentUser.uid).limit(1).get();
+const box=$("myAgentStatus");box.replaceChildren();
+if(snap.empty){box.textContent="No agent application found.";return;}
+const d=snap.docs[0].data(),p=document.createElement("p");
+p.className="notice";
+p.textContent="Agent application status: "+(d.status||"pending")+
+(d.status==="approved"?" · Approved agent float: UGX 57,500 (non-withdrawable).":"");
+box.appendChild(p);
+}catch(err){show($("myAgentStatus"),"Could not load application status: "+messageFromError(err),true);}
+}
+
+$("searchAgents").addEventListener("click",async()=>{
+const region=$("searchRegion").value,town=$("searchTown").value,box=$("agentResults");
+box.textContent="Searching approved agents…";
+try{
+let q=db.collection("agentDirectory");
+if(region)q=q.where("region","==",region);
+if(town)q=q.where("town","==",town);
+const snap=await q.get();box.replaceChildren();
+if(snap.empty){box.textContent="No approved agents found for this selection.";return;}
+snap.forEach(doc=>{
+const d=doc.data(),item=document.createElement("div");item.className="request";
+const name=document.createElement("strong");name.textContent=d.name||"Approved agent";
+const location=document.createElement("p");location.textContent=(d.region||"")+" · "+(d.town||"");
+const contact=document.createElement("p");contact.textContent="Contact: "+(d.phone||"Contact administrator");
+item.append(name,location,contact);box.appendChild(item);
+});
+}catch(err){show(box,"Agent search failed: "+messageFromError(err),true);}
+});
+
+async function checkAdmin(user){
+try{
+const doc=await db.collection("admins").doc(user.uid).get();
+return doc.exists&&doc.data().role==="admin"&&doc.data().enabled===true;
+}catch(e){console.error(e);return false;}
+}
+async function loadAdmin(){
+try{
+const [requests,members,applications]=await Promise.all([
+db.collection("activationRequests").get(),
+db.collection("memberProfiles").get(),
+db.collection("agentApplications").get()
+]);
+$("adminSummary").textContent="Members: "+members.size+" · Activation requests: "+requests.size+
+" · Pending activations: "+requests.docs.filter(d=>d.data().status==="pending").length+
+" · Agent applications: "+applications.size;
+
+const reqBox=$("adminRequests");reqBox.replaceChildren();
+requests.forEach(doc=>{
+const d=doc.data(),item=document.createElement("div");item.className="request";
+item.textContent="Package: "+(d.packageRequested||"Not set")+" · Status: "+(d.status||"pending")+
+" · Area: "+(d.area||"Not set")+" · Member UID: "+(d.uid||"Not set");
+if(d.status==="pending"){
+const approve=document.createElement("button");approve.textContent="Approve activation";
+approve.addEventListener("click",()=>reviewActivation(doc.id,"approved"));
+const reject=document.createElement("button");reject.textContent="Reject activation";reject.className="secondary";
+reject.addEventListener("click",()=>reviewActivation(doc.id,"rejected"));
+item.append(approve,reject);
+}
+reqBox.appendChild(item);
+});
+
+const memberBox=$("adminMembers");memberBox.replaceChildren();
+members.forEach(doc=>{
+const d=doc.data(),item=document.createElement("div");item.className="request";
+item.textContent="Name: "+(d.name||"Not set")+" · Email: "+(d.email||"Not set")+
+" · Status: "+(d.accountStatus||"pending")+" · Package: "+(d.package||"Not assigned");
+memberBox.appendChild(item);
+});
+
+const agentBox=$("adminAgentApplications");agentBox.replaceChildren();
+if(applications.empty){agentBox.textContent="No agent applications yet.";}
+applications.forEach(doc=>{
+const d=doc.data(),item=document.createElement("div");item.className="request";
+const info=document.createElement("p");
+info.textContent="Applicant: "+(d.name||"Not set")+" · Email: "+(d.email||"Not set")+
+" · Region: "+(d.region||"")+" · Town: "+(d.town||"")+
+" · Phone: "+(d.phone||"")+" · NIN: "+(d.nin||"")+
+" · Declared capital: UGX "+(d.capitalDeclared||0
