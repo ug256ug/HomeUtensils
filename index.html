@@ -851,20 +851,139 @@ return doc.exists&&doc.data().role==="admin"&&doc.data().enabled===true;
 }catch(e){console.error(e);return false;}
 }
 
-async function reviewActivation(id,status){
-if(!isAdminUser||!currentUser)return show($("globalMessage"),"Administrator access required.",true);
-if(!["approved","rejected"].includes(status))return;
-if(!confirm("Confirm "+status+" for this activation request?"))return;
-try{
-await db.collection("activationRequests").doc(id).update({
-status:status,
-reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),
-reviewedBy:currentUser.uid
-});
-show($("globalMessage"),"Activation request marked "+status+". Verify any payment and package updates separately.");
-await loadAdmin();
-}catch(err){show($("globalMessage"),"Could not review activation: "+messageFromError(err),true);}
+async function reviewActivation(id, status) {
+  if (!isAdminUser || !currentUser) {
+    return show(
+      $("globalMessage"),
+      "Administrator access required.",
+      true
+    );
+  }
+
+  if (!["approved", "rejected"].includes(status)) {
+    return;
+  }
+
+  const verifiedPayment = status === "approved"
+    ? confirm(
+        "PAYMENT VERIFICATION REQUIRED\n\n" +
+        "Have you independently checked that the member's payment " +
+        "was actually received for the requested package?\n\n" +
+        "Choose OK only if you have checked the payment record. " +
+        "This confirmation does not verify payment automatically."
+      )
+    : true;
+
+  if (!verifiedPayment) {
+    show(
+      $("globalMessage"),
+      "Activation not approved. Verify payment before approving.",
+      true
+    );
+    return;
+  }
+
+  if (
+    !confirm(
+      "Confirm " + status + " for this activation request?"
+    )
+  ) {
+    return;
+  }
+
+  try {
+    const requestRef = db.collection("activationRequests").doc(id);
+    const requestSnap = await requestRef.get();
+
+    if (!requestSnap.exists) {
+      throw new Error("Activation request not found.");
+    }
+
+    const request = requestSnap.data();
+
+    if (request.status !== "pending") {
+      throw new Error(
+        "This request has already been reviewed. Refresh the admin page."
+      );
+    }
+
+    const profileRef = db.collection("memberProfiles").doc(request.uid);
+    const profileSnap = await profileRef.get();
+
+    if (!profileSnap.exists) {
+      throw new Error("Member profile not found.");
+    }
+
+    const updates = {
+      status: status,
+      reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      reviewedBy: currentUser.uid
+    };
+
+    const batch = db.batch();
+
+    if (status === "approved") {
+      const packageName = request.packageRequested;
+
+      const packageDays = {
+        Starter: 60,
+        Standard: 60,
+        Plus: 90
+      };
+
+      if (!Object.prototype.hasOwnProperty.call(
+        packageDays,
+        packageName
+      )) {
+        throw new Error("Unknown package. Request not approved.");
+      }
+
+      const activationDate = new Date();
+      const expiryDate = new Date(activationDate);
+
+      expiryDate.setDate(
+        expiryDate.getDate() + packageDays[packageName]
+      );
+
+      batch.update(profileRef, {
+        package: packageName,
+        packageStatus: "active",
+        activationDate: firebase.firestore.Timestamp.fromDate(
+          activationDate
+        ),
+        expiryDate: firebase.firestore.Timestamp.fromDate(
+          expiryDate
+        ),
+        paymentVerifiedByAdmin: true,
+        paymentVerifiedAt:
+          firebase.firestore.FieldValue.serverTimestamp(),
+        paymentVerifiedBy: currentUser.uid
+      });
+    }
+
+    batch.update(requestRef, updates);
+
+    await batch.commit();
+
+    show(
+      $("globalMessage"),
+      status === "approved"
+        ? "Activation approved and member profile updated. " +
+          "This records the administrator's payment confirmation; " +
+          "it does not send money or verify a payment provider automatically."
+        : "Activation request rejected. The member package was not activated."
+    );
+
+    await loadAdmin();
+  } catch (err) {
+    show(
+      $("globalMessage"),
+      "Could not review activation: " + messageFromError(err),
+      true
+    );
+  }
 }
+
 
 async function reviewWithdrawal(id,status){
 if(!isAdminUser||!currentUser)return show($("globalMessage"),"Administrator access required.",true);
