@@ -30,275 +30,356 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .money{font-size:1.2rem;font-weight:bold}
 footer{text-align:center;padding:20px;color:#647067}
 
-/* HomeUtensils member dashboard improvements */
-#dashboard {
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --green: #075e4f;
+  --green-dark: #06483e;
+  --green-soft: #e8f5f1;
+  --page: #f2f6f8;
+  --text: #173b36;
+  --muted: #64748b;
+  --border: #dce5e9;
+  --white: #ffffff;
+  --orange: #f4511e;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 18px;
+}
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text);
+  font-family: Arial, sans-serif;
+  line-height: 1.5;
+}
+
+header {
+  position: relative;
+  padding: 24px 16px;
+  background: var(--green-dark);
+  color: white;
+  text-align: center;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.65rem;
+}
+
+header p {
+  margin: 7px 0 0;
+  color: #e1efeb;
+}
+
+main {
+  width: 100%;
+  max-width: 760px;
+  margin: 20px auto;
+  padding: 0 14px;
+}
+
+.card {
+  min-width: 0;
+  margin-bottom: 18px;
+  padding: 20px;
+  overflow-wrap: anywhere;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 3px 10px rgba(20, 50, 45, 0.05);
+}
+
+h2 {
+  margin: 0 0 14px;
+  color: var(--green-dark);
+  font-size: 1.2rem;
+  line-height: 1.35;
+}
+
+h3 {
+  color: var(--green-dark);
+}
+
+p {
+  overflow-wrap: anywhere;
+}
+
+label {
+  display: block;
+  margin: 13px 0 6px;
+  font-weight: 600;
+}
+
+input,
+select,
+textarea,
+button {
+  width: 100%;
   max-width: 100%;
+  min-height: 46px;
+  padding: 12px;
+  border-radius: 11px;
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  color: var(--text);
+  background: white;
+  border: 1px solid #cbd5dc;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid #79c6b4;
+  outline-offset: 1px;
+}
+
+button {
+  margin-top: 12px;
+  color: white;
+  background: var(--green);
+  border: 0;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.secondary {
+  color: var(--text);
+  background: #e8edf0;
+}
+
+.danger {
+  background: #991b1b;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.notice,
+.error {
+  margin: 12px 0;
+  padding: 14px;
+  border-radius: 13px;
+  overflow-wrap: anywhere;
+}
+
+.notice {
+  background: #effaf4;
+  border: 1px solid #c8ecd6;
+}
+
+.error {
+  color: #991b1b;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.93rem;
+}
+
+.request {
+  margin: 10px 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fbfdfe;
+  overflow-wrap: anywhere;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.money {
+  font-size: 1.2rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+#dashboard {
+  width: 100%;
 }
 
 #dashboard > .card {
-  border: 1px solid #e0e8e2;
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 18px;
-  box-shadow: 0 4px 14px rgba(20, 83, 45, 0.06);
-}
-
-#dashboard h2 {
-  color: #14532d;
-  font-size: 1.2rem;
-  margin-top: 0;
-  margin-bottom: 12px;
-}
-
-#dashboard .notice {
-  border-radius: 12px;
-}
-
-#dashboard .grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
-}
-
-#dashboard button {
-  min-height: 46px;
-  border-radius: 10px;
-}
-
-#dashboard input,
-#dashboard select,
-#dashboard textarea {
-  min-height: 46px;
-  border-radius: 10px;
+  scroll-margin-top: 16px;
 }
 
 #profileCard {
-  border-top: 5px solid #14532d;
-  background: linear-gradient(180deg, #ffffff 0%, #f7fbf8 100%);
+  border-top: 4px solid var(--green);
+}
+
+#profileMessage {
+  line-height: 1.7;
+}
+
+#walletCard {
+  background: var(--green-soft);
 }
 
 #walletCard .money {
-  color: #14532d;
-  font-size: 1.35rem;
+  color: var(--green-dark);
 }
 
-#dashboard .muted {
-  line-height: 1.6;
+#tasksCard {
+  border-top: 4px solid var(--orange);
 }
 
-@media (max-width: 600px) {
-  main {
-    margin: 12px auto;
-    padding: 0 10px;
-  }
-
-  #dashboard > .card {
-    padding: 15px;
-    margin-bottom: 13px;
-  }
-
-  #dashboard h2 {
-    font-size: 1.1rem;
-  }
-
-  #dashboard .grid {
-    grid-template-columns: 1fr;
-  }
-
-  header h1 {
-    font-size: 1.6rem;
-  }
-
-  header p {
-    font-size: 0.9rem;
-  }
+#withdrawalCard,
+#agentWorkCard {
+  border-top: 4px solid var(--green);
 }
 
-
-/* HomeUtensils compact mobile side menu */
+/* Compact menu button: never stretch across the screen */
 .menu-toggle {
   display: none;
   position: fixed;
   top: 12px;
   left: 12px;
   z-index: 1002;
-  border: 0;
-  border-radius: 10px;
-  padding: 9px 12px;
-  background: #14532d;
+  width: 48px;
+  min-width: 48px;
+  height: 48px;
+  min-height: 48px;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--green-dark);
   color: white;
   font-size: 24px;
 }
+
 .icon-menu {
   position: fixed;
   top: 0;
   bottom: 0;
   left: 0;
-  width: 68px;
   z-index: 1001;
-  background: #14532d;
-  padding: 64px 7px 12px;
-  box-sizing: border-box;
   display: none;
+  width: 68px;
+  padding: 68px 7px 12px;
   flex-direction: column;
   gap: 7px;
   overflow-y: auto;
+  background: var(--green-dark);
   transform: translateX(-100%);
-  transition: transform .2s ease;
+  transition: transform 0.2s ease;
 }
+
 .icon-menu.open {
   transform: translateX(0);
 }
+
 .icon-menu button {
   flex: 0 0 44px;
   width: 100%;
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
+  min-height: 44px;
+  margin: 0;
+  padding: 4px;
   color: white;
-  font-size: 23px;
+  background: transparent;
+  border-radius: 10px;
+  font-size: 22px;
 }
-.icon-menu button:focus,
-.icon-menu button:hover {
+
+.icon-menu button:hover,
+.icon-menu button:focus {
   background: #26734d;
 }
+
 .menu-shade {
   display: none;
   position: fixed;
   inset: 0;
-  background: #0006;
   z-index: 1000;
+  background: rgba(0, 0, 0, 0.4);
 }
+
 .menu-shade.open {
   display: block;
 }
-@media (max-width: 700px) {
-  .menu-toggle {
-    display: block;
-  }
-  .icon-menu {
-    display: flex;
-  }
-  body.menu-open {
-    overflow: hidden;
-  }
-  header {
-    padding-left: 55px;
-  }
-}
 
-
-/* Modern HomeUtensils member dashboard */
-body {
-  background: #f1f6f8;
-  color: #073b35;
-  font-family: Arial, sans-serif;
-}
-
-header {
-  background: #f1f6f8;
-  color: #073b35;
+footer {
   padding: 22px 14px;
+  color: var(--muted);
+  text-align: center;
 }
 
-header h1 {
-  font-size: 1.7rem;
-  letter-spacing: -0.5px;
-}
+@media (max-width: 700px) {
+  main {
+    margin: 14px auto;
+    padding: 0 10px;
+  }
 
-header p {
-  color: #526579;
-}
-
-main {
-  max-width: 760px;
-  margin: 18px auto;
-  padding: 0 14px;
-}
-
-#dashboard > .card {
-  border: 1px solid #dce6eb;
-  border-radius: 22px;
-  padding: 20px;
-  margin-bottom: 18px;
-  background: #fff;
-  box-shadow: 0 3px 8px #163b3510;
-}
-
-#dashboard h2 {
-  color: #073b35;
-  font-size: 1.2rem;
-  letter-spacing: -0.3px;
-}
-
-#profileCard {
-  border-top: 1px solid #dce6eb;
-  background: #fff;
-}
-
-#dashboard .notice {
-  border-radius: 14px;
-}
-
-#dashboard .request {
-  border-radius: 16px;
-  background: #f8fbfc;
-}
-
-#dashboard button {
-  min-height: 48px;
-  border-radius: 13px;
-}
-
-#dashboard input,
-#dashboard select,
-#dashboard textarea {
-  min-height: 48px;
-  border-radius: 12px;
-}
-
-#dashboard .grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-#walletCard {
-  background: #e7f5f2;
-}
-
-#withdrawalCard {
-  border-top: 4px solid #008577;
-}
-
-#tasksCard {
-  border-top: 4px solid #f97316;
-}
-
-#agentWorkCard {
-  border-top: 4px solid #008577;
-}
-
-@media (max-width: 600px) {
   header {
-    padding: 18px 12px;
+    padding: 22px 12px;
   }
 
   header h1 {
     font-size: 1.45rem;
   }
 
-  main {
-    margin: 12px auto;
-    padding: 0 10px;
+  header p {
+    font-size: 0.92rem;
+  }
+
+  .menu-toggle {
+    display: flex;
+  }
+
+  .icon-menu {
+    display: flex;
+  }
+
+  body.menu-open {
+    overflow: hidden;
   }
 
   #dashboard > .card {
     padding: 16px;
-    border-radius: 20px;
     margin-bottom: 14px;
+    border-radius: 18px;
   }
 
-  #dashboard .grid {
+  #dashboard h2 {
+    font-size: 1.12rem;
+  }
+
+  .grid {
     grid-template-columns: 1fr;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .icon-menu {
+    transition: none;
+  }
+}
+
 }
 
 </style>
