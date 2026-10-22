@@ -1110,12 +1110,13 @@ show($("profileMessage"),"Could not load your account: "+messageFromError(err),t
 });
 
 })();
+
 </script>
 
 <script>
 (async function () {
   const SUPABASE_URL = "https://rchghhxuzwhuldjphaue.supabase.co";
-  const SUPABASE_PUBLISHABLE_KEY = "YOUR_ACTUAL_PUBLISHABLE_KEY";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_3pjS96_mBdxTauNEKZSo6w_SAI-8hCX";
 
   try {
     if (!window.supabase || !window.supabase.createClient) {
@@ -1129,10 +1130,11 @@ show($("profileMessage"),"Could not load your account: "+messageFromError(err),t
     );
 
     window.homeUtensilsSupabaseTest = async function () {
-      const { data, error } = await supabaseClient.functions.invoke(
-        "homeutensils-health",
-        { method: "GET" }
-      );
+      const { data, error } =
+        await supabaseClient.functions.invoke(
+          "homeutensils-health",
+          { method: "GET" }
+        );
 
       if (error) {
         console.error("Supabase health test failed:", error.message);
