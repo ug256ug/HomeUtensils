@@ -274,10 +274,12 @@ const $=id=>document.getElementById(id);
 let auth,db,currentUser=null,profileData=null,unsubscribe=null,isAdminUser=false;
 
 const towns={
-Central:["Kampala","Mukono"],
-Western:["Mbarara","Fort Portal"],
-Northern:["Gulu","Lira"]
+  Central:["Kampala","Mukono"],
+  Western:["Mbarara","Fort Portal"],
+  Northern:["Gulu","Lira"],
+  Eastern:["Jinja","Mbale"]
 };
+
 
 function show(el,message,error=false){
 el.textContent=message||"";
