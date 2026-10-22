@@ -30,6 +30,89 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .money{font-size:1.2rem;font-weight:bold}
 footer{text-align:center;padding:20px;color:#647067}
 
+/* HomeUtensils member dashboard improvements */
+#dashboard {
+  max-width: 100%;
+}
+
+#dashboard > .card {
+  border: 1px solid #e0e8e2;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 18px;
+  box-shadow: 0 4px 14px rgba(20, 83, 45, 0.06);
+}
+
+#dashboard h2 {
+  color: #14532d;
+  font-size: 1.2rem;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+#dashboard .notice {
+  border-radius: 12px;
+}
+
+#dashboard .grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+
+#dashboard button {
+  min-height: 46px;
+  border-radius: 10px;
+}
+
+#dashboard input,
+#dashboard select,
+#dashboard textarea {
+  min-height: 46px;
+  border-radius: 10px;
+}
+
+#profileCard {
+  border-top: 5px solid #14532d;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbf8 100%);
+}
+
+#walletCard .money {
+  color: #14532d;
+  font-size: 1.35rem;
+}
+
+#dashboard .muted {
+  line-height: 1.6;
+}
+
+@media (max-width: 600px) {
+  main {
+    margin: 12px auto;
+    padding: 0 10px;
+  }
+
+  #dashboard > .card {
+    padding: 15px;
+    margin-bottom: 13px;
+  }
+
+  #dashboard h2 {
+    font-size: 1.1rem;
+  }
+
+  #dashboard .grid {
+    grid-template-columns: 1fr;
+  }
+
+  header h1 {
+    font-size: 1.6rem;
+  }
+
+  header p {
+    font-size: 0.9rem;
+  }
+}
+
+
 /* HomeUtensils compact mobile side menu */
 .menu-toggle {
   display: none;
