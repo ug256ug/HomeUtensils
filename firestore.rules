@@ -227,6 +227,7 @@ service cloud.firestore {
     // Withdrawal requests
     // -------------------------------
 
+    
     match /withdrawalRequests/{requestId} {
       allow read: if isAdmin()
         || (signedIn() && resource.data.uid == request.auth.uid);
@@ -237,11 +238,11 @@ service cloud.firestore {
         && request.resource.data.amount >= 2000
         && request.resource.data.fee is number
         && request.resource.data.fee >= 0
-                && request.resource.data.fee <= request.resource.data.amount
-        && request.resource.data.fee == request.resource.data.amount * 0.10
-        && request.resource.data.payout == request.resource.data.amount - request.resource.data.fee
+        && request.resource.data.fee <= request.resource.data.amount
         && request.resource.data.payout is number
         && request.resource.data.payout > 0
+        && request.resource.data.payout
+          == request.resource.data.amount - request.resource.data.fee
         && request.resource.data.currency == "UGX"
         && request.resource.data.method in [
           "Mobile Money", "Bank Transfer"
