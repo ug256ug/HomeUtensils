@@ -29,6 +29,79 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
 .money{font-size:1.2rem;font-weight:bold}
 footer{text-align:center;padding:20px;color:#647067}
+
+/* HomeUtensils compact mobile side menu */
+.menu-toggle {
+  display: none;
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1002;
+  border: 0;
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: #14532d;
+  color: white;
+  font-size: 24px;
+}
+.icon-menu {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 68px;
+  z-index: 1001;
+  background: #14532d;
+  padding: 64px 7px 12px;
+  box-sizing: border-box;
+  display: none;
+  flex-direction: column;
+  gap: 7px;
+  overflow-y: auto;
+  transform: translateX(-100%);
+  transition: transform .2s ease;
+}
+.icon-menu.open {
+  transform: translateX(0);
+}
+.icon-menu button {
+  flex: 0 0 44px;
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: white;
+  font-size: 23px;
+}
+.icon-menu button:focus,
+.icon-menu button:hover {
+  background: #26734d;
+}
+.menu-shade {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: #0006;
+  z-index: 1000;
+}
+.menu-shade.open {
+  display: block;
+}
+@media (max-width: 700px) {
+  .menu-toggle {
+    display: block;
+  }
+  .icon-menu {
+    display: flex;
+  }
+  body.menu-open {
+    overflow: hidden;
+  }
+  header {
+    padding-left: 55px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -71,6 +144,28 @@ footer{text-align:center;padding:20px;color:#647067}
 </section>
 
 <section id="dashboard" class="hidden">
+
+<button id="menuToggle" class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false">☰</button>
+
+<div id="menuShade" class="menu-shade"></div>
+
+<nav id="iconMenu" class="icon-menu" aria-label="Member menu">
+  <button type="button" data-target="dashboard" title="Dashboard" aria-label="Dashboard">🏠</button>
+  <button type="button" data-target="findAgentCard" title="Find an Agent" aria-label="Find an Agent">🔎</button>
+  <button type="button" data-target="profileCard" title="My Profile" aria-label="My Profile">👤</button>
+  <button type="button" data-target="packageDetails" title="My Package" aria-label="My Package">📦</button>
+  <button type="button" data-target="referralCard" title="Referral Program" aria-label="Referral Program">🔗</button>
+  <button type="button" data-target="bonusCard" title="Bonus Code" aria-label="Bonus Code">🎁</button>
+  <button type="button" data-target="tasksCard" title="Tasks & Earnings" aria-label="Tasks and Earnings">📝</button>
+  <button type="button" data-target="walletCard" title="My Wallet" aria-label="My Wallet">👛</button>
+  <button type="button" data-target="p2pCard" title="P2P Transfers" aria-label="P2P Transfers">🔄</button>
+  <button type="button" data-target="withdrawalCard" title="Withdrawals" aria-label="Withdrawals">💸</button>
+  <button type="button" data-target="agentWorkCard" title="Agent Work" aria-label="Agent Work">🤝</button>
+  <button type="button" data-target="agentApplicationCard" title="Become an Agent" aria-label="Become an Agent">🪪</button>
+  <button type="button" data-target="settingsCard" title="Settings" aria-label="Settings">⚙️</button>
+  <button id="menuSignOut" type="button" title="Log Out" aria-label="Log Out">🚪</button>
+</nav>
+
 <div class="card">
 <h2>Account overview</h2>
 <p id="memberEmail" class="muted"></p>
