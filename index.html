@@ -169,58 +169,69 @@ The server must verify the schedule, public holidays, available balance and pend
 </div>
 
 <div class="card">
-<h2>Apply to become an agent</h2>
-<p>An agent must be an active Plus member and must submit an application. Plus membership alone does not make you an agent.</p>
-<div class="notice">
-<strong>Starting capital: UGX 50,000.</strong><br>
-After an administrator verifies the capital and approves your application, the agent float becomes UGX 57,500, including a UGX 7,500 bonus. This float is non-withdrawable and is restricted to facilitating package activation.
-</div>
-<form id="agentForm">
+  <h2>Apply to become an agent</h2>
+  <p>An agent must be an active Plus member and submit an application. Plus membership alone does not make you an agent.</p>
 
-<label for="searchRegion">Region</label>
-<select id="searchRegion">
-  <option value="">All regions</option>
-  <option value="Central">Central</option>
-  <option value="Western">Western</option>
-  <option value="Northern">Northern</option>
-  <option value="Eastern">Eastern</option>
-</select>
+  <div class="notice">
+    <strong>Starting capital: UGX 50,000.</strong><br>
+    After an administrator verifies the capital and approves your application, the agent float is recorded as UGX 57,500, including a UGX 7,500 bonus. The float is non-withdrawable and restricted to facilitating package activation.
+  </div>
 
-<label for="agentTown">Town</label>
-<select id="agentTown" required>
-<option value="">Select region first</option>
-</select>
-<label for="agentPhone">Contact phone number</label>
-<input id="agentPhone" type="tel" maxlength="25" required placeholder="Your contact number">
-<label for="agentNin">NIN number</label>
-<input id="agentNin" type="password" maxlength="30" autocomplete="off" required>
-<p class="muted">Your NIN is private and should only be accessible to you and authorised administrators. It will not be shown in public agent search results.</p>
-<label>
-<input id="capitalConfirm" type="checkbox" required style="width:auto">
-I understand that I must provide UGX 50,000 starting capital for verification.
-</label>
-<button type="submit">Submit agent application</button>
-</form>
-<div id="agentMessage" aria-live="polite"></div>
-<div id="myAgentStatus"></div>
+  <form id="agentForm">
+    <label for="agentRegion">Region</label>
+    <select id="agentRegion" required>
+      <option value="">Select region</option>
+      <option value="Central">Central</option>
+      <option value="Western">Western</option>
+      <option value="Northern">Northern</option>
+      <option value="Eastern">Eastern</option>
+    </select>
+
+    <label for="agentTown">Town</label>
+    <select id="agentTown" required>
+      <option value="">Select region first</option>
+    </select>
+
+    <label for="agentPhone">Contact phone number</label>
+    <input id="agentPhone" type="tel" maxlength="25" required placeholder="Your contact number">
+
+    <label for="agentNin">NIN number</label>
+    <input id="agentNin" type="password" maxlength="30" autocomplete="off" required>
+
+    <p class="muted">Your NIN is private and should only be accessible to you and authorised administrators. It will not be shown in public agent search results.</p>
+
+    <label>
+      <input id="capitalConfirm" type="checkbox" required style="width:auto">
+      I understand that I must provide UGX 50,000 starting capital for verification.
+    </label>
+
+    <button type="submit">Submit agent application</button>
+  </form>
+
+  <div id="agentMessage" aria-live="polite"></div>
+  <div id="myAgentStatus"></div>
 </div>
 
 <div class="card">
-<h2>Find an approved agent</h2>
-<p class="muted">Only agents approved by the administrator should appear here.</p>
-<label for="searchRegion">Region</label>
-<select id="searchRegion">
-<option value="">All regions</option>
-<option value="Central">Central</option>
-<option value="Western">Western</option>
-<option value="Northern">Northern</option>
-</select>
-<label for="searchTown">Town</label>
-<select id="searchTown">
-<option value="">All towns</option>
-</select>
-<button id="searchAgents" type="button">Search approved agents</button>
-<div id="agentResults" aria-live="polite">Select a region or town, then search.</div>
+  <h2>Find an approved agent</h2>
+  <p class="muted">Only agents approved by the administrator should appear here.</p>
+
+  <label for="searchRegion">Region</label>
+  <select id="searchRegion">
+    <option value="">All regions</option>
+    <option value="Central">Central</option>
+    <option value="Western">Western</option>
+    <option value="Northern">Northern</option>
+    <option value="Eastern">Eastern</option>
+  </select>
+
+  <label for="searchTown">Town</label>
+  <select id="searchTown">
+    <option value="">All towns</option>
+  </select>
+
+  <button id="searchAgents" type="button">Search approved agents</button>
+  <div id="agentResults" aria-live="polite">Select a region or town, then search.</div>
 </div>
 
 <section id="adminSection" class="hidden">
@@ -770,7 +781,13 @@ return;
 
 if(Number(app.capitalDeclared)!==50000)throw new Error("Declared starting capital must be UGX 50,000.");
 const phone=String(app.phone||"").trim(),region=String(app.region||"").trim(),town=String(app.town||"").trim();
-const validTowns={Central:["Kampala","Mukono"],Western:["Mbarara","Fort Portal"],Northern:["Gulu","Lira"]};
+const validTowns = {
+  Central: ["Kampala", "Mukono"],
+  Western: ["Mbarara", "Fort Portal"],
+  Northern: ["Gulu", "Lira"],
+  Eastern: ["Jinja", "Mbale"]
+};
+
 if(!phone)throw new Error("Applicant phone number is missing.");
 if(!validTowns[region]||!validTowns[region].includes(town))throw new Error("Invalid region and town.");
 
