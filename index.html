@@ -319,13 +319,50 @@ The server must verify the schedule, public holidays, available balance and pend
   </div>
 </div>
 
+
 <div class="card" id="agentWorkCard">
-  <h2>Agent Work</h2>
+  <h2>Agent Facilitation</h2>
+  <p>Use the registered member ID to locate a member and submit a package facilitation request.</p>
+
   <div class="notice">
-    <strong>Agent work is not available yet.</strong>
-    <p>Agent assignments, package activations, commissions, and float movements must be verified and recorded securely before this section can process work.</p>
+    <strong>Important</strong>
+    <p>Only approved agents may facilitate package activation. Submitting a request does not transfer funds or activate a package. The request must pass the required security checks and review.</p>
   </div>
+
+  <form id="agentFacilitationForm">
+    <label for="facilitationMemberId">Member ID</label>
+    <input
+      id="facilitationMemberId"
+      type="text"
+      autocomplete="off"
+      required
+      placeholder="Enter the registered member ID"
+    >
+
+    <button id="findFacilitationMember" type="button">
+      Find Member
+    </button>
+
+    <div id="facilitationMemberResult" class="notice" aria-live="polite">
+      Enter a member ID and select Find Member.
+    </div>
+
+    <label for="facilitationPackage">Requested package</label>
+    <select id="facilitationPackage" required>
+      <option value="">Select package</option>
+      <option value="Starter">Starter</option>
+      <option value="Standard">Standard</option>
+      <option value="Plus">Plus</option>
+    </select>
+
+    <button id="submitFacilitationRequest" type="submit">
+      Submit Facilitation Request
+    </button>
+
+    <div id="facilitationMessage" aria-live="polite"></div>
+  </form>
 </div>
+
 
 <div class="card" id="settingsCard">
   <h2>Settings</h2>
