@@ -632,20 +632,63 @@ show($("activationMessage"),"Request submitted. Your package is not active until
 }catch(err){show($("activationMessage"),messageFromError(err),true);}
 finally{btn.disabled=false;}
 });
-
 function renderProfile(data){
-profileData=data;
-show($("profileMessage"),"Account status: "+(data.accountStatus||"pending")+". Package activation requires authorised review.");
-const details=$("packageDetails");details.replaceChildren();
-const h=document.createElement("h3");h.textContent="Package details";details.appendChild(h);
-[
-["Name",data.fullName||data.name],["Package",data.package],["Package status",data.packageStatus],
-["Activation date",dateText(data.activationDate)],["Expiry date",dateText(data.expiryDate)]
-].forEach(([label,value])=>{
-const p=document.createElement("p");p.textContent=label+": "+(value||"Not set");details.appendChild(p);
-});
-}
+profileData = data || {};
 
+const accountStatus = profileData.accountStatus || "Not set";
+
+show(
+$("profileMessage"),
+"Account status: " + accountStatus +
+". Package activation is valid only after an authorised reviewer approves the request."
+);
+
+const details = $("packageDetails");
+details.replaceChildren();
+
+const heading = document.createElement("h3");
+heading.textContent = "Member profile";
+details.appendChild(heading);
+
+const rows = [
+["Name", profileData.fullName || profileData.name],
+["Email", profileData.email || (currentUser && currentUser.email)],
+["Account status", accountStatus]
+];
+
+rows.forEach(([label, value]) => {
+const p = document.createElement("p");
+p.textContent = label + ": " +
+(value !== undefined && value !== null && String(value).trim()
+? String(value)
+: "Not set");
+details.appendChild(p);
+});
+
+const packageHeading = document.createElement("h3");
+packageHeading.textContent = "Package details";
+details.appendChild(packageHeading);
+
+[
+["Package", profileData.package],
+["Package status", profileData.packageStatus],
+["Activation date", dateText(profileData.activationDate)],
+["Expiry date", dateText(profileData.expiryDate)]
+].forEach(([label, value]) => {
+const p = document.createElement("p");
+p.textContent = label + ": " +
+(value !== undefined && value !== null && String(value).trim()
+? String(value)
+: "Not set");
+details.appendChild(p);
+});
+
+const note = document.createElement("p");
+note.className = "muted";
+note.textContent =
+"Missing package details are not proof of activation. Check the activation request and authorised review status.";
+details.appendChild(note);
+}
 function listenRequests(user){
 $("requestHistory").textContent="Loading requests…";
 db.collection("activationRequests").where("uid","==",user.uid).onSnapshot(snapshot=>{
