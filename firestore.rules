@@ -4,9 +4,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // -------------------------------
     // Authentication and permissions
-    // -------------------------------
 
     function signedIn() {
       return request.auth != null;
@@ -29,6 +27,8 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/memberProfiles/$(userId)).data.packageStatus == "active";
     }
 
+    // Uganda agent regions and towns
+
     function validRegionTown(region, town) {
       return (
         region == "Central"
@@ -39,21 +39,20 @@ service cloud.firestore {
       ) || (
         region == "Northern"
         && town in ["Gulu", "Lira"]
+      ) || (
+        region == "Eastern"
+        && town in ["Jinja", "Mbale"]
       );
     }
 
-    // -------------------------------
     // Administrator records
-    // -------------------------------
 
     match /admins/{userId} {
       allow read: if isOwner(userId) || isAdmin();
       allow create, update, delete: if false;
     }
 
-    // -------------------------------
     // Member profiles
-    // -------------------------------
 
     match /memberProfiles/{userId} {
       allow read: if isOwner(userId) || isAdmin();
@@ -77,9 +76,7 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // -------------------------------
     // Package activation requests
-    // -------------------------------
 
     match /activationRequests/{requestId} {
       allow read: if isAdmin()
@@ -105,9 +102,7 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // -------------------------------
     // Agent applications
-    // -------------------------------
 
     match /agentApplications/{applicationId} {
       allow read: if isAdmin()
@@ -145,9 +140,7 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // -------------------------------
     // Public directory of approved agents
-    // -------------------------------
 
     match /agentDirectory/{agentId} {
       allow read: if resource.data.status == "approved";
@@ -169,9 +162,7 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // -------------------------------
     // Agent working float
-    // -------------------------------
 
     match /agentFloats/{agentId} {
       allow read: if isAdmin();
@@ -198,9 +189,7 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // -------------------------------
     // Agent float audit transactions
-    // -------------------------------
 
     match /agentFloatTransactions/{transactionId} {
       allow read: if isAdmin();
@@ -223,11 +212,8 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // -------------------------------
     // Withdrawal requests
-    // -------------------------------
 
-    
     match /withdrawalRequests/{requestId} {
       allow read: if isAdmin()
         || (signedIn() && resource.data.uid == request.auth.uid);
@@ -267,10 +253,8 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // -------------------------------
     // Financial and activity ledgers
     // Members cannot directly write these records.
-    // -------------------------------
 
     match /walletTransactions/{transactionId} {
       allow read: if isAdmin();
@@ -292,9 +276,7 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
-    // -------------------------------
     // Default: deny everything else
-    // -------------------------------
 
     match /{document=**} {
       allow read, write: if false;
