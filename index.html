@@ -103,6 +103,7 @@ footer{text-align:center;padding:20px;color:#647067}
 }
 
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <header>
@@ -1110,5 +1111,44 @@ show($("profileMessage"),"Could not load your account: "+messageFromError(err),t
 
 })();
 </script>
+
+<script>
+(async function () {
+  const SUPABASE_URL = "https://rchghhxuzwhuldjphaue.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY = "YOUR_ACTUAL_PUBLISHABLE_KEY";
+
+  try {
+    if (!window.supabase || !window.supabase.createClient) {
+      console.error("Supabase library did not load.");
+      return;
+    }
+
+    const supabaseClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
+    );
+
+    window.homeUtensilsSupabaseTest = async function () {
+      const { data, error } = await supabaseClient.functions.invoke(
+        "homeutensils-health",
+        { method: "GET" }
+      );
+
+      if (error) {
+        console.error("Supabase health test failed:", error.message);
+        return { ok: false, error: error.message };
+      }
+
+      console.log("Supabase health test:", data);
+      return data;
+    };
+
+    console.log("HomeUtensils Supabase test client initialized.");
+  } catch (error) {
+    console.error("Supabase initialization failed:", error);
+  }
+})();
+</script>
+
 </body>
 </html>
