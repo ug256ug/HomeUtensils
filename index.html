@@ -504,6 +504,44 @@ $("signOut").addEventListener("click",async()=>{
 try{await auth.signOut();}catch(err){show($("globalMessage"),messageFromError(err),true);}
 });
 
+$("menuToggle").addEventListener("click",()=>{
+  const menu=$("iconMenu");
+  const shade=$("menuShade");
+  const isOpen=menu.classList.toggle("open");
+  shade.classList.toggle("open",isOpen);
+  $("menuToggle").setAttribute("aria-expanded",String(isOpen));
+});
+
+$("menuShade").addEventListener("click",closeIconMenu);
+
+function closeIconMenu(){
+  $("iconMenu").classList.remove("open");
+  $("menuShade").classList.remove("open");
+  $("menuToggle").setAttribute("aria-expanded","false");
+}
+
+$("iconMenu").querySelectorAll("button[data-target]").forEach(button=>{
+  button.addEventListener("click",()=>{
+    const target=$(button.dataset.target);
+    closeIconMenu();
+    if(!target){
+      show($("globalMessage"),"This section is not available yet.");
+      return;
+    }
+    target.scrollIntoView({behavior:"smooth",block:"start"});
+  });
+});
+
+$("menuSignOut").addEventListener("click",async()=>{
+  closeIconMenu();
+  try{
+    await auth.signOut();
+  }catch(err){
+    show($("globalMessage"),messageFromError(err),true);
+  }
+});
+
+
 $("activationForm").addEventListener("submit",async e=>{
 e.preventDefault();
 if(!currentUser)return show($("activationMessage"),"Please sign in first.",true);
