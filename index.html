@@ -176,13 +176,16 @@ The server must verify the schedule, public holidays, available balance and pend
 After an administrator verifies the capital and approves your application, the agent float becomes UGX 57,500, including a UGX 7,500 bonus. This float is non-withdrawable and is restricted to facilitating package activation.
 </div>
 <form id="agentForm">
-<label for="agentRegion">Region</label>
-<select id="agentRegion" required>
-<option value="">Select region</option>
-<option value="Central">Central</option>
-<option value="Western">Western</option>
-<option value="Northern">Northern</option>
+
+<label for="searchRegion">Region</label>
+<select id="searchRegion">
+  <option value="">All regions</option>
+  <option value="Central">Central</option>
+  <option value="Western">Western</option>
+  <option value="Northern">Northern</option>
+  <option value="Eastern">Eastern</option>
 </select>
+
 <label for="agentTown">Town</label>
 <select id="agentTown" required>
 <option value="">Select region first</option>
