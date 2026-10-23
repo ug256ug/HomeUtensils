@@ -950,11 +950,20 @@ const heading = document.createElement("h3");
 heading.textContent = "Member profile";
 details.appendChild(heading);
 
+function maskEmail(email){
+  if(!email || !String(email).includes("@")) return "Not available";
+  const parts=String(email).split("@");
+  const name=parts[0];
+  const domain=parts.slice(1).join("@");
+  return (name.length > 1 ? name[0] + "••••" : "•") + "@" + domain;
+}
+
 const rows = [
-["Name", profileData.fullName || profileData.name],
-["Email", profileData.email || (currentUser && currentUser.email)],
-["Account status", accountStatus]
+  ["Name", profileData.fullName || profileData.name || "Not set"],
+  ["Email", maskEmail(profileData.email || (currentUser && currentUser.email))],
+  ["Account status", accountStatus]
 ];
+
 
 rows.forEach(([label, value]) => {
 const p = document.createElement("p");
