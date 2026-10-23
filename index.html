@@ -881,17 +881,30 @@ function closeIconMenu(){
   $("menuToggle").setAttribute("aria-expanded","false");
 }
 
+
 $("iconMenu").querySelectorAll("button[data-target]").forEach(button=>{
   button.addEventListener("click",()=>{
-    const target=$(button.dataset.target);
+    const targetId=button.dataset.target;
+    const target=$(targetId);
     closeIconMenu();
+
     if(!target){
       show($("globalMessage"),"This section is not available yet.");
       return;
     }
+
+    const dashboard=$("dashboard");
+    const cards=dashboard.querySelectorAll(":scope > .card");
+
+    cards.forEach(card=>{
+      card.classList.toggle("hidden",card!==target);
+    });
+
+    target.classList.remove("hidden");
     target.scrollIntoView({behavior:"smooth",block:"start"});
   });
 });
+
 
 $("menuSignOut").addEventListener("click",async()=>{
   closeIconMenu();
