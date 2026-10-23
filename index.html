@@ -1046,12 +1046,14 @@ function maskEmail(email){
   return (name.length > 1 ? name[0] + "••••" : "•") + "@" + domain;
 }
 
+
 const rows = [
   ["Name", profileData.fullName || profileData.name || "Not set"],
-  ["Member ID", profileData.uid || (currentUser && currentUser.uid) || "Not available"],
+  ["Member ID", profileData.memberId || "Not assigned yet"],
   ["Email", maskEmail(profileData.email || (currentUser && currentUser.email))],
   ["Account status", accountStatus]
 ];
+
 
 
 
