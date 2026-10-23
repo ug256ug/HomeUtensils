@@ -576,15 +576,21 @@ The server must verify the schedule, public holidays, available balance and pend
 <input id="withdrawalAmount" type="number" min="2000" step="1" inputmode="numeric" required placeholder="Minimum 2000">
 
 <div class="grid">
+
 <div class="request">
 <div class="muted">Withdrawal fee (10%)</div>
 <div id="withdrawalFee" class="money">UGX 0</div>
 </div>
 <div class="request">
-<div class="muted">Estimated payout</div>
+<div class="muted">Amount you receive</div>
 <div id="withdrawalPayout" class="money">UGX 0</div>
 </div>
+<div class="request">
+<div class="muted">Total deducted (amount + 10% fee)</div>
+<div id="withdrawalTotal" class="money">UGX 0</div>
 </div>
+</div>
+
 
 <label for="withdrawalMethod">Payout method</label>
 <select id="withdrawalMethod" required>
