@@ -1273,9 +1273,9 @@ const p=document.createElement("p");
 p.textContent="Request: "+doc.id;
 item.appendChild(p);
 [
-["Requested",money(d.amount)],
-["Fee estimate",money(d.fee)],
-["Estimated payout",money(d.payout)],
+["Amount to receive",money(d.payout)],
+["Fee (10%)",money(d.fee)],
+["Total deduction",money(d.totalDeducted !== undefined ? d.totalDeducted : (Number(d.payout || d.amount || 0) + Number(d.fee || 0)))],
 ["Method",d.method||"Not set"],
 ["Status",d.status||"pending"],
 ["Submitted",dateText(d.createdAt)],
