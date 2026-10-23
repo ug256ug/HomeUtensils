@@ -1048,9 +1048,11 @@ function maskEmail(email){
 
 const rows = [
   ["Name", profileData.fullName || profileData.name || "Not set"],
+  ["Member ID", profileData.uid || (currentUser && currentUser.uid) || "Not available"],
   ["Email", maskEmail(profileData.email || (currentUser && currentUser.email))],
   ["Account status", accountStatus]
 ];
+
 
 
 rows.forEach(([label, value]) => {
