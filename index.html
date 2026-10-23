@@ -933,11 +933,22 @@ const btn=$("registerForm").querySelector("button[type=submit]");
 if(!name){show($("globalMessage"),"Enter your full name.",true);return;}
 btn.disabled=true;
 try{
-const result=await auth.createUserWithEmailAndPassword(email,password);
+const result = await auth.createUserWithEmailAndPassword(email, password);
+
+const memberId = "HU" + Array.from(
+  crypto.getRandomValues(new Uint8Array(5)),
+  value => "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"[value % 36]
+).join("");
+
 await db.collection("memberProfiles").doc(result.user.uid).set({
-uid:result.user.uid,name,email,accountStatus:"pending",
-createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  uid: result.user.uid,
+  memberId: memberId,
+  name: name,
+  email: email,
+  accountStatus: "pending",
+  createdAt: firebase.firestore.FieldValue.serverTimestamp()
 });
+
 show($("globalMessage"),"Account created. Your account is pending review.");
 }catch(err){
 show($("globalMessage"),"Registration failed: "+messageFromError(err)+". If your login was created, sign in instead of registering again.",true);
