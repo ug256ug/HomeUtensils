@@ -641,14 +641,48 @@ The server must verify the schedule, public holidays, available balance and pend
 
 <div class="card" id="p2pCard">
   <h2>P2P Transfers</h2>
-  <p class="muted">Send and receive transfers between eligible HomeUtensils members.</p>
+  <p class="muted">Preview the cost of sending money to another eligible HomeUtensils member.</p>
 
   <div class="notice">
-    <strong>Transfers are not available yet.</strong>
-    <p>Member-to-member transfers will be enabled only after secure balance verification, recipient verification, duplicate-transfer protection, and server-side transaction recording are implemented.</p>
+    <strong>Transfer preview only — transfers are not active.</strong>
+    <p>This calculator does not move money, change wallet balances, or create a transfer request.</p>
   </div>
 
-  <p class="muted">Do not send money to another member based on an unverified transfer message or screenshot. This page currently does not initiate transfers.</p>
+  <form id="p2pPreviewForm">
+    <label for="p2pRecipient">Recipient member ID</label>
+    <input id="p2pRecipient" type="text" maxlength="100"
+      autocomplete="off" placeholder="Enter recipient member ID" required>
+
+    <label for="p2pAmount">Amount recipient should receive (UGX)</label>
+    <input id="p2pAmount" type="number" min="1" step="1"
+      inputmode="numeric" placeholder="Enter amount to receive" required>
+
+    <div class="grid">
+      <div class="request">
+        <div class="muted">Transfer fee (10%)</div>
+        <div id="p2pFee" class="money">UGX 0</div>
+      </div>
+      <div class="request">
+        <div class="muted">Recipient receives</div>
+        <div id="p2pPayout" class="money">UGX 0</div>
+      </div>
+      <div class="request">
+        <div class="muted">Total sender pays</div>
+        <div id="p2pTotal" class="money">UGX 0</div>
+      </div>
+    </div>
+
+    <button type="submit">Calculate transfer cost</button>
+  </form>
+
+  <div id="p2pPreviewMessage" aria-live="polite"></div>
+
+  <p class="muted">
+    The sender pays the 10% fee on top of the transfer amount.
+    For example, sending UGX 50,000 costs UGX 55,000 in total.
+    Real transfers require secure balance verification, recipient verification,
+    duplicate-transfer protection, and trusted transaction processing.
+  </p>
 </div>
 
 
