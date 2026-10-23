@@ -645,13 +645,51 @@ The server must verify the schedule, public holidays, available balance and pend
   <p class="muted">Do not send money to another member based on an unverified transfer message or screenshot. This page currently does not initiate transfers.</p>
 </div>
 
+
 <div class="card" id="referralCard">
   <h2>Referral Program</h2>
+
+  <p>Invite people to join HomeUtensils using your personal referral link.</p>
+
   <div class="notice">
-    <strong>Referral tracking is not available yet.</strong>
-    <p>Referral credits will appear only after referrals and eligibility are verified by the system.</p>
+    <strong>Referral tracking is being prepared.</strong>
+    <p>Your referral code, invited members, and referral earnings will appear here after secure referral verification is connected.</p>
   </div>
+
+  <div class="field">
+    <label for="referralCode">Your referral code</label>
+    <input
+      id="referralCode"
+      type="text"
+      readonly
+      placeholder="Not available yet"
+    >
+  </div>
+
+  <div class="field">
+    <label for="referralLink">Your referral link</label>
+    <input
+      id="referralLink"
+      type="text"
+      readonly
+      placeholder="Not available yet"
+    >
+  </div>
+
+  <button type="button" disabled>Copy Referral Link</button>
+
+  <h3>Referral Summary</h3>
+  <p>Verified direct referrals: <strong>Not available yet</strong></p>
+  <p>Eligible referral earnings: <strong>Not available yet</strong></p>
+  <p>Referral payment status: <strong>Not available yet</strong></p>
+
+  <p class="muted">
+    Referral rewards will only be calculated after eligible task earnings
+    are verified by the trusted system. This page does not credit referral
+    money or initiate payments.
+  </p>
 </div>
+
 
 <div class="card" id="bonusCard">
   <h2>Bonus Code</h2>
