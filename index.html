@@ -1312,8 +1312,10 @@ if(scheduleError){
 return show($("withdrawalMessage"),scheduleError,true);
 }
 
-const fee=Math.round(amount*0.10);
-const payout=amount-fee;
+const fee=Math.ceil(amount*0.10);
+const payout=amount;
+const totalDeducted=amount+fee;
+
 const btn=$("withdrawalSubmit");
 btn.disabled=true;
 
