@@ -69,7 +69,7 @@ button.secondary{background:#475569}
 <button onclick="refreshAll()">Refresh records</button>
 </div>
 
-<div class="card">
+<div class="card" id="adminMembers">
 <h2>Member records</h2>
 <input id="memberSearch" placeholder="Search member name or email" oninput="renderMembers()">
 <div id="membersList">Loading member records…</div>
@@ -80,12 +80,12 @@ button.secondary{background:#475569}
 <div id="activationList">Loading requests…</div>
 </div>
 
-<div class="card">
+<div class="card" id="adminAgents">
 <h2>Agent applications</h2>
 <div id="agentList">Loading applications…</div>
 </div>
 
-<div class="card">
+<div class="card" id="adminFinance">
 <h2>Withdrawal requests</h2>
 <div id="withdrawalList">Loading withdrawal records…</div>
 </div>
@@ -100,12 +100,12 @@ button.secondary{background:#475569}
 <div id="p2pList">Loading P2P records…</div>
 </div>
 
-<div class="card">
+<div class="card" id="adminTasks">
 <h2>Task submissions</h2>
 <div id="taskList">Loading task records…</div>
 </div>
 
-<div class="card">
+<div class="card" id="adminSecurity">
 <h2>Administrator audit log</h2>
 <div id="auditList">Loading audit records…</div>
 </div>
