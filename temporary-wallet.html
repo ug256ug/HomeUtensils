@@ -1,0 +1,141 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#176b45">
+<title>HomeUtensils | Temporary Wallet</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f4f7f5;color:#18352a}
+header{background:#176b45;color:white;padding:22px 16px}
+header h1{margin:0 0 7px;font-size:23px}
+header p{margin:0;font-size:14px}
+main{max-width:760px;margin:auto;padding:16px}
+.notice{background:#fff2d5;border:1px solid #e8c777;padding:13px;border-radius:10px;line-height:1.5;font-size:14px}
+.card{background:white;border:1px solid #e0e8e3;border-radius:12px;padding:16px;margin:16px 0}
+h2{font-size:19px;margin:0 0 14px}
+label{display:block;font-weight:bold;font-size:14px;margin:12px 0 6px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #cbd8d0;border-radius:8px;font:inherit;background:white}
+textarea{min-height:75px}
+button{width:100%;border:0;border-radius:8px;padding:13px;background:#176b45;color:white;font-weight:bold;font-size:15px;margin-top:14px}
+.secondary{background:#314c40}
+.danger{background:#a12d2d}
+.item{border:1px solid #e0e8e3;padding:12px;border-radius:8px;margin:10px 0;overflow-wrap:anywhere}
+.item p{margin:5px 0;font-size:14px}
+small{color:#5a6c61}
+</style>
+</head>
+<body>
+<header>
+<h1>HomeUtensils</h1>
+<p>Temporary Withdrawal &amp; P2P Demo</p>
+</header>
+<main>
+<div class="notice"><strong>DEMO ONLY:</strong> Records are saved in this browser on this device only. This page does not transfer money, verify balances, or send requests to an administrator. Never enter passwords or PINs.</div>
+
+<section class="card">
+<h2>Withdrawal Request</h2>
+<form id="withdrawForm">
+<label for="member">Member ID</label>
+<input id="member" required maxlength="80">
+<label for="memberName">Member name</label>
+<input id="memberName" required maxlength="100">
+<label for="amount">Amount (UGX)</label>
+<input id="amount" type="number" min="2000" step="1" required>
+<label for="method">Payment method</label>
+<select id="method" required>
+<option value="">Select method</option>
+<option>Mobile Money</option>
+<option>Bank transfer</option>
+</select>
+<label for="recipient">Payout phone number or account reference</label>
+<input id="recipient" required maxlength="100">
+<label for="note">Note (optional)</label>
+<textarea id="note" maxlength="300"></textarea>
+<button type="submit">Save Demo Withdrawal</button>
+</form>
+</section>
+
+<section class="card">
+<h2>P2P Transfer Proposal</h2>
+<form id="p2pForm">
+<label for="sender">Sender member ID</label>
+<input id="sender" required maxlength="80">
+<label for="receiver">Recipient member ID</label>
+<input id="receiver" required maxlength="80">
+<label for="p2pAmount">Proposed amount (UGX)</label>
+<input id="p2pAmount" type="number" min="1" step="1" required>
+<button type="submit">Save Demo P2P Proposal</button>
+</form>
+</section>
+
+<section class="card">
+<h2>Demo Records on This Device</h2>
+<p><small>Records are not shared with other members or administrators.</small></p>
+<div id="records"></div>
+<button type="button" class="secondary" id="export">Export Demo Records</button>
+<button type="button" class="danger" id="clear">Clear All Demo Records</button>
+</section>
+</main>
+<script>
+const KEY="homeutensils_temporary_wallet_demo_v1";
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){return []}}
+function save(rows){localStorage.setItem(KEY,JSON.stringify(rows));render()}
+function render(){
+ const box=document.getElementById("records");box.replaceChildren();
+ const rows=load();
+ if(!rows.length){box.textContent="No demo records saved yet.";return}
+ rows.slice().reverse().forEach(r=>{
+  const item=document.createElement("div");item.className="item";
+  const title=document.createElement("strong");title.textContent=r.type;item.appendChild(title);
+  [r.reference,r.status,r.details,r.created].forEach(value=>{
+   const p=document.createElement("p");p.textContent=value;item.appendChild(p);
+  });
+  box.appendChild(item);
+ });
+}
+document.getElementById("withdrawForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ const amount=Number(document.getElementById("amount").value);
+ if(!Number.isSafeInteger(amount)||amount<2000){alert("Minimum demo amount is UGX 2,000.");return}
+ const rows=load();
+ rows.push({
+  type:"DEMO WITHDRAWAL",
+  reference:"DEMO-W-"+Date.now(),
+  status:"Not submitted for payment",
+  details:"Member: "+document.getElementById("member").value.trim()+"; Name: "+document.getElementById("memberName").value.trim()+"; Amount: UGX "+amount+"; Method: "+document.getElementById("method").value+"; Destination: "+document.getElementById("recipient").value.trim()+"; Note: "+document.getElementById("note").value.trim(),
+  created:new Date().toLocaleString()
+ });
+ save(rows);e.target.reset();alert("Demo saved on this device only. No money was moved.");
+});
+document.getElementById("p2pForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ const sender=document.getElementById("sender").value.trim();
+ const receiver=document.getElementById("receiver").value.trim();
+ const amount=Number(document.getElementById("p2pAmount").value);
+ if(sender.toLowerCase()===receiver.toLowerCase()){alert("Sender and recipient must be different.");return}
+ if(!Number.isSafeInteger(amount)||amount<1){alert("Enter a valid whole amount.");return}
+ const rows=load();
+ rows.push({
+  type:"DEMO P2P PROPOSAL",
+  reference:"DEMO-P2P-"+Date.now(),
+  status:"No transfer made",
+  details:"Sender: "+sender+"; Recipient: "+receiver+"; Proposed amount: UGX "+amount,
+  created:new Date().toLocaleString()
+ });
+ save(rows);e.target.reset();alert("Demo proposal saved on this device only. No money was transferred.");
+});
+document.getElementById("export").addEventListener("click",()=>{
+ const blob=new Blob([JSON.stringify(load(),null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob);const a=document.createElement("a");
+ a.href=url;a.download="homeutensils-demo-records.json";a.click();URL.revokeObjectURL(url);
+});
+document.getElementById("clear").addEventListener("click",()=>{
+ if(confirm("Delete all demo records on this device?")){localStorage.removeItem(KEY);render()}
+});
+render();
+</script>
+</body>
+</html>
