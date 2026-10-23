@@ -1679,7 +1679,8 @@ const profileDoc=await db.collection("memberProfiles").doc(user.uid).get();
 if(profileDoc.exists){
 renderProfile(profileDoc.data());
 }else{
-show($("profileMessage"),"Your account has no member profile yet. Please contact the administrator.",true);
+$("missingProfileRecovery").classList.remove("hidden");
+show($("profileMessage"),"Your sign-in is valid, but no member profile was found. Use the recovery form below.",true);
 }
 listenRequests(user);
 listenWithdrawals(user);
