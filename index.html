@@ -510,6 +510,18 @@ footer {
 <p id="memberEmail" class="muted"></p>
 <button id="signOut" type="button" class="secondary">Sign out</button>
 <div id="profileMessage" class="notice">Loading account…</div>
+
+<div id="missingProfileRecovery" class="notice hidden" style="margin-top:12px;">
+  <h3>Recover your member profile</h3>
+  <p>Your sign-in exists, but your member profile was not found. Enter your full name to create a profile for this account. Your existing activation requests will remain unchanged. Your account will still require admin review.</p>
+  <form id="recoverProfileForm">
+    <label for="recoveryFullName">Full name</label>
+    <input id="recoveryFullName" type="text" maxlength="100" autocomplete="name" required placeholder="Enter your full name">
+    <button id="recoverProfileButton" type="submit">Create My Member Profile</button>
+    <div id="recoveryProfileMessage" aria-live="polite"></div>
+  </form>
+</div>
+
 <div id="packageDetails"></div>
 </div>
 
