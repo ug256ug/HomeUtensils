@@ -982,6 +982,48 @@ function updateWithdrawalQuote(){
 }
 
 $("withdrawalAmount").addEventListener("input",updateWithdrawalQuote);
+function updateP2PPreview(){
+ const amount=Number($("p2pAmount").value);
+ const valid=Number.isFinite(amount)&&amount>0&&Number.isInteger(amount);
+ const fee=valid?Math.ceil(amount*0.10):0;
+ const payout=valid?amount:0;
+ const total=valid?amount+fee:0;
+
+ $("p2pFee").textContent=money(fee);
+ $("p2pPayout").textContent=money(payout);
+ $("p2pTotal").textContent=money(total);
+}
+
+$("p2pAmount").addEventListener("input",updateP2PPreview);
+
+$("p2pPreviewForm").addEventListener("submit",function(e){
+ e.preventDefault();
+
+ const recipient=$("p2pRecipient").value.trim();
+ const amount=Number($("p2pAmount").value);
+
+ if(!recipient){
+  return show($("p2pPreviewMessage"),"Enter the recipient member ID.",true);
+ }
+
+ if(!Number.isInteger(amount)||amount<=0){
+  return show($("p2pPreviewMessage"),"Enter a valid whole-number UGX amount.",true);
+ }
+
+ const fee=Math.ceil(amount*0.10);
+ const total=amount+fee;
+
+ show(
+  $("p2pPreviewMessage"),
+  "Preview only — recipient member ID: "+recipient+
+  ". Recipient would receive: "+money(amount)+
+  ". Fee (10%): "+money(fee)+
+  ". Sender would pay: "+money(total)+
+  ". No transfer was made and no wallet balance was changed."
+ );
+});
+
+updateP2PPreview();
 
 function withdrawalScheduleMessage(){
 try{
