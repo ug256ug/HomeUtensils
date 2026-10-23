@@ -1551,9 +1551,9 @@ async function reviewActivation(id, status) {
 async function reviewWithdrawal(id,status){
 if(!isAdminUser||!currentUser)return show($("globalMessage"),"Administrator access required.",true);
 if(!["approved","rejected"].includes(status))return;
-const note=prompt("Enter the review note. This decision changes request status only; it does not debit or refund a wallet or send money.");
+const note=prompt("Enter the review note. Approval records the decision only; it does not deduct the member's balance or send payment. Rejection does not refund a wallet.");
 if(note===null)return;
-if(!confirm("Mark this withdrawal request "+status+"? No payment or balance change will occur."))return;
+if(!confirm("Mark this withdrawal request "+status+"? This only updates its review status. No wallet deduction, refund, or payment will occur."))return;
 try{
 const ref=db.collection("withdrawalRequests").doc(id);
 const snap=await ref.get();
@@ -1565,7 +1565,7 @@ reviewNote:note.trim(),
 reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),
 reviewedBy:currentUser.uid
 });
-show($("globalMessage"),"Withdrawal request marked "+status+". No wallet balance was changed and no payment was made.");
+show($("globalMessage"),"Withdrawal request marked "+status+". Only the review status was updated; no wallet deduction, refund, or payment was made.");
 await loadAdmin();
 }catch(err){show($("globalMessage"),"Could not review withdrawal request: "+messageFromError(err),true);}
 }
