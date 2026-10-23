@@ -52,6 +52,7 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    
     // Member profiles
 
     match /memberProfiles/{userId} {
@@ -62,8 +63,11 @@ service cloud.firestore {
         && request.resource.data.name is string
         && request.resource.data.email is string
         && request.resource.data.accountStatus == "pending"
+        && request.resource.data.memberId is string
+        && request.resource.data.memberId.matches('^HU[A-Z0-9]{5}$')
         && request.resource.data.keys().hasOnly([
-          "uid", "name", "email", "accountStatus", "createdAt"
+          "uid", "memberId", "name", "email",
+          "accountStatus", "createdAt"
         ]);
 
       allow update: if isAdmin()
@@ -75,6 +79,7 @@ service cloud.firestore {
 
       allow delete: if false;
     }
+
 
     // Package activation requests
 
