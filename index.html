@@ -901,7 +901,7 @@ $("iconMenu").querySelectorAll("button[data-target]").forEach(button=>{
     });
 
     target.classList.remove("hidden");
-    target.scrollIntoView({behavior:"smooth",block:"start"});
+   window.scrollTo({top:0,behavior:"smooth"});
   });
 });
 
