@@ -966,6 +966,95 @@ show($("globalMessage"),"Account created. Your account is pending review.");
 show($("globalMessage"),"Registration failed: "+messageFromError(err)+". If your login was created, sign in instead of registering again.",true);
 }finally{btn.disabled=false;}
 });
+
+$("recoverProfileForm").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const btn = $("recoverProfileButton");
+  const fullName = $("recoveryFullName").value.trim();
+
+  if (!currentUser) {
+    show($("recoveryProfileMessage"), "Please sign in again.", true);
+    return;
+  }
+
+  if (fullName.length < 2) {
+    show($("recoveryProfileMessage"), "Enter your full name.", true);
+    return;
+  }
+
+  if (!currentUser.email) {
+    show($("recoveryProfileMessage"), "Your account has no email address. Contact the administrator.", true);
+    return;
+  }
+
+  btn.disabled = true;
+
+  try {
+    const profileRef = db.collection("memberProfiles").doc(currentUser.uid);
+    const existing = await profileRef.get();
+
+    if (existing.exists) {
+      const data = existing.data() || {};
+
+      if (data.memberId) {
+        renderProfile(data);
+        $("missingProfileRecovery").classList.add("hidden");
+        show($("recoveryProfileMessage"), "Your existing Member ID has been preserved.");
+      } else {
+        show(
+          $("recoveryProfileMessage"),
+          "Your profile exists but has no Member ID. Please contact the administrator so your existing records can be preserved.",
+          true
+        );
+      }
+      return;
+    }
+
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const bytes = crypto.getRandomValues(new Uint8Array(5));
+    const memberId = "HU" + Array.from(
+      bytes,
+      value => alphabet[value % alphabet.length]
+    ).join("");
+
+    await profileRef.set({
+      uid: currentUser.uid,
+      memberId: memberId,
+      name: fullName,
+      email: currentUser.email,
+      accountStatus: "pending",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    const saved = await profileRef.get();
+
+    if (saved.exists) {
+      renderProfile(saved.data());
+      $("missingProfileRecovery").classList.add("hidden");
+      show(
+        $("recoveryProfileMessage"),
+        "Profile created. Your Member ID is " + memberId +
+        ". Your account is still pending admin review."
+      );
+    } else {
+      show(
+        $("recoveryProfileMessage"),
+        "We could not confirm that your profile was saved. Please retry.",
+        true
+      );
+    }
+  } catch (err) {
+    show(
+      $("recoveryProfileMessage"),
+      "Profile recovery failed: " + messageFromError(err),
+      true
+    );
+  } finally {
+    btn.disabled = false;
+  }
+});
+
 $("resetPassword").addEventListener("click",async()=>{
 const email=$("loginEmail").value.trim();
 if(!email){show($("globalMessage"),"Enter your email in the sign-in email field first.",true);return;}
