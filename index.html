@@ -1347,8 +1347,7 @@ createdAt:firebase.firestore.FieldValue.serverTimestamp()
 });
 
 $("withdrawalForm").reset();
-updateWithdrawalQuote();
-show($("withdrawalMessage"),"Withdrawal request submitted for administrator review. No wallet balance has been changed and no payment has been made. The server must verify your balance, schedule, public holidays and request eligibility before processing.");
+updateWithdrawalQuote();show($("withdrawalMessage"),"Withdrawal request submitted for administrator review. Amount requested: "+money(amount)+". Fee (10%): "+money(fee)+". Amount to receive: "+money(payout)+". Total deduction if approved and processed: "+money(totalDeducted)+". No wallet balance has been changed and no payment has been made.");
 }catch(err){
 show($("withdrawalMessage"),"Could not submit withdrawal request: "+messageFromError(err),true);
 }finally{
