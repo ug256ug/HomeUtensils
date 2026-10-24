@@ -1788,6 +1788,119 @@ show($("globalMessage"),"Withdrawal request marked "+status+". Only the review s
 await loadAdmin();
 }catch(err){show($("globalMessage"),"Could not review withdrawal request: "+messageFromError(err),true);}
 }
+async function loadAdminTaskSubmissions() {
+  const box = $("adminTaskSubmissions");
+  box.replaceChildren();
+  box.textContent = "Loading task submissions…";
+
+  try {
+    const snap = await db.collection("taskSubmissions")
+      .orderBy("createdAt", "desc")
+      .limit(50)
+      .get();
+
+    box.replaceChildren();
+
+    if (snap.empty) {
+      box.textContent = "No task submissions yet.";
+      return;
+    }
+
+    snap.forEach(doc => {
+      const d = doc.data();
+      const item = document.createElement("div");
+      item.className = "request";
+
+      [
+        ["Task", d.taskTitle || d.taskId || "Not specified"],
+        ["Member UID", d.uid || "Not specified"],
+        ["Answer", d.answer || "Not provided"],
+        ["Status", d.status || "pending"],
+        ["Submitted", dateText(d.createdAt)]
+      ].forEach(([label, value]) => {
+        const p = document.createElement("p");
+        p.textContent = label + ": " + value;
+        item.appendChild(p);
+      });
+
+      if ((d.status || "pending") === "pending") {
+        const approve = document.createElement("button");
+        approve.textContent = "Approve answer";
+        approve.addEventListener("click", () =>
+          reviewTaskSubmission(doc.id, "approved")
+        );
+
+        const reject = document.createElement("button");
+        reject.textContent = "Reject answer";
+        reject.className = "secondary";
+        reject.addEventListener("click", () =>
+          reviewTaskSubmission(doc.id, "rejected")
+        );
+
+        item.append(approve, reject);
+      }
+
+      box.appendChild(item);
+    });
+  } catch (err) {
+    show(
+      box,
+      "Could not load task submissions: " + messageFromError(err),
+      true
+    );
+  }
+}
+
+async function reviewTaskSubmission(id, status) {
+  if (!isAdminUser || !currentUser) {
+    return show(
+      $("globalMessage"),
+      "Administrator access required.",
+      true
+    );
+  }
+
+  if (!["approved", "rejected"].includes(status)) return;
+
+  const feedback = prompt("Optional review note:");
+  if (feedback === null) return;
+
+  if (!confirm("Confirm " + status + " for this task answer?")) return;
+
+  try {
+    const ref = db.collection("taskSubmissions").doc(id);
+    const snap = await ref.get();
+
+    if (!snap.exists) {
+      throw new Error("Task submission not found.");
+    }
+
+    if ((snap.data().status || "pending") !== "pending") {
+      throw new Error("This submission has already been reviewed.");
+    }
+
+    await ref.update({
+      status: status,
+      feedback: feedback.trim(),
+      reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      reviewedBy: currentUser.uid
+    });
+
+    show(
+      $("globalMessage"),
+      "Task answer marked " + status +
+      ". No earnings or wallet balance were changed."
+    );
+
+    await loadAdminTaskSubmissions();
+  } catch (err) {
+    show(
+      $("globalMessage"),
+      "Could not review task: " + messageFromError(err),
+      true
+    );
+  }
+}
 
 async function loadAdmin(){
 try{
