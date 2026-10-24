@@ -1503,12 +1503,21 @@ async function loadMyTaskSubmissions() {
       const answer = document.createElement("p");
       answer.textContent = "Your answer: " + (d.answer || "");
 
-      const status = document.createElement("p");
-      status.textContent = "Status: " + (d.status || "pending");
+      const answer = document.createElement("p");
+answer.textContent = "Your answer: " + (d.answer || "");
 
-      item.append(title, answer, status);
-      box.appendChild(item);
-    });
+const status = document.createElement("p");
+status.textContent = "Status: " + (d.status || "pending");
+
+item.append(title, answer, status);
+
+if (d.feedback) {
+const feedback = document.createElement("p");
+feedback.textContent = "Administrator feedback: " + d.feedback;
+item.appendChild(feedback);
+}
+
+box.appendChild(item);
   } catch (err) {
     show(box, "Could not load submissions: " +
       messageFromError(err), true);
