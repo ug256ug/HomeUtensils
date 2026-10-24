@@ -2031,6 +2031,7 @@ $("missingProfileRecovery").classList.remove("hidden");
 show($("profileMessage"),"Your sign-in is valid, but no member profile was found. Use the recovery form below.",true);
 }
 listenRequests(user);
+await loadMyTaskSubmissions();
 listenWithdrawals(user);
 await loadMyAgentStatus();
 
