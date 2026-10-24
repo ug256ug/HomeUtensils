@@ -1469,93 +1469,63 @@ btn.disabled=false;
 }
 });
 async function loadMyTaskSubmissions() {
-  const box = $("myTaskSubmissions");
-  box.replaceChildren();
+const box = $("myTaskSubmissions");
+box.replaceChildren();
 
-  if (!currentUser) {
-    box.textContent = "Sign in to view your submissions.";
-    return;
-  }
-
-  box.textContent = "Loading submissions…";
-
-  try {
-    const snap = await db.collection("taskSubmissions")
-      .where("uid", "==", currentUser.uid)
-      .limit(20)
-      .get();
-
-    box.replaceChildren();
-
-    if (snap.empty) {
-      box.textContent = "You have not submitted any tasks yet.";
-      return;
-    }
-
-    snap.forEach(doc => {
-      const d = doc.data();
-      const item = document.createElement("div");
-      item.className = "request";
-
-      const title = document.createElement("p");
-      title.textContent = "Task: " + (d.taskTitle || d.taskId);
-
-      async function loadMyTaskSubmissions() {
-  const box = $("myTaskSubmissions");
-  box.replaceChildren();
-
-  if (!currentUser) {
-    box.textContent = "Sign in to view your submissions.";
-    return;
-  }
-
-  box.textContent = "Loading submissions…";
-
-  try {
-    const snap = await db.collection("taskSubmissions")
-      .where("uid", "==", currentUser.uid)
-      .limit(20)
-      .get();
-
-    box.replaceChildren();
-
-    if (snap.empty) {
-      box.textContent = "You have not submitted any tasks yet.";
-      return;
-    }
-
-    snap.forEach(doc => {
-      const d = doc.data();
-      const item = document.createElement("div");
-      item.className = "request";
-
-      const title = document.createElement("p");
-      title.textContent = "Task: " + (d.taskTitle || d.taskId || "");
-
-      const answer = document.createElement("p");
-      answer.textContent = "Your answer: " + (d.answer || "");
-
-      const status = document.createElement("p");
-      status.textContent = "Status: " + (d.status || "pending");
-
-      item.append(title, answer, status);
-
-      if (d.feedback) {
-        const feedback = document.createElement("p");
-        feedback.textContent = "Administrator feedback: " + d.feedback;
-        item.appendChild(feedback);
-      }
-
-      box.appendChild(item);
-    });
-  } catch (err) {
-    show(
-      box,
-      "Could not load submissions: " + messageFromError(err),
-      true
-    );
-  }
+if (!currentUser) {
+box.textContent = "Sign in to view your submissions.";
+return;
 }
+
+box.textContent = "Loading submissions…";
+
+try {
+const snap = await db.collection("taskSubmissions")
+.where("uid", "==", currentUser.uid)
+.limit(20)
+.get();
+
+box.replaceChildren();
+
+if (snap.empty) {
+  box.textContent = "You have not submitted any tasks yet.";
+  return;
+}
+
+snap.forEach(doc => {
+  const d = doc.data();
+  const item = document.createElement("div");
+  item.className = "request";
+
+  const title = document.createElement("p");
+  title.textContent = "Task: " + (d.taskTitle || d.taskId || "");
+
+  const answer = document.createElement("p");
+  answer.textContent = "Your answer: " + (d.answer || "");
+
+  const status = document.createElement("p");
+  status.textContent = "Status: " + (d.status || "pending");
+
+  item.append(title, answer, status);
+
+  if (d.feedback) {
+    const feedback = document.createElement("p");
+    feedback.textContent = "Administrator feedback: " + d.feedback;
+    item.appendChild(feedback);
+  }
+
+  box.appendChild(item);
+});
+
+} catch (err) {
+show(
+box,
+"Could not load submissions: " + messageFromError(err),
+true
+);
+}
+}
+ 
 
 $("taskSubmissionForm").addEventListener("submit", async e => {
   e.preventDefault();
