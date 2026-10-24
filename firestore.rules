@@ -272,15 +272,26 @@ service cloud.firestore {
     }
 
     match /taskSubmissions/{submissionId} {
-  allow read: if isAdmin()
-    || (signedIn() && resource.data.uid == request.auth.uid);
+allow read: if isAdmin()
+|| (signedIn() && resource.data.uid == request.auth.uid);
 
   allow create: if signedIn()
     && request.resource.data.uid == request.auth.uid
     && request.resource.data.taskId is string
+    && request.resource.data.taskId.size() <= 50
     && request.resource.data.taskTitle is string
+    && request.resource.data.taskTitle.size() <= 150
     && request.resource.data.answer is string
+    && request.resource.data.answer.size() > 0
+    && request.resource.data.answer.size() <= 200
     && request.resource.data.status == "pending"
+    && (
+      !("notes" in request.resource.data)
+      || (
+        request.resource.data.notes is string
+        && request.resource.data.notes.size() <= 500
+      )
+    )
     && request.resource.data.keys().hasOnly([
       "uid", "taskId", "taskTitle", "answer",
       "notes", "status", "createdAt"
@@ -293,7 +304,14 @@ service cloud.firestore {
         "status", "feedback", "isCorrect",
         "reviewedAt", "reviewedBy"
       ])
-    && request.resource.data.status in ["approved", "rejected"];
+    && request.resource.data.status in ["approved", "rejected"]
+    && (
+      !("feedback" in request.resource.data)
+      || (
+        request.resource.data.feedback is string
+        && request.resource.data.feedback.size() <= 500
+      )
+    );
 
   allow delete: if false;
 }
