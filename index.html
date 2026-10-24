@@ -399,22 +399,25 @@ footer {
 
 <nav id="iconMenu" class="icon-menu" aria-label="Member menu">
   <button type="button" data-target="profileCard">🏠 <span>Home</span></button>
-  <button type="button" data-target="profileCard">👤 <span>My Profile</span></button>
-  <button type="button" data-target="activationCard">📦 <span>Package Activation</span></button>
-  <button type="button" data-target="activationHistoryCard">📋 <span>Activation History</span></button>
-  <button type="button" data-target="walletCard">👛 <span>My Wallet</span></button>
-  <button type="button" data-target="tasksCard">📝 <span>Tasks &amp; Earnings</span></button>
-  <button type="button" data-target="withdrawalCard">💸 <span>Withdrawals</span></button>
-  <button type="button" data-target="withdrawalHistoryCard">📄 <span>Withdrawal History</span></button>
-  <button type="button" data-target="p2pCard">🔄 <span>P2P Transfers</span></button>
-  <button type="button" data-target="referralCard">🔗 <span>Referral Program</span></button>
-  <button type="button" data-target="bonusCard">🎁 <span>Bonus Code</span></button>
-  <button type="button" data-target="agentWorkCard">🤝 <span>Agent Facilitation</span></button>
-  <button type="button" data-target="agentApplicationCard">🪪 <span>Become an Agent</span></button>
-  <button type="button" data-target="findAgentCard">🔎 <span>Find an Agent</span></button>
+  <button type="button" data-target="profileCard">👤 <span>Profile</span></button>
+  <button type="button" data-target="activationCard">📦 <span>Activate</span></button>
+  <button type="button" data-target="upgradeCard">⬆️ <span>Upgrade</span></button>
+  <button type="button" data-target="activationHistoryCard">📋 <span>Activations</span></button>
+  <button type="button" data-target="walletCard">👛 <span>Wallet</span></button>
+  <button type="button" data-target="transactionHistoryCard">🧾 <span>Transactions</span></button>
+  <button type="button" data-target="tasksCard">📝 <span>Tasks</span></button>
+  <button type="button" data-target="withdrawalCard">💸 <span>Withdraw</span></button>
+  <button type="button" data-target="withdrawalHistoryCard">📄 <span>Withdrawals History</span></button>
+  <button type="button" data-target="p2pCard">🔄 <span>P2P</span></button>
+  <button type="button" data-target="referralCard">🔗 <span>Referrals</span></button>
+  <button type="button" data-target="bonusCard">🎁 <span>Bonus</span></button>
+  <button type="button" data-target="agentWorkCard">🤝 <span>Agent Work</span></button>
+  <button type="button" data-target="agentApplicationCard">🪪 <span>Become Agent</span></button>
+  <button type="button" data-target="findAgentCard">🔎 <span>Find Agent</span></button>
   <button type="button" data-target="settingsCard">⚙️ <span>Settings</span></button>
   <button id="menuSignOut" type="button" title="Log Out" aria-label="Log Out">🚪 <span>Sign Out</span></button>
 </nav>
+
 
 
 <div class="card" id="profileCard">
@@ -525,7 +528,7 @@ footer {
 <div id="packageDetails"></div>
 </div>
 
-<div class="card">
+<div class="card" id="activationCard">
 <h2>Request package activation</h2>
 <p class="muted">Submitting a request does not activate your package. An authorised administrator must verify payment and approve it.</p>
 <form id="activationForm">
