@@ -1458,6 +1458,111 @@ show($("withdrawalMessage"),"Could not submit withdrawal request: "+messageFromE
 btn.disabled=false;
 }
 });
+async function loadMyTaskSubmissions() {
+  const box = $("myTaskSubmissions");
+  box.replaceChildren();
+
+  if (!currentUser) {
+    box.textContent = "Sign in to view your submissions.";
+    return;
+  }
+
+  box.textContent = "Loading submissions…";
+
+  try {
+    const snap = await db.collection("taskSubmissions")
+      .where("uid", "==", currentUser.uid)
+      .limit(20)
+      .get();
+
+    box.replaceChildren();
+
+    if (snap.empty) {
+      box.textContent = "You have not submitted any tasks yet.";
+      return;
+    }
+
+    snap.forEach(doc => {
+      const d = doc.data();
+      const item = document.createElement("div");
+      item.className = "request";
+
+      const title = document.createElement("p");
+      title.textContent = "Task: " + (d.taskTitle || d.taskId);
+
+      const answer = document.createElement("p");
+      answer.textContent = "Your answer: " + (d.answer || "");
+
+      const status = document.createElement("p");
+      status.textContent = "Status: " + (d.status || "pending");
+
+      item.append(title, answer, status);
+      box.appendChild(item);
+    });
+  } catch (err) {
+    show(box, "Could not load submissions: " +
+      messageFromError(err), true);
+  }
+}
+
+$("taskSubmissionForm").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  if (!currentUser) {
+    return show(
+      $("taskSubmissionMessage"),
+      "Please sign in first.",
+      true
+    );
+  }
+
+  const select = $("taskChoice");
+  const taskId = select.value;
+  const taskTitle =
+    select.options[select.selectedIndex].textContent;
+  const answer = $("taskAnswer").value.trim();
+  const notes = $("taskNotes").value.trim();
+  const button = $("submitTaskButton");
+
+  if (!taskId || !answer) {
+    return show(
+      $("taskSubmissionMessage"),
+      "Choose a task and enter your answer.",
+      true
+    );
+  }
+
+  button.disabled = true;
+
+  try {
+    await db.collection("taskSubmissions").add({
+      uid: currentUser.uid,
+      taskId: taskId,
+      taskTitle: taskTitle,
+      answer: answer,
+      ...(notes ? { notes: notes } : {}),
+      status: "pending",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    $("taskSubmissionForm").reset();
+
+    show(
+      $("taskSubmissionMessage"),
+      "Task submitted for administrator review. No earnings have been credited."
+    );
+
+    await loadMyTaskSubmissions();
+  } catch (err) {
+    show(
+      $("taskSubmissionMessage"),
+      "Submission failed: " + messageFromError(err),
+      true
+    );
+  } finally {
+    button.disabled = false;
+  }
+});
 
 $("agentForm").addEventListener("submit",async e=>{
 e.preventDefault();
