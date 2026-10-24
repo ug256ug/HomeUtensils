@@ -741,9 +741,37 @@ The server must verify the schedule, public holidays, available balance and pend
 
 <div class="card" id="tasksCard">
   <h2>Tasks &amp; Earnings</h2>
+  <p>Complete a task and submit your answer for administrator review.</p>
+
   <div class="notice">
-    <strong>Verified earnings are not connected here yet.</strong>
-    <p>Only completed and approved tasks should produce earnings recorded in the trusted transaction ledger.</p>
+    <strong>Important</strong>
+    <p>Submissions remain pending until reviewed. Submitting an answer does not create earnings or change your wallet balance.</p>
+  </div>
+
+  <form id="taskSubmissionForm">
+    <label for="taskChoice">Choose a task</label>
+    <select id="taskChoice" required>
+      <option value="">Select a task</option>
+      <option value="math_3x6" data-title="Multiply 3 × 6">Multiply 3 × 6</option>
+      <option value="math_8x4" data-title="Multiply 8 × 4">Multiply 8 × 4</option>
+      <option value="math_7x5" data-title="Multiply 7 × 5">Multiply 7 × 5</option>
+    </select>
+
+    <label for="taskAnswer">Your answer</label>
+    <input id="taskAnswer" type="text" maxlength="200" required
+      autocomplete="off" placeholder="Enter your answer">
+
+    <label for="taskNotes">Optional note</label>
+    <textarea id="taskNotes" maxlength="500"
+      placeholder="Add a note if necessary"></textarea>
+
+    <button id="submitTaskButton" type="submit">Submit task for review</button>
+    <div id="taskSubmissionMessage" aria-live="polite"></div>
+  </form>
+
+  <h3>My task submissions</h3>
+  <div id="myTaskSubmissions" aria-live="polite">
+    Sign in to view your submissions.
   </div>
 </div>
 
