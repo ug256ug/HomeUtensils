@@ -5,118 +5,176 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#14532d">
-<title>HomeUtensils | Administrator Dashboard</title>
+<title>HomeUtensils | Admin Control Center</title>
 <style>
+:root{--green:#14532d;--deep:#0b3521;--mint:#e8f5ed;--gold:#d8b568;--bg:#f3f6f4;--ink:#17251d;--muted:#66756a;--border:#dce5de}
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:#f3f6f4;color:#18251d}
-header{background:#14532d;color:white;padding:20px}
-header h1{margin:0 0 8px;font-size:23px}
-header p{margin:0;color:#d8eadc}
-main{max-width:1100px;margin:auto;padding:16px}
-.card{background:white;border:1px solid #dce5de;border-radius:12px;padding:16px;margin:12px 0;overflow-wrap:anywhere}
-h2{font-size:18px;margin-top:0}
-input,button{width:100%;padding:12px;margin:6px 0;border-radius:8px;font-size:15px}
-input{border:1px solid #bdc9bf}
-button{border:0;background:#176b45;color:white;font-weight:bold;cursor:pointer}
+html{scroll-behavior:smooth;scroll-padding-top:90px}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+header{background:linear-gradient(135deg,var(--deep),var(--green));color:white;padding:25px 18px;border-bottom:4px solid var(--gold)}
+.head-inner,main{max-width:1150px;margin:auto}
+.brand{font-size:12px;letter-spacing:2px;color:#d9eadd;font-weight:bold}
+header h1{font-size:clamp(24px,5vw,34px);margin:8px 0}
+header p{margin:0;color:#dce9df;font-size:14px}
+main{padding:15px}
+.card{background:white;border:1px solid var(--border);border-radius:16px;padding:18px;margin:15px 0;box-shadow:0 3px 12px #153c2010;overflow-wrap:anywhere}
+h2{font-size:19px;margin:0 0 12px}
+h3{font-size:16px;margin:15px 0 8px}
+.small{font-size:13px;color:var(--muted)}
+input,button,textarea,select{font:inherit;width:100%;padding:12px;margin:6px 0;border-radius:9px}
+input,textarea,select{border:1px solid #bdc9bf;background:#fff;color:var(--ink)}
+textarea{min-height:100px;resize:vertical}
+button{border:0;background:var(--green);color:white;font-weight:bold;cursor:pointer}
+button:disabled{background:#aab5ad;color:#f8faf8;cursor:not-allowed}
 button.secondary{background:#475569}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
-.metric{background:#edf6ef;padding:14px;border-radius:9px}
-.metric strong{display:block;font-size:24px;color:#14532d;margin-top:7px}
-.notice{padding:12px;background:#fff7df;border-radius:8px;overflow-wrap:anywhere}
-.small{font-size:13px;color:#59675d}
-.record{padding:12px 0;border-bottom:1px solid #e2e8e3;white-space:pre-wrap}
-.hidden{display:none}
-#message{white-space:pre-wrap}
+button.gold{background:#87651a}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.metric{background:var(--mint);border:1px solid #d5e9da;padding:14px;border-radius:12px;font-size:13px;color:#355342}
+.metric strong{display:block;font-size:27px;color:var(--green);margin-top:5px}
+nav{position:sticky;top:0;z-index:20;background:#ffffffed;backdrop-filter:blur(8px);padding:9px;border:1px solid var(--border);border-radius:13px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+nav a{padding:10px 3px;text-align:center;background:var(--mint);color:var(--green);border-radius:8px;text-decoration:none;font-size:12px;font-weight:bold}
+nav a:focus,nav a:hover{background:#d3ead9}
+.notice{padding:13px;background:#fff7df;border:1px solid #f0dfac;border-radius:10px;font-size:14px}
+.safe{padding:13px;background:#edf6ef;border:1px solid #d5e8d9;border-radius:10px;font-size:14px}
+.record{padding:13px 0;border-bottom:1px solid #e2e8e3;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px}
+.record:last-child{border-bottom:0}
+.hidden{display:none!important}
+#message{white-space:pre-wrap;font-size:14px}
+.section-label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);font-weight:bold;margin-bottom:7px}
+footer{text-align:center;padding:22px;color:var(--muted);font-size:12px}
+@media(min-width:650px){main{padding:22px}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}nav{grid-template-columns:repeat(5,minmax(0,1fr))}.card{padding:22px}}
 </style>
 </head>
 <body>
 <header>
-<h1>HomeUtensils Administration</h1>
-<p>Member oversight, package activation, agents and financial records</p>
+<div class="head-inner">
+<div class="brand">HOMEUTENSILS • ADMINISTRATION</div>
+<h1>Admin Control Center</h1>
+<p>Member services, activations, agents, withdrawals and P2P oversight.</p>
+</div>
 </header>
 <main>
-<div class="card">
+<section class="card" id="signInCard">
+<div class="section-label">Restricted access</div>
 <h2>Administrator sign in</h2>
-<p class="small">Use your existing HomeUtensils administrator account.</p>
-<input id="email" type="email" autocomplete="username" placeholder="Administrator email">
-<input id="password" type="password" autocomplete="current-password" placeholder="Password">
-<button id="loginBtn" onclick="login()">Sign in securely</button>
-<button id="logoutBtn" class="secondary hidden" onclick="logout()">Sign out</button>
-<p id="message" role="status"></p>
-</div>
-
+<p class="small">Sign in using your existing authorized HomeUtensils administrator account.</p>
+<form id="loginForm">
+<input id="email" type="email" autocomplete="username" placeholder="Administrator email" required>
+<input id="password" type="password" autocomplete="current-password" placeholder="Password" required>
+<button id="loginBtn" type="submit">Sign in securely</button>
+</form>
+<button id="logoutBtn" class="secondary hidden" type="button" onclick="logout()">Sign out</button>
+<p id="message" role="status" aria-live="polite">Checking sign-in status…</p>
+</section>
 <div id="dashboard" class="hidden">
-
-<nav aria-label="Administrator sections" style="position:sticky;top:0;z-index:20;background:#fff;padding:10px;border:1px solid #dce5de;border-radius:12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
-  <a href="#adminOverview" style="padding:12px 6px;text-align:center;background:#e8f5ef;color:#075e4f;border-radius:8px;text-decoration:none;font-weight:bold;">📊 Overview</a>
-  <a href="#adminMembers" style="padding:12px 6px;text-align:center;background:#e8f5ef;color:#075e4f;border-radius:8px;text-decoration:none;font-weight:bold;">👥 Members</a>
-  <a href="#adminFinance" style="padding:12px 6px;text-align:center;background:#e8f5ef;color:#075e4f;border-radius:8px;text-decoration:none;font-weight:bold;">💳 Finance</a>
-  <a href="#adminTasks" style="padding:12px 6px;text-align:center;background:#e8f5ef;color:#075e4f;border-radius:8px;text-decoration:none;font-weight:bold;">📝 Tasks</a>
-  <a href="#adminAgents" style="padding:12px 6px;text-align:center;background:#e8f5ef;color:#075e4f;border-radius:8px;text-decoration:none;font-weight:bold;">🤝 Agents</a>
-  <a href="#adminSecurity" style="padding:12px 6px;text-align:center;background:#e8f5ef;color:#075e4f;border-radius:8px;text-decoration:none;font-weight:bold;">🔐 Security</a>
+<nav aria-label="Administrator sections">
+<a href="#overview">Overview</a>
+<a href="#members">Members</a>
+<a href="#finance">Finance &amp; P2P</a>
+<a href="#agents">Agents</a>
+<a href="#tasks">Tasks</a>
+<a href="#notifications">Notifications</a>
+<a href="#giftCodes">Gift Codes</a>
+<a href="#security">Security</a>
 </nav>
-
-<div class="card" id="adminOverview">
+<section class="card" id="overview">
+<div class="section-label">At a glance</div>
 <h2>System overview</h2>
 <div class="grid">
-<div class="metric">Members<strong id="membersCount">—</strong></div>
+<div class="metric">Member records<strong id="membersCount">—</strong></div>
 <div class="metric">Active packages<strong id="activeCount">—</strong></div>
 <div class="metric">Activation requests<strong id="activationCount">—</strong></div>
 <div class="metric">Agent applications<strong id="agentsCount">—</strong></div>
 <div class="metric">Withdrawal requests<strong id="withdrawalsCount">—</strong></div>
 </div>
-<p class="small">Counts show records this signed-in administrator is permitted to read.</p>
-<button onclick="refreshAll()">Refresh records</button>
-</div>
-
-<div class="card" id="adminMembers">
+<p class="small">These are record counts, not verified cash balances or proof that a payment has been made.</p>
+<button type="button" onclick="refreshAll()">Refresh records</button>
+</section>
+<section class="card" id="members">
+<div class="section-label">Member services</div>
 <h2>Member records</h2>
-<input id="memberSearch" placeholder="Search member name or email" oninput="renderMembers()">
-<div id="membersList">Loading member records…</div>
-</div>
+<input id="memberSearch" type="search" placeholder="Search member name, email or ID" oninput="renderMembers()">
+<div id="membersList" class="small">Member records appear after sign-in.</div>
+</section>
 
-<div class="card">
+<section class="card" id="activations">
 <h2>Package activation requests</h2>
-<div id="activationList">Loading requests…</div>
-</div>
+<div id="activationList" class="small">No data loaded.</div>
+</section>
 
-<div class="card" id="adminAgents">
+<section class="card" id="agents">
+<div class="section-label">Agent management</div>
 <h2>Agent applications</h2>
-<div id="agentList">Loading applications…</div>
-</div>
+<div id="agentList" class="small">No data loaded.</div>
+</section>
 
-<div class="card" id="adminFinance">
+<section class="card" id="finance">
+<div class="section-label">Financial oversight</div>
 <h2>Withdrawal requests</h2>
-<div id="withdrawalList">Loading withdrawal records…</div>
-</div>
+<div class="notice">Review records carefully. This dashboard does not send money or approve withdrawals.</div>
+<div id="withdrawalList" class="small">No data loaded.</div>
 
-<div class="card">
 <h2>Wallet transaction ledger</h2>
-<div id="walletList">Loading wallet records…</div>
-</div>
+<div id="walletList" class="small">No data loaded.</div>
 
-<div class="card">
 <h2>P2P transfer ledger</h2>
-<div id="p2pList">Loading P2P records…</div>
-</div>
+<div id="p2pList" class="small">No data loaded.</div>
+</section>
 
-<div class="card" id="adminTasks">
+<section class="card" id="tasks">
+<div class="section-label">Work and earnings</div>
 <h2>Task submissions</h2>
-<div id="taskList">Loading task records…</div>
-</div>
+<div id="taskList" class="small">No data loaded.</div>
+</section>
 
-<div class="card" id="adminSecurity">
+<section class="card" id="notifications">
+<div class="section-label">Member communication</div>
+<h2>Notifications to all members</h2>
+<div class="safe">Planned feature. The announcement form is not connected to a sending service yet.</div>
+
+<label for="announcementTitle">Announcement title</label>
+<input id="announcementTitle" type="text" maxlength="100" placeholder="For example: Important member update" disabled>
+
+<label for="announcementBody">Message for members</label>
+<textarea id="announcementBody" maxlength="2000" placeholder="Write your announcement here…" disabled></textarea>
+
+<button type="button" disabled>Send announcement to all members — not enabled</button>
+
+<p class="small">A secure backend and a member-facing notification inbox must be implemented before messages can be sent or delivery can be confirmed.</p>
+</section>
+
+<section class="card" id="giftCodes">
+<div class="section-label">Member rewards</div>
+<h2>UGX gift codes</h2>
+<div class="safe">Planned feature. No codes can be generated or redeemed from this dashboard yet.</div>
+
+<label for="giftAmount">Gift value (UGX)</label>
+<input id="giftAmount" type="number" min="1" step="1" placeholder="Enter whole UGX amount" disabled>
+
+<label for="giftQuantity">Number of codes</label>
+<input id="giftQuantity" type="number" min="1" max="100" step="1" placeholder="Enter number of codes" disabled>
+
+<button type="button" class="gold" disabled>Generate gift codes — not enabled</button>
+
+<h3>Gift code history</h3>
+<p class="small">Gift code history will appear here after secure code creation and redemption are implemented.</p>
+
+<p class="small">Because redeemed gifts are intended to become withdrawable cash, the backend must validate each code, prevent duplicate redemption, record an audit trail, and credit the member's wallet exactly once. The member interface must also be implemented.</p>
+</section>
+
+<section class="card" id="security">
+<div class="section-label">Access and accountability</div>
 <h2>Administrator audit log</h2>
-<div id="auditList">Loading audit records…</div>
-</div>
+<div id="auditList" class="small">No data loaded.</div>
 
-<div class="card">
-<h2>Important controls</h2>
-<div class="notice">This first dashboard version is read-only. It does not approve payments, alter balances, approve withdrawals, activate packages, or create audit entries. Those actions must be implemented with verified business rules and secure Firebase permissions.</div>
-</div>
+<h2>Important safety controls</h2>
+<div class="notice">This dashboard is currently read-only. It does not approve payments, alter balances, approve withdrawals, activate packages, send announcements or issue gift codes. Those actions require verified server-side functions and secure Firebase permissions.</div>
+
+<p class="small">Never share administrator passwords or private credentials. A successful dashboard sign-in does not by itself authorize every financial action.</p>
+</section>
 </div>
 </main>
-
+<footer>HomeUtensils • Administrator access • Secure review required for financial actions</footer>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -137,18 +195,30 @@ const $=id=>document.getElementById(id);
 
 let memberRecords=[];
 let activeUser=null;
+let refreshInProgress=false;
 
 function message(text,error=false){
 $("message").textContent=text;
 $("message").style.color=error?"#b91c1c":"#166534";
 }
 
+$("loginForm").addEventListener("submit",async event=>{
+event.preventDefault();
+await login();
+});
+
 async function login(){
 const email=$("email").value.trim();
 const password=$("password").value;
-if(!email||!password){message("Enter your email and password.",true);return}
+
+if(!email||!password){
+message("Enter your email and password.",true);
+return;
+}
+
 $("loginBtn").disabled=true;
 message("Signing in…");
+
 try{
 await auth.signInWithEmailAndPassword(email,password);
 }catch(e){
@@ -159,7 +229,11 @@ $("loginBtn").disabled=false;
 }
 
 async function logout(){
+try{
 await auth.signOut();
+}catch(e){
+message("Sign-out failed: "+e.message,true);
+}
 }
 
 auth.onAuthStateChanged(async user=>{
@@ -167,22 +241,34 @@ activeUser=user;
 $("dashboard").classList.add("hidden");
 $("logoutBtn").classList.add("hidden");
 $("loginBtn").classList.remove("hidden");
-if(!user){message("Sign in with an authorized administrator account.");return}
+
+if(!user){
+memberRecords=[];
+message("Sign in with an authorized administrator account.");
+return;
+}
+
 $("logoutBtn").classList.remove("hidden");
 $("loginBtn").classList.add("hidden");
 message("Checking administrator permissions…");
+
 try{
 const adminDoc=await db.collection("admins").doc(user.uid).get();
-if(!adminDoc.exists||
+
+if(
+!adminDoc.exists||
 adminDoc.data().role!=="admin"||
-adminDoc.data().enabled!==true){
+adminDoc.data().enabled!==true
+){
 message("Access denied. This account is not enabled as an administrator.",true);
 await auth.signOut();
 return;
 }
+
 $("dashboard").classList.remove("hidden");
 message("Administrator access verified.");
 await refreshAll();
+
 }catch(e){
 message("Could not verify administrator access. Check Firebase rules and the admins record. "+e.message,true);
 }
@@ -190,18 +276,24 @@ message("Could not verify administrator access. Check Firebase rules and the adm
 
 function showRecords(id,records){
 const target=$(id);
+target.replaceChildren();
+
 if(!records.length){
-target.innerHTML='<p class="small">No records found, or this collection is empty.</p>';
+const empty=document.createElement("p");
+empty.className="small";
+empty.textContent="No records found, or this collection is empty.";
+target.appendChild(empty);
 return;
 }
-target.replaceChildren();
+
 records.forEach(record=>{
 const row=document.createElement("div");
 row.className="record";
+
 const data={...record};
 delete data._id;
-row.textContent="Record ID: "+record._id+"\n"+
-JSON.stringify(data,null,2);
+
+row.textContent="Record ID: "+record._id+"\n"+JSON.stringify(data,null,2);
 target.appendChild(row);
 });
 }
@@ -210,8 +302,10 @@ async function readCollection(name,targetId,limit=100){
 try{
 const snap=await db.collection(name).limit(limit).get();
 const records=snap.docs.map(d=>({_id:d.id,...d.data()}));
+
 showRecords(targetId,records);
 return records;
+
 }catch(e){
 $(targetId).textContent="Cannot read '"+name+"': "+e.message;
 return null;
@@ -220,14 +314,22 @@ return null;
 
 function renderMembers(){
 const q=$("memberSearch").value.trim().toLowerCase();
-showRecords("membersList",memberRecords.filter(m=>
+
+showRecords(
+"membersList",
+memberRecords.filter(m=>
 JSON.stringify(m).toLowerCase().includes(q)
-));
+)
+);
 }
 
 async function refreshAll(){
-if(!activeUser)return;
+if(!activeUser||refreshInProgress)return;
+
+refreshInProgress=true;
 message("Refreshing system records…");
+
+try{
 const results=await Promise.all([
 readCollection("memberProfiles","membersList"),
 readCollection("activationRequests","activationList"),
@@ -238,19 +340,37 @@ readCollection("p2pTransfers","p2pList"),
 readCollection("taskSubmissions","taskList"),
 readCollection("adminAuditLogs","auditList")
 ]);
+
 memberRecords=results[0]||[];
 renderMembers();
-$("membersCount").textContent=memberRecords.length;
-$("activeCount").textContent=memberRecords.filter(m=>
+
+$("membersCount").textContent=
+results[0]===null?"Error":memberRecords.length;
+
+$("activeCount").textContent=
+results[0]===null?"Error":
+memberRecords.filter(m=>
 String(m.packageStatus||"").toLowerCase()==="active"&&
 String(m.accountStatus||"").toLowerCase()!=="suspended"
 ).length;
-$("activationCount").textContent=results[1]===null?"Error":results[1].length;
-$("agentsCount").textContent=results[2]===null?"Error":results[2].length;
-$("withdrawalsCount").textContent=results[3]===null?"Error":results[3].length;
-message("Refresh complete. If a section shows a permission error, its Firebase rules or collection name needs checking.");
+
+$("activationCount").textContent=
+results[1]===null?"Error":results[1].length;
+
+$("agentsCount").textContent=
+results[2]===null?"Error":results[2].length;
+
+$("withdrawalsCount").textContent=
+results[3]===null?"Error":results[3].length;
+
+message("Refresh complete. Check any section showing a permission or collection error.");
+
+}catch(e){
+message("Could not refresh records: "+e.message,true);
+}finally{
+refreshInProgress=false;
+}
 }
 </script>
 </body>
-  </html>
-
+</html>
