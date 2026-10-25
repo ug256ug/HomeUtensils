@@ -39,6 +39,193 @@ async function requireAdmin(request) {
   return uid;
 }
 
+exports.sendP2PFloat = onCall(async (request) => {
+const senderUid = requireSignedIn(request);
+
+const recipientMemberId = String(
+request.data?.recipientMemberId || ""
+).trim();
+
+const amount = request.data?.amount;
+const requestId = String(
+request.data?.requestId || ""
+).trim();
+
+if (
+!recipientMemberId ||
+recipientMemberId.length > 100 ||
+!Number.isSafeInteger(amount) ||
+amount <= 0 ||
+amount > 100000000 ||
+!/^[A-Za-z0-9_-]{16,100}$/.test(requestId)
+) {
+throw new HttpsError(
+"invalid-argument",
+"Enter a valid recipient, whole-number UGX amount, and request ID."
+);
+}
+
+const senderProfileRef = db
+.collection("memberProfiles")
+.doc(senderUid);
+
+const recipientQuery = await db
+.collection("memberProfiles")
+.where("memberId", "==", recipientMemberId)
+.limit(2)
+.get();
+
+if (recipientQuery.size !== 1) {
+throw new HttpsError(
+"not-found",
+"The recipient was not found or the member ID is not unique."
+);
+}
+
+const recipientUid = recipientQuery.docs[0].id;
+
+if (senderUid === recipientUid) {
+throw new HttpsError(
+"invalid-argument",
+"You cannot send P2P float to your own account."
+);
+}
+
+const senderBalanceRef = db
+.collection("memberP2PBalances")
+.doc(senderUid);
+
+const recipientBalanceRef = db
+.collection("memberP2PBalances")
+.doc(recipientUid);
+
+const transferRef = db
+.collection("p2pTransfers")
+.doc(requestId);
+
+await db.runTransaction(async (transaction) => {
+const existingTransfer = await transaction.get(transferRef);
+
+if (existingTransfer.exists) {
+  const existing = existingTransfer.data();
+
+  if (
+    existing.senderUid === senderUid &&
+    existing.recipientUid === recipientUid &&
+    existing.amount === amount
+  ) {
+    return;
+  }
+
+  throw new HttpsError(
+    "already-exists",
+    "This request ID has already been used."
+  );
+}
+
+const senderBalance = await transaction.get(senderBalanceRef);
+const recipientBalance = await transaction.get(recipientBalanceRef);
+
+if (!senderBalance.exists || !recipientBalance.exists) {
+  throw new HttpsError(
+    "failed-precondition",
+    "Verified P2P balances are not set up for both members yet. No transfer was made."
+  );
+}
+
+const senderData = senderBalance.data();
+const recipientData = recipientBalance.data();
+
+if (
+  senderData.verified !== true ||
+  recipientData.verified !== true ||
+  senderData.currency !== "UGX" ||
+  recipientData.currency !== "UGX" ||
+  !Number.isSafeInteger(senderData.availableBalance) ||
+  !Number.isSafeInteger(recipientData.availableBalance) ||
+  senderData.availableBalance < 0 ||
+  recipientData.availableBalance < 0
+) {
+  throw new HttpsError(
+    "failed-precondition",
+    "The member balances are not verified or are invalid."
+  );
+}
+
+if (senderData.availableBalance < amount) {
+  throw new HttpsError(
+    "failed-precondition",
+    "Your verified P2P balance is insufficient."
+  );
+}
+
+if (
+  !Number.isSafeInteger(
+    recipientData.availableBalance + amount
+  )
+) {
+  throw new HttpsError(
+    "out-of-range",
+    "The recipient balance would exceed the supported limit."
+  );
+}
+
+transaction.update(senderBalanceRef, {
+  availableBalance: senderData.availableBalance - amount,
+  updatedAt: FieldValue.serverTimestamp()
+});
+
+transaction.update(recipientBalanceRef, {
+  availableBalance: recipientData.availableBalance + amount,
+  updatedAt: FieldValue.serverTimestamp()
+});
+
+transaction.create(transferRef, {
+  senderUid,
+  recipientUid,
+  recipientMemberId,
+  amount,
+  currency: "UGX",
+  status: "completed",
+  requestId,
+  createdAt: FieldValue.serverTimestamp(),
+  createdBy: "trusted_backend"
+});
+
+transaction.create(
+  db.collection("walletTransactions")
+    .doc("p2p_" + requestId + "_debit"),
+  {
+    uid: senderUid,
+    type: "p2p_debit",
+    amount,
+    currency: "UGX",
+    transferId: requestId,
+    createdAt: FieldValue.serverTimestamp()
+  }
+);
+
+transaction.create(
+  db.collection("walletTransactions")
+    .doc("p2p_" + requestId + "_credit"),
+  {
+    uid: recipientUid,
+    type: "p2p_credit",
+    amount,
+    currency: "UGX",
+    transferId: requestId,
+    createdAt: FieldValue.serverTimestamp()
+  }
+);
+
+});
+
+return {
+ok: true,
+message: "P2P transfer processed or already completed.",
+transferId: requestId
+};
+});
 exports.healthCheck = onCall(async (request) => {
   requireSignedIn(request);
 
