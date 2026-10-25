@@ -422,111 +422,60 @@ footer {
 
 <div class="card" id="profileCard">
 
-<div style="margin-bottom:18px;overflow:hidden;border-radius:16px;background:#eaf4ed;">
-  <img
-    src="https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=1000&q=80"
-    alt="Modern kitchen with home essentials"
-    style="display:block;width:100%;height:190px;object-fit:cover;"
-    loading="lazy"
+<!-- HomeUtensils Professional Member Account --><div style="margin-bottom:16px;overflow:hidden;border-radius:16px;background:#ffffff;border:1px solid #dce9e2;box-shadow:0 4px 14px rgba(0,70,50,.07);"><img
+src="assets/household-utensils.jpg"
+alt="Quality household essentials from HomeUtensils"
+style="display:block;width:100%;height:135px;object-fit:cover;"
+loading="lazy"
+
+«»
+
+  <div style="padding:16px;background:linear-gradient(135deg,#f0f8f3,#ffffff);">
+    <p style="margin:0 0 6px;color:#176b45;font-size:12px;font-weight:800;letter-spacing:1.5px;">
+      WELCOME TO HOMEUTENSILS
+    </p><h2 style="margin:0 0 8px;color:#174b35;font-size:22px;line-height:1.3;">
+  Your Membership. Your Progress. Your Opportunities.
+</h2>
+
+<p style="margin:0;color:#43584b;font-size:14px;line-height:1.6;">
+  Manage your member profile, follow your task progress and access your available member services—all from one convenient dashboard.
+</p>
+
+  </div>
+</div><!-- Member Account Details --><div style="margin-bottom:16px;padding:16px;border:1px solid #dce9e2;border-radius:14px;background:#ffffff;">  <p style="margin:0 0 5px;color:#176b45;font-size:12px;font-weight:800;letter-spacing:1.2px;">
+    MEMBER ACCOUNT
+  </p>  <h2 style="margin:0 0 8px;color:#174b35;font-size:21px;">
+    Your Account Overview
+  </h2>  <p style="margin:0 0 14px;color:#52665b;font-size:14px;line-height:1.5;">
+    Keep your membership details up to date and review your account information in one place.
+  </p>  <p id="memberEmail" class="muted"></p>  <div id="profileMessage" class="notice">Loading your member profile…</div>  <div id="missingProfileRecovery" class="notice hidden" style="margin-top:12px;">
+    <h3>Complete Your Member Profile</h3><p>
+  We could not find a member profile linked to your sign-in. Enter your full name below to create your profile. Your existing activation requests will remain unchanged, and your account may still require administrator review.
+</p>
+
+<form id="recoverProfileForm">
+  <label for="recoveryFullName">Full name</label>
+  <input
+    id="recoveryFullName"
+    type="text"
+    maxlength="100"
+    autocomplete="name"
+    required
+    placeholder="Enter your full name"
   >
-  <div style="padding:16px;">
-    <p style="margin:0 0 6px;color:#176b45;font-weight:700;letter-spacing:1px;">
-      HOMEUTENSILS
-    </p>
-    <h2 style="margin:0 0 8px;color:#174b35;">Make your home feel complete</h2>
-    <p style="margin:0;color:#43584b;line-height:1.5;">
-      Discover kitchen tools, cooking essentials and useful products
-      for everyday living.
-    </p>
-  </div>
+
+  <button id="recoverProfileButton" type="submit">
+    Create My Member Profile
+  </button>
+
+  <div id="recoveryProfileMessage" aria-live="polite"></div>
+</form>
+
+  </div>  <div id="packageDetails"></div>  <button id="signOut" type="button" class="secondary" style="margin-top:12px;">
+    Sign Out Securely
+  </button>
 </div>
-
-
-<!-- HomeUtensils main product board -->
-<section style="margin-bottom:22px;border:1px solid #dce9e2;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 4px 14px rgba(0,70,50,.07);">
-
-  <div style="padding:22px 16px;background:linear-gradient(120deg,#e8f5ef,#fff9e8);">
-    <p style="margin:0 0 5px;color:#08745b;font-weight:800;letter-spacing:1.5px;">
-      HOMEUTENSILS
-    </p>
-    <h2 style="margin:0 0 8px;color:#075e4f;font-size:clamp(23px,5vw,32px);">
-      Better Homes. Happier Lives.
-    </h2>
-    <p style="margin:0;color:#43584b;">
-      Everyday household essentials for cooking, serving and living.
-    </p>
-  </div>
-
-  <div style="padding:14px;">
-    <h3 style="margin:0 0 12px;color:#075e4f;">Explore Our Products</h3>
-
-    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
-
-      <div style="padding:14px 8px;text-align:center;background:#f1f8f4;border:1px solid #dce9e2;border-radius:12px;">
-        <div style="font-size:38px;">🍳</div>
-        <strong style="color:#075e4f;">Sauce Pans</strong>
-        <p style="margin:4px 0 0;font-size:12px;color:#64748b;">Cooking essentials</p>
-      </div>
-
-      <div style="padding:14px 8px;text-align:center;background:#f1f8f4;border:1px solid #dce9e2;border-radius:12px;">
-        <div style="font-size:38px;">🪣</div>
-        <strong style="color:#075e4f;">Basins</strong>
-        <p style="margin:4px 0 0;font-size:12px;color:#64748b;">Everyday home use</p>
-      </div>
-
-      <div style="padding:14px 8px;text-align:center;background:#f1f8f4;border:1px solid #dce9e2;border-radius:12px;">
-        <div style="font-size:38px;">🥄</div>
-        <strong style="color:#075e4f;">Spoons</strong>
-        <p style="margin:4px 0 0;font-size:12px;color:#64748b;">Kitchen utensils</p>
-      </div>
-
-      <div style="padding:14px 8px;text-align:center;background:#f1f8f4;border:1px solid #dce9e2;border-radius:12px;">
-        <div style="font-size:38px;">🥛</div>
-        <strong style="color:#075e4f;">Glass Cups</strong>
-        <p style="margin:4px 0 0;font-size:12px;color:#64748b;">Drinking and serving</p>
-      </div>
-
-      <div style="padding:14px 8px;text-align:center;background:#f1f8f4;border:1px solid #dce9e2;border-radius:12px;">
-        <div style="font-size:38px;">🍽️</div>
-        <strong style="color:#075e4f;">Plates &amp; Bowls</strong>
-        <p style="margin:4px 0 0;font-size:12px;color:#64748b;">Dining essentials</p>
-      </div>
-
-      <div style="padding:14px 8px;text-align:center;background:#f1f8f4;border:1px solid #dce9e2;border-radius:12px;">
-        <div style="font-size:38px;">🥡</div>
-        <strong style="color:#075e4f;">Storage</strong>
-        <p style="margin:4px 0 0;font-size:12px;color:#64748b;">Keep items organized</p>
-      </div>
-
-      <div style="padding:14px 8px;text-align:center;background:#f1f8f4;border:1px solid #dce9e2;border-radius:12px;grid-column:1/-1;">
-        <div style="font-size:38px;">🏡</div>
-        <strong style="color:#075e4f;">Home Living</strong>
-        <p style="margin:4px 0 0;font-size:12px;color:#64748b;">Useful essentials for your home</p>
-      </div>
-
-    </div>
-  </div>
-</section>
-<!-- End HomeUtensils main product board -->
-
-<h2>Account overview</h2>
-<p id="memberEmail" class="muted"></p>
-<button id="signOut" type="button" class="secondary">Sign out</button>
-<div id="profileMessage" class="notice">Loading account…</div>
-
-<div id="missingProfileRecovery" class="notice hidden" style="margin-top:12px;">
-  <h3>Recover your member profile</h3>
-  <p>Your sign-in exists, but your member profile was not found. Enter your full name to create a profile for this account. Your existing activation requests will remain unchanged. Your account will still require admin review.</p>
-  <form id="recoverProfileForm">
-    <label for="recoveryFullName">Full name</label>
-    <input id="recoveryFullName" type="text" maxlength="100" autocomplete="name" required placeholder="Enter your full name">
-    <button id="recoverProfileButton" type="submit">Create My Member Profile</button>
-    <div id="recoveryProfileMessage" aria-live="polite"></div>
-  </form>
-</div>
-
-<div id="packageDetails"></div>
-</div>
+<!-- End HomeUtensils Professional Member Account -->
 
 <div class="card" id="activationCard">
 <h2>Request package activation</h2>
