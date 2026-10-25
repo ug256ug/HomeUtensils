@@ -288,3 +288,199 @@ exports.reviewActivationRequest = onCall(async (request) => {
       : "Activation request rejected. The member package was not activated."
   };
 });
+
+/**
+ * Securely reviews a task submission and records a reward
+ * only when an enabled administrator approves it.
+ *
+ * This records earnings in the trusted ledger.
+ * It does not send money or directly pay a withdrawal.
+ */
+exports.reviewTaskSubmission = onCall(async (request) => {
+  const adminUid = await requireAdmin(request);
+
+  const submissionId =
+    request.data && request.data.submissionId;
+  const status = request.data && request.data.status;
+  const feedback =
+    typeof (request.data && request.data.feedback) === "string"
+      ? request.data.feedback.trim().slice(0, 500)
+      : "";
+
+  if (
+    typeof submissionId !== "string" ||
+    !submissionId ||
+    submissionId.length > 150 ||
+    submissionId.includes("/")
+  ) {
+    throw new HttpsError(
+      "invalid-argument",
+      "A valid task submission ID is required."
+    );
+  }
+
+  if (!["approved", "rejected"].includes(status)) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Status must be approved or rejected."
+    );
+  }
+
+  const submissionRef = db
+    .collection("taskSubmissions")
+    .doc(submissionId);
+
+  const result = await db.runTransaction(async (transaction) => {
+    const submissionSnap = await transaction.get(submissionRef);
+
+    if (!submissionSnap.exists) {
+      throw new HttpsError(
+        "not-found",
+        "Task submission not found."
+      );
+    }
+
+    const submission = submissionSnap.data();
+
+    if (submission.status !== "pending") {
+      throw new HttpsError(
+        "failed-precondition",
+        "This task has already been reviewed."
+      );
+    }
+
+    if (
+      typeof submission.uid !== "string" ||
+      !submission.uid ||
+      typeof submission.taskId !== "string" ||
+      !submission.taskId
+    ) {
+      throw new HttpsError(
+        "failed-precondition",
+        "The submission is missing its member or task ID."
+      );
+    }
+
+    const profileRef = db
+      .collection("memberProfiles")
+      .doc(submission.uid);
+
+    const profileSnap = await transaction.get(profileRef);
+
+    if (!profileSnap.exists) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Member profile not found."
+      );
+    }
+
+    const profile = profileSnap.data();
+    let reward = 0;
+    let rewardRef = null;
+
+    if (status === "approved") {
+      if (profile.packageStatus !== "active") {
+        throw new HttpsError(
+          "failed-precondition",
+          "The member's package is not active."
+        );
+      }
+
+      const packageRules = {
+        Starter: { limit: 3, reward: 500 },
+        Standard: { limit: 5, reward: 500 },
+        Plus: { limit: 6, reward: 1000 }
+      };
+
+      const rule = packageRules[profile.package];
+
+      if (!rule) {
+        throw new HttpsError(
+          "failed-precondition",
+          "The member's package is not recognised."
+        );
+      }
+
+      const approvedQuery = db
+        .collection("taskSubmissions")
+        .where("uid", "==", submission.uid)
+        .where("status", "==", "approved");
+
+      const approvedSnap = await transaction.get(approvedQuery);
+
+      if (approvedSnap.size >= rule.limit) {
+        throw new HttpsError(
+          "failed-precondition",
+          "The initial approved-task limit for this package has been reached."
+        );
+      }
+
+      // Stable reward ID prevents this submission being rewarded twice.
+      rewardRef = db
+        .collection("walletTransactions")
+        .doc("task_reward_" + submissionId);
+
+      const existingReward = await transaction.get(rewardRef);
+
+      if (existingReward.exists) {
+        throw new HttpsError(
+          "already-exists",
+          "A reward ledger entry already exists for this submission."
+        );
+      }
+
+      reward = rule.reward;
+    }
+
+    transaction.update(submissionRef, {
+      status,
+      feedback,
+      reviewedAt: FieldValue.serverTimestamp(),
+      reviewedBy: adminUid
+    });
+
+    if (rewardRef && reward > 0) {
+      transaction.create(rewardRef, {
+        uid: submission.uid,
+        type: "TASK_REWARD",
+        taskId: submission.taskId,
+        taskSubmissionId: submissionId,
+        amount: reward,
+        currency: "UGX",
+        status: "recorded",
+        createdAt: FieldValue.serverTimestamp(),
+        createdBy: "trusted_backend"
+      });
+    }
+
+    return {
+      memberUid: submission.uid,
+      reward,
+      currency: "UGX"
+    };
+  });
+
+  await db.collection("adminAuditLogs").add({
+    actorUid: adminUid,
+    action: status === "approved"
+      ? "TASK_APPROVED_BY_BACKEND"
+      : "TASK_REJECTED_BY_BACKEND",
+    targetType: "taskSubmission",
+    targetId: submissionId,
+    memberUid: result.memberUid,
+    reward: result.reward,
+    currency: result.currency,
+    createdAt: FieldValue.serverTimestamp(),
+    source: "trusted_backend"
+  });
+
+  return {
+    ok: true,
+    status,
+    reward: result.reward,
+    currency: result.currency,
+    message: status === "approved"
+      ? "Task approved and reward recorded in the trusted ledger."
+      : "Task rejected. No reward was recorded."
+  };
+});
