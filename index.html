@@ -1561,6 +1561,17 @@ show($("activationMessage"),"Request submitted. Your package is not active until
 }catch(err){show($("activationMessage"),messageFromError(err),true);}
 finally{btn.disabled=false;}
 });
+function maskEmail(email) {
+if (!email || !String(email).includes("@")) {
+return "Not available";
+}
+
+const parts = String(email).split("@");
+const name = parts[0];
+const domain = parts.slice(1).join("@");
+
+return (name.length > 1 ? name[0] + "••••" : "•") + "@" + domain;
+}
 function renderProfile(data) {
   profileData = data || {};
 
