@@ -520,17 +520,57 @@ footer {
 <button id="resetPassword" type="button" class="secondary">Reset password by email</button>
 </div>
 <div id="registerPanel" class="hidden">
-<h3>Create account</h3>
-<form id="registerForm">
-<label for="fullName">Full name</label>
-<input id="fullName" maxlength="100" autocomplete="name" required>
-<label for="registerEmail">Email address</label>
-<input id="registerEmail" type="email" autocomplete="email" required>
+  <h3>Create account</h3>  <div id="inviterNotice" class="notice hidden" aria-live="polite">
+    <strong>You were invited to join HomeUtensils.</strong>
+    <p>Inviter Member ID: <strong id="inviterMemberId"></strong></p>
+  </div>  <form id="registerForm">
+    <label for="fullName">Full name</label>
+    <input
+      id="fullName"
+      type="text"
+      maxlength="100"
+      autocomplete="name"
+      required
+    ><label for="registerEmail">Email address</label>
+<input
+  id="registerEmail"
+  type="email"
+  autocomplete="email"
+  required
+>
+
 <label for="registerPassword">Password (at least 6 characters)</label>
-<input id="registerPassword" type="password" minlength="6" autocomplete="new-password" required>
+<input
+  id="registerPassword"
+  type="password"
+  minlength="6"
+  autocomplete="new-password"
+  required
+>
+<button id="toggleRegisterPassword" type="button" class="secondary">
+  Show password
+</button>
+
+<label for="confirmPassword">Confirm password</label>
+<input
+  id="confirmPassword"
+  type="password"
+  minlength="6"
+  autocomplete="new-password"
+  required
+>
+<button id="toggleConfirmPassword" type="button" class="secondary">
+  Show confirmation password
+</button>
+
+<p id="passwordMatchMessage" class="muted" aria-live="polite"></p>
+
 <button type="submit">Register</button>
-</form>
-<button id="showSignIn" type="button" class="secondary">Back to sign in</button>
+
+  </form>  <button id="showSignIn" type="button" class="secondary">
+    Back to sign in
+  </button>
+</div>
 </div>
 </section>
 
