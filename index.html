@@ -581,7 +581,7 @@ The server must verify the schedule, public holidays, available balance and pend
 <div class="grid">
 
 <div class="request">
-<div class="muted">Withdrawal fee (10%)</div>
+<div class="muted">Total deducted from wallet if approved</div>
 <div id="withdrawalFee" class="money">UGX 0</div>
 </div>
 <div class="request">
@@ -1502,8 +1502,8 @@ return show($("withdrawalMessage"),scheduleError,true);
 }
 
 const fee=Math.ceil(amount*0.10);
-const payout=amount;
-const totalDeducted=amount+fee;
+const payout=amount-fee;
+const totalDeducted=amount;
 
 const btn=$("withdrawalSubmit");
 btn.disabled=true;
@@ -1524,7 +1524,6 @@ uid:currentUser.uid,
 amount:amount,
 fee:fee,
 payout:payout,
-totalDeducted:totalDeducted,
 currency:"UGX",
 
 method:method,
