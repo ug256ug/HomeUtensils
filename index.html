@@ -2044,39 +2044,44 @@ async function reviewTaskSubmission(id, status) {
     );
   }
 
-  if (!["approved", "rejected"].includes(status)) return;
+  if (!["approved", "rejected"].includes(status)) {
+    return;
+  }
 
   const feedback = prompt("Optional review note:");
-  if (feedback === null) return;
 
-  if (!confirm("Confirm " + status + " for this task answer?")) return;
+  if (feedback === null) {
+    return;
+  }
+
+  if (!confirm("Confirm " + status + " for this task answer?")) {
+    return;
+  }
 
   try {
-    const ref = db.collection("taskSubmissions").doc(id);
-    const snap = await ref.get();
+    const reviewTask = firebase
+      .functions()
+      .httpsCallable("reviewTaskSubmission");
 
-    if (!snap.exists) {
-      throw new Error("Task submission not found.");
-    }
-
-    if ((snap.data().status || "pending") !== "pending") {
-      throw new Error("This submission has already been reviewed.");
-    }
-
-    await ref.update({
+    const result = await reviewTask({
+      submissionId: id,
       status: status,
-      feedback: feedback.trim(),
-      reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      reviewedBy: currentUser.uid
+      feedback: feedback.trim()
     });
+
+    const data = result && result.data ? result.data : {};
 
     show(
       $("globalMessage"),
-      "Task answer marked " + status +
-      ". No earnings or wallet balance were changed."
+      status === "approved"
+        ? "Task approved. Trusted backend recorded UGX " +
+          Number(data.reward || 0).toLocaleString("en-UG") +
+          " in the task reward ledger. This is a ledger entry, not a cash payment."
+        : "Task rejected. No task reward was recorded."
     );
 
     await loadAdminTaskSubmissions();
+
   } catch (err) {
     show(
       $("globalMessage"),
@@ -2085,7 +2090,6 @@ async function reviewTaskSubmission(id, status) {
     );
   }
 }
-
 async function loadAdmin(){
 await loadAdminTaskSubmissions();
 try{
