@@ -226,6 +226,95 @@ message: "P2P transfer processed or already completed.",
 transferId: requestId
 };
 });
+exports.requestManualWithdrawal = onCall(async (request) => {
+const uid = requireSignedIn(request);
+
+const amount = request.data?.amount;
+const method = String(request.data?.method || "").trim();
+const payoutDetails = String(
+request.data?.payoutDetails || ""
+).trim();
+
+const allowedMethods = [
+"Mobile Money",
+"Bank Transfer"
+];
+
+if (
+!Number.isSafeInteger(amount) ||
+amount < 2000 ||
+amount > 100000000 ||
+!allowedMethods.includes(method) ||
+payoutDetails.length < 3 ||
+payoutDetails.length > 200
+) {
+throw new HttpsError(
+"invalid-argument",
+"Enter a valid whole-number amount of at least UGX 2,000, payout method, and payout details."
+);
+}
+
+const fee = Math.ceil(amount * 0.10);
+const totalDeduction = amount + fee;
+
+const profileRef = db
+.collection("memberProfiles")
+.doc(uid);
+
+const pendingQuery = db
+.collection("withdrawalRequests")
+.where("uid", "==", uid)
+.where("status", "==", "pending");
+
+const requestRef = db
+.collection("withdrawalRequests")
+.doc();
+
+await db.runTransaction(async (transaction) => {
+const profile = await transaction.get(profileRef);
+const pending = await transaction.get(pendingQuery);
+
+if (!profile.exists) {
+  throw new HttpsError(
+    "failed-precondition",
+    "Your member profile was not found."
+  );
+}
+
+if (pending.size > 0) {
+  throw new HttpsError(
+    "failed-precondition",
+    "You already have a pending withdrawal request."
+  );
+}
+
+transaction.create(requestRef, {
+  uid,
+  amount,
+  fee,
+  totalDeduction,
+  method,
+  payoutDetails,
+  currency: "UGX",
+  status: "pending",
+  paymentStatus: "not_paid",
+  reviewNote: "",
+  createdAt: FieldValue.serverTimestamp(),
+  updatedAt: FieldValue.serverTimestamp()
+});
+
+});
+
+return {
+ok: true,
+requestId: requestRef.id,
+status: "pending",
+amount,
+fee,
+totalDeduction,
+message: "Withdrawal request submitted for manual admin review. No balance has been deducted and no payment has been sent."
+};
+});
 exports.healthCheck = onCall(async (request) => {
   requireSignedIn(request);
 
