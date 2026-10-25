@@ -1388,34 +1388,85 @@ await auth.signInWithEmailAndPassword($("loginEmail").value.trim(),$("loginPassw
 show($("globalMessage"),"");
 }catch(err){show($("globalMessage"),messageFromError(err),true);}
 });
-$("registerForm").addEventListener("submit",async e=>{
-e.preventDefault();
-const name=$("fullName").value.trim(),email=$("registerEmail").value.trim(),password=$("registerPassword").value;
-const btn=$("registerForm").querySelector("button[type=submit]");
-if(!name){show($("globalMessage"),"Enter your full name.",true);return;}
-btn.disabled=true;
-try{
-const result = await auth.createUserWithEmailAndPassword(email, password);
 
-const memberId = "HU" + Array.from(
-  crypto.getRandomValues(new Uint8Array(5)),
-  value => "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"[value % 36]
-).join("");
+$("registerForm").addEventListener("submit", async e => {
+  e.preventDefault();
 
-await db.collection("memberProfiles").doc(result.user.uid).set({
-  uid: result.user.uid,
-  memberId: memberId,
-  name: name,
-  email: email,
-  accountStatus: "pending",
-  createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  const name = $("fullName").value.trim();
+  const email = $("registerEmail").value.trim();
+  const password = $("registerPassword").value;
+  const btn = $("registerForm").querySelector('button[type="submit"]');
+
+  if (!name) {
+    show($("globalMessage"), "Enter your full name.", true);
+    return;
+  }
+
+  btn.disabled = true;
+
+  try {
+    const result = await auth.createUserWithEmailAndPassword(email, password);
+
+    const memberId = "HU" + Array.from(
+      crypto.getRandomValues(new Uint8Array(5)),
+      value => "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"[value % 36]
+    ).join("");
+
+    await db.collection("memberProfiles").doc(result.user.uid).set({
+      uid: result.user.uid,
+      memberId: memberId,
+      name: name,
+      email: email,
+      accountStatus: "pending",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    const referralCode = (
+      new URLSearchParams(window.location.search).get("ref") || ""
+    ).trim().toUpperCase();
+
+    if (referralCode) {
+      try {
+        const applyReferralCode = firebase
+          .app()
+          .functions()
+          .httpsCallable("applyReferralCode");
+
+        await applyReferralCode({
+          referralCode: referralCode
+        });
+
+        show(
+          $("globalMessage"),
+          "Account created. Your referral was recorded, and your account is pending review."
+        );
+      } catch (referralError) {
+        console.error("Referral recording failed:", referralError);
+
+        show(
+          $("globalMessage"),
+          "Account created, but the referral could not yet be recorded. Your account is pending review. Please contact the administrator to check the referral.",
+          true
+        );
+      }
+    } else {
+      show(
+        $("globalMessage"),
+        "Account created. Your account is pending review."
+      );
+    }
+  } catch (err) {
+    show(
+      $("globalMessage"),
+      "Registration failed: " + messageFromError(err) +
+      ". If your login was created, sign in instead of registering again.",
+      true
+    );
+  } finally {
+    btn.disabled = false;
+  }
 });
 
-show($("globalMessage"),"Account created. Your account is pending review.");
-}catch(err){
-show($("globalMessage"),"Registration failed: "+messageFromError(err)+". If your login was created, sign in instead of registering again.",true);
-}finally{btn.disabled=false;}
-});
 
 $("recoverProfileForm").addEventListener("submit", async e => {
   e.preventDefault();
