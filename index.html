@@ -577,18 +577,62 @@ The server must verify the schedule, public holidays, available balance and pend
 
 <div class="card" id="walletCard">
   <h2>My Wallet</h2>
-  <p class="muted">Your wallet overview. Figures shown here are based on your account records and must not be treated as confirmed funds unless verified by the server.</p>
 
-  <div class="grid">
-    <div class="notice">
-      <strong>Total income</strong>
-      <p id="walletTotalIncome">Not available yet</p>
-<p id="walletWithdrawableBalance">Not calculated yet</p>
-<p id="walletPendingWithdrawals">Not loaded yet</p>
-    </div>
+  <div class="notice">
+    <strong>Wallet preview mode</strong>
+    <p>
+      Your wallet dashboard is being prepared. The figures below are
+      not connected to a verified earnings and balance calculation.
+      Do not treat them as available money.
+    </p>
   </div>
 
-  <p class="muted">Your balance must be calculated and validated using trusted server-side records before withdrawals or transfers are allowed.</p>
+  <div class="grid">
+
+    <div class="request">
+      <div class="muted">Total Income Earned</div>
+      <div class="money">Not verified</div>
+      <p class="muted">
+        Approved earnings will be displayed when verified records
+        are connected.
+      </p>
+    </div>
+
+    <div class="request">
+      <div class="muted">Withdrawable Balance</div>
+      <div class="money">Not calculated</div>
+      <p class="muted">
+        No amount is confirmed as available for withdrawal yet.
+      </p>
+    </div>
+
+    <div class="request">
+      <div class="muted">Pending Withdrawals</div>
+      <div class="money">Not loaded</div>
+      <p class="muted">
+        Withdrawal requests are separate from confirmed wallet funds.
+      </p>
+    </div>
+
+  </div>
+
+  <div class="notice">
+    <strong>What happens next?</strong>
+    <p>
+      You can review the withdrawal form and calculate the estimated
+      fee and payout. Requests must remain clearly identified as
+      requests for review—not completed payments.
+    </p>
+    <p>
+      P2P transfers remain preview-only. Neither feature changes
+      your wallet balance or sends money.
+    </p>
+  </div>
+
+  <p class="muted">
+    This preview does not create earnings, approve withdrawals,
+    or confirm that funds are available.
+  </p>
 </div>
 <div class="card" id="transactionHistoryCard">
   <h2>Transaction History</h2>
