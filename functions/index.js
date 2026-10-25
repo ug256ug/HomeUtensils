@@ -760,3 +760,76 @@ exports.reviewTaskSubmission = onCall(async (request) => {
       : "Task rejected. No reward was recorded."
   };
 });
+
+exports.applyReferralCode = onCall(async (request) => {
+  const newMemberUid = requireSignedIn(request);
+
+  const referralCode = String(
+    request.data?.referralCode || ""
+  ).trim().toUpperCase();
+
+  if (!/^HU[A-Z0-9]{5}$/.test(referralCode)) {
+    throw new HttpsError(
+      "invalid-argument",
+      "The referral code is invalid."
+    );
+  }
+
+  const newMemberRef = db
+    .collection("memberProfiles")
+    .doc(newMemberUid);
+
+  const referrerQuery = await db
+    .collection("memberProfiles")
+    .where("memberId", "==", referralCode)
+    .limit(2)
+    .get();
+
+  if (referrerQuery.size !== 1) {
+    throw new HttpsError(
+      "not-found",
+      "The referring member was not found."
+    );
+  }
+
+  const referrerDoc = referrerQuery.docs[0];
+
+  if (referrerDoc.id === newMemberUid) {
+    throw new HttpsError(
+      "invalid-argument",
+      "You cannot refer your own account."
+    );
+  }
+
+  await db.runTransaction(async (transaction) => {
+    const newMemberSnap = await transaction.get(newMemberRef);
+
+    if (!newMemberSnap.exists) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Create your member profile before applying a referral code."
+      );
+    }
+
+    const member = newMemberSnap.data();
+
+    if (member.referredByUid || member.referredByMemberId) {
+      throw new HttpsError(
+        "failed-precondition",
+        "A referral has already been recorded for this account."
+      );
+    }
+
+    transaction.update(newMemberRef, {
+      referredByUid: referrerDoc.id,
+      referredByMemberId: referralCode,
+      referralRecordedAt: FieldValue.serverTimestamp()
+    });
+  });
+
+  return {
+    ok: true,
+    message: "Referral recorded successfully."
+  };
+});
+
