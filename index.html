@@ -1389,6 +1389,54 @@ note.textContent =
 "Missing package details are not proof of activation. Check the activation request and authorised review status.";
 details.appendChild(note);
 }
+function updateReferralDisplay(profile) {
+  const codeInput = $("referralCode");
+  const linkInput = $("referralLink");
+  const copyButton = $("copyReferralLink");
+
+  if (!codeInput || !linkInput || !copyButton) return;
+
+  const code = String(profile.memberId || "").trim();
+
+  if (!code) {
+    codeInput.value = "";
+    linkInput.value = "";
+    codeInput.placeholder = "Member ID not available";
+    linkInput.placeholder = "Member ID not available";
+    copyButton.disabled = true;
+    return;
+  }
+
+  const url = new URL(window.location.href);
+  url.searchParams.set("ref", code);
+
+  codeInput.value = code;
+  linkInput.value = url.toString();
+  copyButton.disabled = false;
+}
+
+$("copyReferralLink").addEventListener("click", async () => {
+  const link = $("referralLink").value;
+
+  if (!link) {
+    show($("referralMessage"), "Your referral link is not available yet.", true);
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(link);
+    show($("referralMessage"), "Referral link copied. You can now share it.");
+  } catch (err) {
+    $("referralLink").focus();
+    $("referralLink").select();
+
+    show(
+      $("referralMessage"),
+      "Automatic copying failed. Select and copy the referral link manually.",
+      true
+    );
+  }
+});
 function listenRequests(user){
 $("requestHistory").textContent="Loading requests…";
 db.collection("activationRequests").where("uid","==",user.uid).onSnapshot(snapshot=>{
