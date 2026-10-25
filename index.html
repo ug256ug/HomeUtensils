@@ -622,8 +622,26 @@ loading="lazy"
 <!-- End HomeUtensils Professional Member Account -->
 
 <div class="card" id="activationCard">
-<h2>Request package activation</h2>
-<p class="muted">Submitting a request does not activate your package. An authorised administrator must verify payment and approve it.</p>
+<h2>Activate or request a package</h2><div class="notice" id="p2pActivationNotice">
+  <strong>Activate with P2P float</strong>
+  <p>
+    Did a friend send P2P float to your account?
+    You can select P2P float when requesting package activation.
+  </p>
+  <p>
+    <strong>Temporary mode:</strong>
+    P2P transfers and balances are not yet connected to
+    a verified transaction system. This button will not
+    deduct float or activate your package automatically.
+  </p>
+  <button id="chooseP2pActivation" type="button">
+    Use P2P Float
+  </button>
+</div><p class="muted">
+  Choose your package below. Until verified P2P balance
+  checking and deduction are connected, the request
+  still requires payment verification and approval.
+</p>
 <form id="activationForm">
 <label for="area">Area / district</label>
 <input id="area" maxlength="100" required placeholder="For example, Wakiso">
