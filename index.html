@@ -1417,76 +1417,146 @@ show($("activationMessage"),"Request submitted. Your package is not active until
 }catch(err){show($("activationMessage"),messageFromError(err),true);}
 finally{btn.disabled=false;}
 });
-function renderProfile(data){
-profileData = data || {};
+function renderProfile(data) {
+  profileData = data || {};
 
-const accountStatus = profileData.accountStatus || "Not set";
+  const accountStatus = profileData.accountStatus || "Not set";
+  const details = $("packageDetails");
 
-show(
-$("profileMessage"),
-"Account status: " + accountStatus +
-". Package activation is valid only after an authorised reviewer approves the request."
-);
+  if (!details) return;
 
-const details = $("packageDetails");
-details.replaceChildren();
+  details.replaceChildren();
 
-const heading = document.createElement("h3");
-heading.textContent = "Member profile";
-details.appendChild(heading);
+  const card = document.createElement("div");
+  card.className = "member-profile-card";
 
-function maskEmail(email){
-  if(!email || !String(email).includes("@")) return "Not available";
-  const parts=String(email).split("@");
-  const name=parts[0];
-  const domain=parts.slice(1).join("@");
-  return (name.length > 1 ? name[0] + "••••" : "•") + "@" + domain;
-}
+  // Member profile heading
+  const header = document.createElement("div");
+  header.className = "member-profile-header";
 
+  const title = document.createElement("h3");
+  title.textContent = "Member Profile";
 
-const rows = [
-  ["Name", profileData.fullName || profileData.name || "Not set"],
-  ["Member ID", profileData.memberId || "Not assigned yet"],
-  ["Email", maskEmail(profileData.email || (currentUser && currentUser.email))],
-  ["Account status", accountStatus]
-];
+  const subtitle = document.createElement("p");
+  subtitle.textContent = "Your personal account information";
 
+  header.append(title, subtitle);
+  card.appendChild(header);
 
+  // Member identity
+  const identity = document.createElement("div");
+  identity.className = "member-identity";
 
+  const avatar = document.createElement("div");
+  avatar.className = "member-avatar";
 
-rows.forEach(([label, value]) => {
-const p = document.createElement("p");
-p.textContent = label + ": " +
-(value !== undefined && value !== null && String(value).trim()
-? String(value)
-: "Not set");
-details.appendChild(p);
-});
+  const memberName =
+    profileData.fullName || profileData.name || "HomeUtensils Member";
 
-const packageHeading = document.createElement("h3");
-packageHeading.textContent = "Package details";
-details.appendChild(packageHeading);
+  avatar.textContent = String(memberName).trim().charAt(0).toUpperCase() || "M";
 
-[
-["Package", profileData.package],
-["Package status", profileData.packageStatus],
-["Activation date", dateText(profileData.activationDate)],
-["Expiry date", dateText(profileData.expiryDate)]
-].forEach(([label, value]) => {
-const p = document.createElement("p");
-p.textContent = label + ": " +
-(value !== undefined && value !== null && String(value).trim()
-? String(value)
-: "Not set");
-details.appendChild(p);
-});
+  const identityText = document.createElement("div");
 
-const note = document.createElement("p");
-note.className = "muted";
-note.textContent =
-"Missing package details are not proof of activation. Check the activation request and authorised review status.";
-details.appendChild(note);
-updateReferralDisplay(profileData);
+  const name = document.createElement("h4");
+  name.textContent = memberName;
+
+  const memberId = document.createElement("p");
+  memberId.textContent =
+    "Member ID: " + (profileData.memberId || "Not assigned yet");
+
+  identityText.append(name, memberId);
+  identity.append(avatar, identityText);
+  card.appendChild(identity);
+
+  // Account status
+  const statusBox = document.createElement("div");
+  statusBox.className = "member-status-box";
+
+  const statusLabel = document.createElement("span");
+  statusLabel.textContent = "Account status";
+
+  const statusValue = document.createElement("strong");
+  statusValue.textContent = accountStatus;
+
+  statusBox.append(statusLabel, statusValue);
+  card.appendChild(statusBox);
+
+  function addSection(titleText, rows) {
+    const section = document.createElement("section");
+    section.className = "member-details-section";
+
+    const heading = document.createElement("h4");
+    heading.textContent = titleText;
+    section.appendChild(heading);
+
+    rows.forEach(([label, value]) => {
+      const row = document.createElement("div");
+      row.className = "member-detail-row";
+
+      const labelElement = document.createElement("span");
+      labelElement.className = "member-detail-label";
+      labelElement.textContent = label;
+
+      const valueElement = document.createElement("span");
+      valueElement.className = "member-detail-value";
+
+      const text =
+        value !== undefined &&
+        value !== null &&
+        String(value).trim() !== ""
+          ? String(value)
+          : "Not set";
+
+      valueElement.textContent = text;
+
+      row.append(labelElement, valueElement);
+      section.appendChild(row);
+    });
+
+    card.appendChild(section);
+  }
+
+  addSection("Personal Information", [
+    [
+      "Full name",
+      profileData.fullName || profileData.name || "Not set"
+    ],
+    [
+      "Member ID",
+      profileData.memberId || "Not assigned yet"
+    ],
+    [
+      "Email",
+      maskEmail(
+        profileData.email ||
+        (currentUser && currentUser.email)
+      )
+    ]
+  ]);
+
+  addSection("Membership Details", [
+    ["Package", profileData.package],
+    ["Package status", profileData.packageStatus],
+    ["Activation date", dateText(profileData.activationDate)],
+    ["Expiry date", dateText(profileData.expiryDate)]
+  ]);
+
+  const note = document.createElement("p");
+  note.className = "member-profile-note";
+  note.textContent =
+    "Package activation and eligibility must be verified against the authorised approval records.";
+
+  card.appendChild(note);
+  details.appendChild(card);
+
+  show(
+    $("profileMessage"),
+    "Account status: " +
+      accountStatus +
+      ". Package activation is valid only after an authorised reviewer approves the request."
+  );
+
+  updateReferralDisplay(profileData);
 }
 function updateReferralDisplay(profile) {
   const codeInput = $("referralCode");
