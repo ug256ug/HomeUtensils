@@ -735,7 +735,11 @@ The server must verify the schedule, public holidays, available balance and pend
     >
   </div>
 
-  <button type="button" disabled>Copy Referral Link</button>
+  <button type="button" id="copyReferralLink">
+  Copy Referral Link
+</button>
+
+<div id="referralMessage" aria-live="polite"></div>
 
   <h3>Referral Summary</h3>
   <p>Verified direct referrals: <strong>Not available yet</strong></p>
@@ -964,8 +968,8 @@ The server must verify the schedule, public holidays, available balance and pend
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
+<script>
 (function(){
 "use strict";
 
