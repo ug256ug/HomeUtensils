@@ -1038,8 +1038,8 @@ function updateWithdrawalQuote(){
  const amount=Number($("withdrawalAmount").value);
  const valid=Number.isFinite(amount)&&amount>=2000&&Number.isInteger(amount);
  const fee=valid?Math.ceil(amount*0.10):0;
- const payout=valid?amount:0;
- const total=valid?amount+fee:0;
+ const payout=valid?amount-fee:0;
+ const total=valid?amount:0;
  $("withdrawalFee").textContent=money(fee);
  $("withdrawalPayout").textContent=money(payout);
  $("withdrawalTotal").textContent=money(total);
