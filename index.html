@@ -1388,6 +1388,7 @@ note.className = "muted";
 note.textContent =
 "Missing package details are not proof of activation. Check the activation request and authorised review status.";
 details.appendChild(note);
+updateReferralDisplay(profileData);
 }
 function updateReferralDisplay(profile) {
   const codeInput = $("referralCode");
