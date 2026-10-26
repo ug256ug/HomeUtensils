@@ -345,26 +345,40 @@ if (id === "taskList") {
       result.textContent = "Sending review…";
 
       try {
-        const review = firebase.functions().httpsCallable(
-          "reviewTaskSubmission"
-        );
+        const db = firebase.firestore();
+        const adminUser = firebase.auth().currentUser;
 
-        const response = await review({
-          submissionId: record._id,
-          status: status,
-          feedback: ""
-        });
+        if (!adminUser) {
+          throw new Error("Please sign in as an administrator.");
+        }
 
-        result.textContent =
-          response.data.message || "Review completed.";
+        if (!["approved", "rejected"].includes(status)) {
+          throw new Error("Invalid review status.");
+        }
+
+        await db.collection("taskSubmissions")
+          .doc(record._id)
+          .update({
+            status: status,
+            feedback: "",
+            isCorrect: status === "approved",
+            reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            reviewedBy: adminUser.uid
+          });
+
+        result.textContent = status === "approved"
+          ? "Task approved. No reward has been credited automatically."
+          : "Task rejected.";
 
         await refreshAll();
+
       } catch (error) {
         approve.disabled = false;
         reject.disabled = false;
+
         result.textContent =
           "Review failed (" + (error.code || "unknown") + "). " +
-          (error.message || "Check backend deployment and logs.");
+          (error.message || "Check administrator access and Firestore rules.");
       }
     }
 
