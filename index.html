@@ -2505,7 +2505,36 @@ $("taskSubmissionForm").addEventListener("submit", async e => {
     );
   }
 
-  const select = $("taskChoice");
+  // Block task submissions unless the member has an active package.
+  if (
+    !profileData ||
+    profileData.packageStatus !== "active" ||
+    !profileData.expiryDate
+  ) {
+    return show(
+      $("taskSubmissionMessage"),
+      "Tasks are locked. Activate your package first, or renew it if it has expired.",
+      true
+    );
+  }
+
+  const expiryValue = profileData.expiryDate;
+  const expiryDate =
+    typeof expiryValue.toDate === "function"
+      ? expiryValue.toDate()
+      : new Date(expiryValue);
+
+  if (
+    Number.isNaN(expiryDate.getTime()) ||
+    expiryDate.getTime() <= Date.now()
+  ) {
+    return show(
+      $("taskSubmissionMessage"),
+      "Your package has expired. Renew your package to access tasks.",
+      true
+    );
+  }
+const select = $("taskChoice");
   const taskId = select.value;
   const taskTitle =
     select.options[select.selectedIndex].textContent;
