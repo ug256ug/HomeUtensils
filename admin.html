@@ -127,21 +127,28 @@ footer{text-align:center;padding:22px;color:var(--muted);font-size:12px}
 <div id="taskList" class="small">No data loaded.</div>
 </section>
 
+
 <section class="card" id="notifications">
 <div class="section-label">Member communication</div>
 <h2>Notifications to all members</h2>
-<div class="safe">Planned feature. The announcement form is not connected to a sending service yet.</div>
+<div class="safe">Publish an announcement for members using the HomeUtensils announcements collection.</div>
 
+<form id="announcementForm">
 <label for="announcementTitle">Announcement title</label>
-<input id="announcementTitle" type="text" maxlength="100" placeholder="For example: Important member update" disabled>
+<input id="announcementTitle" type="text" maxlength="100" placeholder="For example: Important member update" required>
 
 <label for="announcementBody">Message for members</label>
-<textarea id="announcementBody" maxlength="2000" placeholder="Write your announcement here…" disabled></textarea>
+<textarea id="announcementBody" maxlength="2000" placeholder="Write your announcement here…" required></textarea>
 
-<button type="button" disabled>Send announcement to all members — not enabled</button>
+<button id="sendAnnouncementBtn" type="submit">Publish announcement</button>
+</form>
 
-<p class="small">A secure backend and a member-facing notification inbox must be implemented before messages can be sent or delivery can be confirmed.</p>
+<p id="announcementMessage" class="small" role="status" aria-live="polite"></p>
+
+<h3>Published announcements</h3>
+<div id="announcementHistory" class="small">Sign in as an administrator to load announcements.</div>
 </section>
+
 
 <section class="card" id="giftCodes">
 <div class="section-label">Member rewards</div>
