@@ -3169,56 +3169,76 @@ reqBox.appendChild(item);
 });
 
 
-const withdrawalBox=$("adminWithdrawals");withdrawalBox.replaceChildren();
-if(withdrawals.empty)withdrawalBox.textContent="No withdrawal requests.";
+const withdrawalBox=$("adminWithdrawals");
+withdrawalBox.replaceChildren();
+
+if(withdrawals.empty){
+  withdrawalBox.textContent="No withdrawal requests.";
+}
 
 const withdrawalDocs=withdrawals.docs.slice().sort((a,b)=>{
-const order={pending:0,rejected:1,approved:2};
-const statusA=String(a.data().status||"pending").toLowerCase();
-const statusB=String(b.data().status||"pending").toLowerCase();
-return (order[statusA]??1)-(order[statusB]??1);
+  const order={pending:0,rejected:1,approved:2};
+  const statusA=String(a.data().status||"pending").toLowerCase();
+  const statusB=String(b.data().status||"pending").toLowerCase();
+  return (order[statusA]??1)-(order[statusB]??1);
 });
 
 withdrawalDocs.forEach(doc=>{
-const d=doc.data(),item=document.createElement("div");
-item.className="request";
+  const d=doc.data();
+  const item=document.createElement("div");
+  item.className="request";
 
-const profile=members.docs.find(m=>
-m.id===(d.uid||d.memberUid||d.userId)
-);
-const member=profile?profile.data():{};
+  const profile=members.docs.find(m=>
+    m.id===(d.uid||d.memberUid||d.userId)
+  );
+  const member=profile?profile.data():{};
 
-const displayName=d.accountName||member.fullName||member.name||d.name||"Name not set";
-const phone=d.phone||d.phoneNumber||member.phone||member.phoneNumber||"Not provided";
-const status=String(d.status||"pending").toLowerCase();
+  const name=member.fullName||member.name||d.name||d.accountName||"Name not set";
+  const status=String(d.status||"pending").toLowerCase();
+  const method=d.method||"Not provided";
+  const account=d.account||d.phone||d.phoneNumber||"Not provided";
+  const accountName=d.accountName||"Not provided";
 
-const heading=document.createElement("p");
-heading.textContent="Status: "+status.charAt(0).toUpperCase()+status.slice(1);
-item.appendChild(heading);
+  const title=document.createElement("h3");
+  title.textContent=name;
+  item.appendChild(title);
 
-[
-["Name",displayName],
-["Phone",phone],
-["Amount",money(d.amount)]
-].forEach(([label,value])=>{
-const p=document.createElement("p");
-p.textContent=label+": "+value;
-item.appendChild(p);
-});
+  const details=[
+    ["Status",status.charAt(0).toUpperCase()+status.slice(1)],
+    ["Member ID",(d.uid||d.memberUid||d.userId||"Not available")],
+    ["Payment method",method],
+    ["Account name",accountName],
+    ["Payment number / account",account],
+    ["Requested amount",money(d.amount)],
+    ["Fee",money(d.fee)],
+    ["Expected payout",money(d.payout)]
+  ];
 
-if(status==="pending"){
-const approve=document.createElement("button");
-approve.textContent="Mark approved for review";
-approve.addEventListener("click",()=>reviewWithdrawal(doc.id,"approved"));
+  details.forEach(([label,value])=>{
+    const p=document.createElement("p");
+    p.textContent=label+": "+value;
+    item.appendChild(p);
+  });
 
-const reject=document.createElement("button");
-reject.textContent="Reject request";
-reject.className="secondary";
-reject.addEventListener("click",()=>reviewWithdrawal(doc.id,"rejected"));
+  const note=document.createElement("p");
+  note.className="muted";
+  note.textContent="Review status only. This does not send payment.";
+  item.appendChild(note);
 
-item.append(approve,reject);
-}
-withdrawalBox.appendChild(item);
+  if(status==="pending"){
+    const approve=document.createElement("button");
+    approve.textContent="Approve for review";
+    approve.addEventListener("click",()=>reviewWithdrawal(doc.id,"approved"));
+
+    const reject=document.createElement("button");
+    reject.textContent="Reject";
+    reject.className="secondary";
+    reject.addEventListener("click",()=>reviewWithdrawal(doc.id,"rejected"));
+
+    item.append(approve,reject);
+  }
+
+  withdrawalBox.appendChild(item);
 });
 
 const memberBox=$("adminMembers");memberBox.replaceChildren();
