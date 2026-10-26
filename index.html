@@ -1778,7 +1778,216 @@ $("signOut").addEventListener("click",async()=>{
 try{await auth.signOut();}catch(err){show($("globalMessage"),messageFromError(err),true);}
 });
 
-// HomeUtensils notification bell: open and close the panel.
+// HomeUtensils member notifications: activation and withdrawal updates.
+let notificationUnsubscribers = [];
+let memberNotificationItems = [];
+let notificationCurrentUid = null;
+
+function stopMemberNotifications() {
+  notificationUnsubscribers.forEach(unsubscribe => unsubscribe());
+  notificationUnsubscribers = [];
+  memberNotificationItems = [];
+  notificationCurrentUid = null;
+
+  $("notificationUnreadCount").textContent = "0";
+  $("notificationUnreadCount").style.display = "none";
+}
+
+function getNotificationReadIds() {
+  if (!notificationCurrentUid) return [];
+
+  try {
+    return JSON.parse(
+      localStorage.getItem(
+        "homeUtensilsReadNotifications_" + notificationCurrentUid
+      ) || "[]"
+    );
+  } catch (error) {
+    return [];
+  }
+}
+
+function saveNotificationReadIds(ids) {
+  if (!notificationCurrentUid) return;
+
+  try {
+    localStorage.setItem(
+      "homeUtensilsReadNotifications_" + notificationCurrentUid,
+      JSON.stringify(ids)
+    );
+  } catch (error) {
+    show(
+      $("notificationMessage"),
+      "Read status could not be saved on this browser.",
+      true
+    );
+  }
+}
+
+function notificationDateMillis(value) {
+  if (!value) return 0;
+
+  if (typeof value.toMillis === "function") {
+    return value.toMillis();
+  }
+
+  const result = new Date(value).getTime();
+  return Number.isFinite(result) ? result : 0;
+}
+
+function renderMemberNotifications() {
+  const list = $("notificationList");
+  const unreadCount = $("notificationUnreadCount");
+  const readIds = getNotificationReadIds();
+
+  const sortedItems = [...memberNotificationItems].sort(
+    (a, b) => b.sortTime - a.sortTime
+  );
+
+  const unreadItems = sortedItems.filter(
+    item => !readIds.includes(item.id)
+  );
+
+  unreadCount.textContent =
+    unreadItems.length > 99 ? "99+" : String(unreadItems.length);
+
+  unreadCount.style.display =
+    unreadItems.length ? "inline-block" : "none";
+
+  list.replaceChildren();
+
+  if (!sortedItems.length) {
+    const empty = document.createElement("p");
+    empty.className = "muted";
+    empty.textContent =
+      "No activation or withdrawal updates yet.";
+    list.appendChild(empty);
+    return;
+  }
+
+  sortedItems.forEach(notification => {
+    const card = document.createElement("div");
+    card.className = "request";
+    card.style.marginBottom = "10px";
+
+    const title = document.createElement("strong");
+    title.textContent = notification.title;
+
+    if (!readIds.includes(notification.id)) {
+      title.textContent += " · NEW";
+    }
+
+    const message = document.createElement("p");
+    message.textContent = notification.message;
+    message.style.marginBottom = "6px";
+
+    const date = document.createElement("p");
+    date.className = "muted";
+    date.textContent = notification.date;
+
+    card.appendChild(title);
+    card.appendChild(message);
+    card.appendChild(date);
+    list.appendChild(card);
+  });
+}
+
+function startMemberNotifications(user) {
+  stopMemberNotifications();
+  notificationCurrentUid = user.uid;
+
+  $("notificationMessage").textContent = "";
+  $("notificationList").textContent = "Loading notifications…";
+
+  function updateNotifications(source, snapshot) {
+    const otherItems = memberNotificationItems.filter(
+      item => item.source !== source
+    );
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const status = String(data.status || "pending").toLowerCase();
+      const reviewNote = String(data.reviewNote || "").trim();
+
+      let title;
+      let message;
+      let eventTime = data.reviewedAt || data.createdAt;
+
+      if (source === "activation") {
+        title = "Package activation: " + status;
+
+        if (status === "approved") {
+          message = "Your package activation request has been approved.";
+        } else if (status === "rejected") {
+          message = "Your package activation request was rejected.";
+        } else {
+          message = "Your package activation request is awaiting review.";
+        }
+      } else {
+        title = "Withdrawal: " + status;
+
+        if (status === "approved" || status === "paid") {
+          message = "Your withdrawal request has been " + status + ".";
+        } else if (status === "rejected") {
+          message = "Your withdrawal request was rejected.";
+        } else {
+          message = "Your withdrawal request is awaiting review.";
+        }
+      }
+
+      if (reviewNote) {
+        message += " Administrator note: " + reviewNote;
+      }
+
+      const itemId =
+        source + ":" + doc.id + ":" + status + ":" + reviewNote;
+
+      otherItems.push({
+        id: itemId,
+        source: source,
+        title: title,
+        message: message,
+        date: dateText(eventTime),
+        sortTime: notificationDateMillis(eventTime)
+      });
+    });
+
+    memberNotificationItems = otherItems;
+    renderMemberNotifications();
+  }
+
+  const activationUnsubscribe = db
+    .collection("activationRequests")
+    .where("uid", "==", user.uid)
+    .onSnapshot(
+      snapshot => updateNotifications("activation", snapshot),
+      error => show(
+        $("notificationMessage"),
+        "Activation notifications could not load: " +
+          messageFromError(error),
+        true
+      )
+    );
+
+  notificationUnsubscribers.push(activationUnsubscribe);
+
+  const withdrawalUnsubscribe = db
+    .collection("withdrawalRequests")
+    .where("uid", "==", user.uid)
+    .onSnapshot(
+      snapshot => updateNotifications("withdrawal", snapshot),
+      error => show(
+        $("notificationMessage"),
+        "Withdrawal notifications could not load: " +
+          messageFromError(error),
+        true
+      )
+    );
+
+  notificationUnsubscribers.push(withdrawalUnsubscribe);
+}
+
+// Open or close the notification panel.
 $("notificationBell").addEventListener("click", () => {
   const panel = $("notificationPanel");
   const isOpening = panel.classList.contains("hidden");
@@ -1791,14 +2000,16 @@ $("notificationBell").addEventListener("click", () => {
   );
 });
 
-// Allow members to close the notification panel.
-$("notificationList").addEventListener("click", (event) => {
-  const closeButton = event.target.closest("[data-close-notifications]");
+// Mark the notifications currently displayed as read.
+$("markAllNotificationsRead").addEventListener("click", () => {
+  const readIds = getNotificationReadIds();
+  const allIds = memberNotificationItems.map(item => item.id);
 
-  if (closeButton) {
-    $("notificationPanel").classList.add("hidden");
-    $("notificationBell").setAttribute("aria-expanded", "false");
-  }
+  saveNotificationReadIds([...new Set([...readIds, ...allIds])]);
+  renderMemberNotifications();
+
+  $("notificationMessage").textContent =
+    "Displayed notifications marked as read on this browser.";
 });
 $("menuToggle").addEventListener("click",()=>{
   const menu=$("iconMenu");
