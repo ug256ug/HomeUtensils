@@ -3256,23 +3256,61 @@ memberBox.appendChild(item);
 });
 
 
-const agentBox=$("adminAgentApplications");agentBox.replaceChildren();
-if(applications.empty)agentBox.textContent="No agent applications yet.";
-applications.forEach(doc=>{
-const d=doc.data(),item=document.createElement("div");item.className="request";
-const info=document.createElement("p");
-const nin=d.nin||"",maskedNin=nin.length>4?"••••••"+nin.slice(-4):"Hidden";
-info.textContent="Applicant: "+(d.name||"Not set")+" · Email: "+(d.email||"Not set")+" · Region: "+(d.region||"Not set")+" · Town: "+(d.town||"Not set")+" · Phone: "+(d.phone||"Not set")+" · NIN: "+maskedNin+" · Declared capital: UGX "+(d.capitalDeclared||0)+" · Application status: "+(d.status||"pending");
-item.appendChild(info);
-if((d.status||"pending")==="pending"){
-const approve=document.createElement("button");approve.textContent="Approve agent";
-approve.addEventListener("click",()=>reviewAgentApplication(doc.id,"approved"));
-const reject=document.createElement("button");reject.textContent="Reject application";reject.className="secondary";
-reject.addEventListener("click",()=>reviewAgentApplication(doc.id,"rejected"));
-item.append(approve,reject);
+
+const agentBox=$("adminAgentApplications");
+agentBox.replaceChildren();
+
+if(applications.empty){
+  agentBox.textContent="No agent applications yet.";
 }
-agentBox.appendChild(item);
+
+applications.forEach(doc=>{
+  const d=doc.data();
+  const item=document.createElement("div");
+  item.className="request";
+
+  const heading=document.createElement("h3");
+  heading.textContent=d.name||"Applicant name not set";
+  item.appendChild(heading);
+
+  const agentId=d.agentId||("HU-AG-"+doc.id.slice(0,6).toUpperCase());
+
+  const details=[
+    ["Agent reference",agentId],
+    ["Region",d.region||"Not provided"],
+    ["District / Town",d.town||d.district||"Not provided"],
+    ["Phone",d.phone||"Not provided"],
+    ["Declared capital",money(d.capitalDeclared||0)],
+    ["Payment number",d.paymentNumber||"Not provided"],
+    ["Application status",d.status||"pending"]
+  ];
+
+  details.forEach(([label,value])=>{
+    const p=document.createElement("p");
+    p.textContent=label+": "+value;
+    item.appendChild(p);
+  });
+
+  if((d.status||"pending")==="pending"){
+    const approve=document.createElement("button");
+    approve.textContent="Approve agent";
+    approve.addEventListener("click",()=>{
+      reviewAgentApplication(doc.id,"approved");
+    });
+
+    const reject=document.createElement("button");
+    reject.textContent="Reject application";
+    reject.className="secondary";
+    reject.addEventListener("click",()=>{
+      reviewAgentApplication(doc.id,"rejected");
+    });
+
+    item.append(approve,reject);
+  }
+
+  agentBox.appendChild(item);
 });
+
 }catch(err){
 show($("adminSummary"),"Admin dashboard failed: "+messageFromError(err),true);
 }
