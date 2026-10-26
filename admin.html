@@ -275,6 +275,7 @@ return;
 $("dashboard").classList.remove("hidden");
 message("Administrator access verified.");
 await refreshAll();
+await loadAnnouncementHistory();
 
 }catch(e){
 message("Could not verify administrator access. Check Firebase rules and the admins record. "+e.message,true);
@@ -330,54 +331,102 @@ JSON.stringify(m).toLowerCase().includes(q)
 );
 }
 
-async function refreshAll(){
-if(!activeUser||refreshInProgress)return;
 
-refreshInProgress=true;
-message("Refreshing system records…");
+$("announcementForm").addEventListener("submit", async function(event) {
+  event.preventDefault();
 
-try{
-const results=await Promise.all([
-readCollection("memberProfiles","membersList"),
-readCollection("activationRequests","activationList"),
-readCollection("agentApplications","agentList"),
-readCollection("withdrawalRequests","withdrawalList"),
-readCollection("walletTransactions","walletList"),
-readCollection("p2pTransfers","p2pList"),
-readCollection("taskSubmissions","taskList"),
-readCollection("adminAuditLogs","auditList")
-]);
+  const title = $("announcementTitle").value.trim();
+  const body = $("announcementBody").value.trim();
+  const status = $("announcementMessage");
+  const button = $("sendAnnouncementBtn");
 
-memberRecords=results[0]||[];
-renderMembers();
+  if (!activeUser || !title || !body) {
+    status.textContent = "Sign in as an administrator and enter both fields.";
+    return;
+  }
 
-$("membersCount").textContent=
-results[0]===null?"Error":memberRecords.length;
+  if (title.length > 100 || body.length > 2000) {
+    status.textContent = "The title or message is too long.";
+    return;
+  }
 
-$("activeCount").textContent=
-results[0]===null?"Error":
-memberRecords.filter(m=>
-String(m.packageStatus||"").toLowerCase()==="active"&&
-String(m.accountStatus||"").toLowerCase()!=="suspended"
-).length;
+  button.disabled = true;
+  status.textContent = "Publishing announcement…";
 
-$("activationCount").textContent=
-results[1]===null?"Error":results[1].length;
+  try {
+    const adminDoc = await db.collection("admins").doc(activeUser.uid).get();
 
-$("agentsCount").textContent=
-results[2]===null?"Error":results[2].length;
+    if (
+      !adminDoc.exists ||
+      adminDoc.data().role !== "admin" ||
+      adminDoc.data().enabled !== true
+    ) {
+      throw new Error("Administrator permission could not be verified.");
+    }
 
-$("withdrawalsCount").textContent=
-results[3]===null?"Error":results[3].length;
+    await db.collection("announcements").add({
+      title: title,
+      message: body,
+      published: true,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdBy: activeUser.uid
+    });
 
-message("Refresh complete. Check any section showing a permission or collection error.");
+    $("announcementTitle").value = "";
+    $("announcementBody").value = "";
+    status.textContent = "Announcement published successfully.";
+    await loadAnnouncementHistory();
 
-}catch(e){
-message("Could not refresh records: "+e.message,true);
-}finally{
-refreshInProgress=false;
+  } catch (error) {
+    status.textContent = "Could not publish: " + error.message;
+  } finally {
+    button.disabled = false;
+  }
+});
+
+async function loadAnnouncementHistory() {
+  const target = $("announcementHistory");
+
+  try {
+    const snapshot = await db.collection("announcements")
+      .orderBy("createdAt", "desc")
+      .limit(50)
+      .get();
+
+    target.replaceChildren();
+
+    if (snapshot.empty) {
+      target.textContent = "No announcements have been published yet.";
+      return;
+    }
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const item = document.createElement("div");
+      item.className = "record";
+
+      const heading = document.createElement("strong");
+      heading.textContent = data.title || "Untitled announcement";
+
+      const content = document.createElement("p");
+      content.textContent = data.message || "";
+
+      const date = document.createElement("p");
+      date.className = "small";
+      date.textContent = data.createdAt &&
+        typeof data.createdAt.toDate === "function"
+          ? data.createdAt.toDate().toLocaleString()
+          : "Date pending";
+
+      item.append(heading, content, date);
+      target.appendChild(item);
+    });
+
+  } catch (error) {
+    target.textContent = "Could not load announcements: " + error.message;
+  }
 }
-}
+
 </script>
 </body>
 </html>
