@@ -283,27 +283,94 @@ message("Could not verify administrator access. Check Firebase rules and the adm
 }
 });
 
-function showRecords(id,records){
-const target=$(id);
+function showRecords(id, records) {
+const target = $(id);
 target.replaceChildren();
 
-if(!records.length){
-const empty=document.createElement("p");
-empty.className="small";
-empty.textContent="No records found, or this collection is empty.";
+if (!records || !records.length) {
+const empty = document.createElement("p");
+empty.className = "small";
+empty.textContent = "No records found, or this collection is empty.";
 target.appendChild(empty);
 return;
 }
 
-records.forEach(record=>{
-const row=document.createElement("div");
-row.className="record";
+records.forEach(record => {
+const row = document.createElement("div");
+row.className = "record";
 
-const data={...record};
+const data = { ...record };
 delete data._id;
 
-row.textContent="Record ID: "+record._id+"\n"+JSON.stringify(data,null,2);
+const details = document.createElement("pre");
+details.style.whiteSpace = "pre-wrap";
+details.style.overflowWrap = "anywhere";
+details.textContent =
+  "Record ID: " + record._id + "\n" +
+  JSON.stringify(data, null, 2);
+
+row.appendChild(details);
+
+if (id === "taskList" && record.status === "pending") {
+  const approve = document.createElement("button");
+  approve.type = "button";
+  approve.textContent = "Approve task";
+
+  const reject = document.createElement("button");
+  reject.type = "button";
+  reject.textContent = "Reject task";
+
+  approve.style.marginRight = "10px";
+
+  const result = document.createElement("p");
+  result.className = "small";
+  result.setAttribute("aria-live", "polite");
+
+  async function reviewTask(status) {
+    if (!activeUser) {
+      result.textContent = "Please sign in again.";
+      return;
+    }
+
+    if (!window.confirm("Are you sure you want to " + status + " this task?")) {
+      return;
+    }
+
+    approve.disabled = true;
+    reject.disabled = true;
+    result.textContent = "Submitting review…";
+
+    try {
+      const review = firebase.functions().httpsCallable(
+        "reviewTaskSubmission"
+      );
+
+      const response = await review({
+        submissionId: record._id,
+        status: status,
+        feedback: ""
+      });
+
+      result.textContent =
+        response.data.message || "Review completed.";
+
+      await refreshAll();
+    } catch (error) {
+      approve.disabled = false;
+      reject.disabled = false;
+      result.textContent =
+        "Review failed: " + (error.message || "Backend unavailable.");
+    }
+  }
+
+  approve.addEventListener("click", () => reviewTask("approved"));
+  reject.addEventListener("click", () => reviewTask("rejected"));
+
+  row.append(approve, reject, result);
+}
+
 target.appendChild(row);
+
 });
 }
 
