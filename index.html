@@ -2569,7 +2569,71 @@ const select = $("taskChoice");
   const notes = $("taskNotes").value.trim();
   const button = $("submitTaskButton");
 
-  if (!taskId || !answer) {
+  // Enforce task access and package submission limits.
+const packageName = String(profileData.package || "").toLowerCase();
+const taskLimit = {
+starter: 3,
+standard: 5,
+plus: 6
+}[packageName] || 0;
+
+if (
+!profileData ||
+profileData.packageStatus !== "active" ||
+!profileData.expiryDate
+) {
+return show(
+$("taskSubmissionMessage"),
+"Tasks are locked. Activate your package first.",
+true
+);
+}
+
+const expiryValue = profileData.expiryDate;
+const expiryDate =
+typeof expiryValue.toDate === "function"
+? expiryValue.toDate()
+: new Date(expiryValue);
+
+if (
+Number.isNaN(expiryDate.getTime()) ||
+expiryDate.getTime() <= Date.now()
+) {
+return show(
+$("taskSubmissionMessage"),
+"Your package has expired. Renew it to access tasks.",
+true
+);
+}
+
+if (taskLimit === 0) {
+return show(
+$("taskSubmissionMessage"),
+"Your package does not allow task submissions.",
+true
+);
+}
+
+const previousTasks = await db.collection("taskSubmissions")
+.where("uid", "==", currentUser.uid)
+.get();
+
+const submittedTaskIds = new Set(
+previousTasks.docs.map(doc => doc.data().taskId)
+);
+
+if (
+!submittedTaskIds.has(taskId) &&
+submittedTaskIds.size >= taskLimit
+) {
+return show(
+$("taskSubmissionMessage"),
+"You have reached your package task limit of " +
+taskLimit + " different tasks.",
+true
+);
+}
+if (!taskId || !answer) {
     return show(
       $("taskSubmissionMessage"),
       "Choose a task and enter your answer.",
