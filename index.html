@@ -3101,6 +3101,7 @@ show($("profileMessage"),"Your sign-in is valid, but no member profile was found
 listenRequests(user);
 await loadMyTaskSubmissions();
 listenWithdrawals(user);
+startMemberNotifications(user);
 await loadMyAgentStatus();
 
 isAdminUser=await checkAdmin(user);
