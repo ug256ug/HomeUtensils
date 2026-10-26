@@ -312,6 +312,7 @@ allow read: if isAdmin()
 
   allow create: if signedIn()
     && request.resource.data.uid == request.auth.uid
+&& isActiveMember(request.auth.uid)
     && request.resource.data.taskId is string
     && request.resource.data.taskId.size() <= 50
     && request.resource.data.taskTitle is string
