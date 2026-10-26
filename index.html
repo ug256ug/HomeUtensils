@@ -3168,33 +3168,54 @@ item.append(approve,reject);
 reqBox.appendChild(item);
 });
 
+
 const withdrawalBox=$("adminWithdrawals");withdrawalBox.replaceChildren();
 if(withdrawals.empty)withdrawalBox.textContent="No withdrawal requests.";
-withdrawals.forEach(doc=>{
-const d=doc.data(),item=document.createElement("div");item.className="request";
-[
-["Request ID",doc.id],
-["Member UID",d.uid||"Not set"],
-["Requested amount",money(d.amount)],
-["Fee estimate",money(d.fee)],
-["Estimated payout",money(d.payout)],
-["Method",d.method||"Not set"],
-["Account holder",d.accountName||"Not set"],
-["Payout account",d.account||"Not set"],
-["Status",d.status||"pending"],
-["Submitted",dateText(d.createdAt)],
-["Note",d.note||"None"]
-].forEach(([label,value])=>{
-const p=document.createElement("p");p.textContent=label+": "+value;item.appendChild(p);
+
+const withdrawalDocs=withdrawals.docs.slice().sort((a,b)=>{
+const order={pending:0,rejected:1,approved:2};
+const statusA=String(a.data().status||"pending").toLowerCase();
+const statusB=String(b.data().status||"pending").toLowerCase();
+return (order[statusA]??1)-(order[statusB]??1);
 });
-if(d.status==="pending"){
+
+withdrawalDocs.forEach(doc=>{
+const d=doc.data(),item=document.createElement("div");
+item.className="request";
+
+const profile=members.docs.find(m=>
+m.id===(d.uid||d.memberUid||d.userId)
+);
+const member=profile?profile.data():{};
+
+const displayName=d.accountName||member.fullName||member.name||d.name||"Name not set";
+const phone=d.phone||d.phoneNumber||member.phone||member.phoneNumber||"Not provided";
+const status=String(d.status||"pending").toLowerCase();
+
+const heading=document.createElement("p");
+heading.textContent="Status: "+status.charAt(0).toUpperCase()+status.slice(1);
+item.appendChild(heading);
+
+[
+["Name",displayName],
+["Phone",phone],
+["Amount",money(d.amount)]
+].forEach(([label,value])=>{
+const p=document.createElement("p");
+p.textContent=label+": "+value;
+item.appendChild(p);
+});
+
+if(status==="pending"){
 const approve=document.createElement("button");
 approve.textContent="Mark approved for review";
 approve.addEventListener("click",()=>reviewWithdrawal(doc.id,"approved"));
+
 const reject=document.createElement("button");
 reject.textContent="Reject request";
 reject.className="secondary";
 reject.addEventListener("click",()=>reviewWithdrawal(doc.id,"rejected"));
+
 item.append(approve,reject);
 }
 withdrawalBox.appendChild(item);
@@ -3202,11 +3223,18 @@ withdrawalBox.appendChild(item);
 
 const memberBox=$("adminMembers");memberBox.replaceChildren();
 if(members.empty)memberBox.textContent="No registered member profiles.";
+
 members.forEach(doc=>{
-const d=doc.data(),item=document.createElement("div");item.className="request";
-item.textContent="Name: "+(d.fullName||d.name||"Not set")+" · Email: "+(d.email||"Not set")+" · Status: "+(d.accountStatus||"pending")+" · Package: "+(d.package||"Not assigned");
+const d=doc.data(),item=document.createElement("div");
+item.className="request";
+item.textContent=
+"Name: "+(d.fullName||d.name||"Not set")+
+" · Email: "+(d.email||"Not set")+
+" · Package: "+(d.package||"Not assigned")+
+" · Phone: "+(d.phone||d.phoneNumber||"Not provided");
 memberBox.appendChild(item);
 });
+
 
 const agentBox=$("adminAgentApplications");agentBox.replaceChildren();
 if(applications.empty)agentBox.textContent="No agent applications yet.";
