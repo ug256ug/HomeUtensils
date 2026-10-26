@@ -3083,6 +3083,7 @@ $("adminSection").classList.add("hidden");
 if(unsubscribe){unsubscribe();unsubscribe=null;}
 
 if(!user){
+stopMemberNotifications();
 $("memberEmail").textContent="";
 return;
 }
