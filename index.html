@@ -2067,29 +2067,41 @@ function closeIconMenu(){
 }
 
 
-$("iconMenu").querySelectorAll("button[data-target]").forEach(button=>{
-  button.addEventListener("click",()=>{
-    const targetId=button.dataset.target;
-    const target=$(targetId);
-    closeIconMenu();
+$("iconMenu").querySelectorAll("button[data-target]").forEach(button => {
+button.addEventListener("click", () => {
+const targetId = button.dataset.target;
+const target = $(targetId);
+const dashboard = $("dashboard");
 
-    if(!target){
-      show($("globalMessage"),"This section is not available yet.");
-      return;
-    }
+closeIconMenu();
 
-    const dashboard=$("dashboard");
-    const cards=dashboard.querySelectorAll(".card[id]");
+if (!target || !dashboard.contains(target)) {
+  show($("globalMessage"), "This section could not be opened. Please try again.", true);
+  return;
+}
 
-    cards.forEach(card=>{
-      card.classList.toggle("hidden",card!==target);
-    });
-
-    target.classList.remove("hidden");
-   window.scrollTo({top:0,behavior:"smooth"});
-  });
+// Hide dashboard cards first.
+dashboard.querySelectorAll(".card[id]").forEach(card => {
+  card.classList.add("hidden");
 });
 
+// Reveal the selected section and any parent cards containing it.
+let current = target;
+
+while (current && current !== dashboard) {
+  if (current.classList && current.classList.contains("card")) {
+    current.classList.remove("hidden");
+  }
+  current = current.parentElement;
+}
+
+target.scrollIntoView({
+  behavior: "smooth",
+  block: "start"
+});
+
+});
+});
 
 $("menuSignOut").addEventListener("click",async()=>{
   closeIconMenu();
