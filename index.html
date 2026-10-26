@@ -519,7 +519,7 @@ footer {
 <input id="loginPassword" type="password" autocomplete="current-password" required>
 <button type="submit">Sign in</button>
 </form>
-<button id="showRegister" type="button" class="secondary">Create a new account</button>
+<button id="showRegister" type="button" class="secondary" onclick="document.getElementById('signInPanel').classList.add('hidden'); document.getElementById('registerPanel').classList.remove('hidden'); document.getElementById('globalMessage').textContent='';">Create a new account</button>
 <button id="resetPassword" type="button" class="secondary">Reset password by email</button>
 </div>
 <div id="registerPanel" class="hidden">
