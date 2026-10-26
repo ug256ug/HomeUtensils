@@ -412,9 +412,43 @@ target.appendChild(row);
 async function readCollection(name,targetId,limit=100){
 try{
 const snap=await db.collection(name).limit(limit).get();
-const records=snap.docs.map(d=>({_id:d.id,...d.data()}));
+const records = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
 
-showRecords(targetId,records);
+if (name === "taskSubmissions") {
+  const getTime = record => {
+    const date = record.createdAt;
+
+    if (date && typeof date.toMillis === "function") {
+      return date.toMillis();
+    }
+
+    if (date && typeof date.toDate === "function") {
+      return date.toDate().getTime();
+    }
+
+    return date ? (Date.parse(date) || 0) : 0;
+  };
+
+  records.sort((a, b) => {
+    const pendingA = a.status === "pending" ? 0 : 1;
+    const pendingB = b.status === "pending" ? 0 : 1;
+
+    return pendingA - pendingB || getTime(b) - getTime(a);
+  });
+
+  const pendingCount = records.filter(
+    record => record.status === "pending"
+  ).length;
+
+  const counter = $("pendingTaskCount");
+
+  if (counter) {
+    counter.textContent =
+      "Pending tasks awaiting review: " + pendingCount;
+  }
+}
+
+showRecords(targetId, records);
 return records;
 
 }catch(e){
