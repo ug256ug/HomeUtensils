@@ -2882,6 +2882,141 @@ async function reviewTaskSubmission(id, status) {
     );
   }
 }
+// HomeUtensils: Admin announcements and member notifications
+
+let announcementUnsubscribe = null;
+
+function startAnnouncementNotifications(user) {
+if (announcementUnsubscribe) {
+announcementUnsubscribe();
+announcementUnsubscribe = null;
+}
+
+announcementUnsubscribe = db.collection("announcements")
+.where("published", "==", true)
+.limit(50)
+.onSnapshot(snapshot => {
+memberNotificationItems = memberNotificationItems.filter(
+item => item.source !== "announcement"
+);
+
+  snapshot.forEach(doc => {
+    const data = doc.data();
+
+    memberNotificationItems.push({
+      id: "announcement:" + doc.id,
+      source: "announcement",
+      title: "📢 " + String(data.title || "HomeUtensils announcement"),
+      message: String(data.message || ""),
+      date: dateText(data.createdAt),
+      sortTime: notificationDateMillis(data.createdAt)
+    });
+  });
+
+  renderMemberNotifications();
+}, error => {
+  show(
+    $("notificationMessage"),
+    "Announcements could not load: " + messageFromError(error),
+    true
+  );
+});
+
+}
+
+async function loadAdminAnnouncements() {
+const box = $("adminAnnouncementHistory");
+box.replaceChildren();
+box.textContent = "Loading announcements…";
+
+try {
+const snapshot = await db.collection("announcements")
+.orderBy("createdAt", "desc")
+.limit(50)
+.get();
+
+box.replaceChildren();
+
+if (snapshot.empty) {
+  box.textContent = "No announcements have been published yet.";
+  return;
+}
+
+snapshot.forEach(doc => {
+  const data = doc.data();
+  const item = document.createElement("div");
+  item.className = "request";
+
+  const title = document.createElement("strong");
+  title.textContent = data.title || "Untitled announcement";
+
+  const message = document.createElement("p");
+  message.textContent = data.message || "";
+
+  const date = document.createElement("p");
+  date.className = "muted";
+  date.textContent = dateText(data.createdAt);
+
+  item.append(title, message, date);
+  box.appendChild(item);
+});
+
+} catch (error) {
+show(
+box,
+"Could not load announcements: " + messageFromError(error),
+true
+);
+}
+}
+
+$("adminAnnouncementForm").addEventListener("submit", async event => {
+event.preventDefault();
+
+if (!currentUser || !isAdminUser) {
+show($("adminAnnouncementMessage"), "Administrator access required.", true);
+return;
+}
+
+const title = $("announcementTitle").value.trim();
+const message = $("announcementBody").value.trim();
+const button = $("publishAnnouncementButton");
+
+if (!title || !message) {
+show($("adminAnnouncementMessage"), "Enter both a title and message.", true);
+return;
+}
+
+button.disabled = true;
+
+try {
+await db.collection("announcements").add({
+title: title,
+message: message,
+published: true,
+createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+createdBy: currentUser.uid
+});
+
+$("adminAnnouncementForm").reset();
+
+show(
+  $("adminAnnouncementMessage"),
+  "Announcement published. Members can see it in their notification bell."
+);
+
+await loadAdminAnnouncements();
+
+} catch (error) {
+show(
+$("adminAnnouncementMessage"),
+"Publishing failed: " + messageFromError(error),
+true
+);
+} finally {
+button.disabled = false;
+}
+});
 async function loadAdmin(){
 await loadAdminTaskSubmissions();
 try{
