@@ -2079,7 +2079,7 @@ $("iconMenu").querySelectorAll("button[data-target]").forEach(button=>{
     }
 
     const dashboard=$("dashboard");
-    const cards=dashboard.querySelectorAll(":scope > .card");
+    const cards=dashboard.querySelectorAll(".card[id]");
 
     cards.forEach(card=>{
       card.classList.toggle("hidden",card!==target);
