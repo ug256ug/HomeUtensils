@@ -26,6 +26,12 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/memberProfiles/$(userId)).data.package == "Plus"
         && get(/databases/$(database)/documents/memberProfiles/$(userId)).data.packageStatus == "active";
     }
+function isActiveMember(userId) {
+  return exists(/databases/$(database)/documents/memberProfiles/$(userId))
+    && get(/databases/$(database)/documents/memberProfiles/$(userId)).data.packageStatus == "active"
+    && get(/databases/$(database)/documents/memberProfiles/$(userId)).data.expiryDate is timestamp
+    && request.time < get(/databases/$(database)/documents/memberProfiles/$(userId)).data.expiryDate;
+}
 
     // Uganda agent regions and towns
 
