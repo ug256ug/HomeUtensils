@@ -1279,6 +1279,42 @@ The server must verify the schedule, public holidays, available balance and pend
 <h2>Administrator dashboard</h2>
 <p>Review member profiles, activation requests, withdrawal requests and agent applications.</p>
 <div id="adminSummary" class="notice">Loading…</div>
+<div class="card" id="adminAnnouncementsCard">
+  <h2>📢 Admin Announcements</h2>
+  <p class="muted">
+    Publish important updates for signed-in members.
+  </p>  <form id="adminAnnouncementForm">
+    <label for="announcementTitle">Announcement title</label>
+    <input
+      id="announcementTitle"
+      type="text"
+      maxlength="100"
+      required
+      placeholder="Enter announcement title"
+    ><label for="announcementBody">Announcement message</label>
+<textarea
+  id="announcementBody"
+  rows="4"
+  maxlength="2000"
+  required
+  placeholder="Write your announcement"
+></textarea>
+
+<button id="publishAnnouncementButton" type="submit">
+  Publish announcement
+</button>
+
+<div
+  id="adminAnnouncementMessage"
+  class="notice"
+  aria-live="polite"
+></div>
+
+  </form>  <h3>Published announcements</h3>
+  <div id="adminAnnouncementHistory">
+    Loading announcements…
+  </div>
+</div>
 </div>
 
 <div class="card">
