@@ -299,81 +299,102 @@ records.forEach(record => {
 const row = document.createElement("div");
 row.className = "record";
 
-const data = { ...record };
-delete data._id;
+if (id === "taskList") {
+  const heading = document.createElement("h3");
+  heading.textContent = record.taskTitle || record.taskId || "Submitted task";
 
-const details = document.createElement("pre");
-details.style.whiteSpace = "pre-wrap";
-details.style.overflowWrap = "anywhere";
-details.textContent =
-  "Record ID: " + record._id + "\n" +
-  JSON.stringify(data, null, 2);
+  const questionLabel = document.createElement("p");
+  questionLabel.textContent = "Question";
 
-row.appendChild(details);
+  const question = document.createElement("p");
+  question.textContent = record.taskTitle || "Question not recorded.";
 
-if (id === "taskList" && record.status === "pending") {
-  const approve = document.createElement("button");
-  approve.type = "button";
-  approve.textContent = "Approve task";
+  const answerLabel = document.createElement("p");
+  answerLabel.textContent = "Member's answer";
 
-  const reject = document.createElement("button");
-  reject.type = "button";
-  reject.textContent = "Reject task";
+  const answer = document.createElement("p");
+  answer.textContent = record.answer || "No answer provided.";
 
-  approve.style.marginRight = "10px";
+  row.append(heading, questionLabel, question, answerLabel, answer);
 
-  const result = document.createElement("p");
-  result.className = "small";
-  result.setAttribute("aria-live", "polite");
+  if (record.status === "pending") {
+    const approve = document.createElement("button");
+    approve.type = "button";
+    approve.textContent = "Approve";
 
-  async function reviewTask(status) {
-    if (!activeUser) {
-      result.textContent = "Please sign in again.";
-      return;
+    const reject = document.createElement("button");
+    reject.type = "button";
+    reject.textContent = "Reject";
+
+    const result = document.createElement("p");
+    result.className = "small";
+    result.setAttribute("aria-live", "polite");
+
+    async function reviewTask(status) {
+      if (!activeUser) {
+        result.textContent = "Please sign in again.";
+        return;
+      }
+
+      if (!confirm("Confirm you want to " + status + " this submission?")) {
+        return;
+      }
+
+      approve.disabled = true;
+      reject.disabled = true;
+      result.textContent = "Sending review…";
+
+      try {
+        const review = firebase.functions().httpsCallable(
+          "reviewTaskSubmission"
+        );
+
+        const response = await review({
+          submissionId: record._id,
+          status: status,
+          feedback: ""
+        });
+
+        result.textContent =
+          response.data.message || "Review completed.";
+
+        await refreshAll();
+      } catch (error) {
+        approve.disabled = false;
+        reject.disabled = false;
+        result.textContent =
+          "Review failed (" + (error.code || "unknown") + "). " +
+          (error.message || "Check backend deployment and logs.");
+      }
     }
 
-    if (!window.confirm("Are you sure you want to " + status + " this task?")) {
-      return;
-    }
+    approve.addEventListener("click", () => reviewTask("approved"));
+    reject.addEventListener("click", () => reviewTask("rejected"));
 
-    approve.disabled = true;
-    reject.disabled = true;
-    result.textContent = "Submitting review…";
-
-    try {
-      const review = firebase.functions().httpsCallable(
-        "reviewTaskSubmission"
-      );
-
-      const response = await review({
-        submissionId: record._id,
-        status: status,
-        feedback: ""
-      });
-
-      result.textContent =
-        response.data.message || "Review completed.";
-
-      await refreshAll();
-    } catch (error) {
-      approve.disabled = false;
-      reject.disabled = false;
-      result.textContent =
-        "Review failed: " + (error.message || "Backend unavailable.");
-    }
+    row.append(approve, reject, result);
+  } else {
+    const status = document.createElement("p");
+    status.textContent = "Status: " + (record.status || "unknown");
+    row.appendChild(status);
   }
+} else {
+  const data = { ...record };
+  delete data._id;
 
-  approve.addEventListener("click", () => reviewTask("approved"));
-  reject.addEventListener("click", () => reviewTask("rejected"));
+  const details = document.createElement("pre");
+  details.style.whiteSpace = "pre-wrap";
+  details.style.overflowWrap = "anywhere";
+  details.textContent =
+    "Record ID: " + record._id + "\n" +
+    JSON.stringify(data, null, 2);
 
-  row.append(approve, reject, result);
+  row.appendChild(details);
 }
 
 target.appendChild(row);
 
 });
 }
-
 async function readCollection(name,targetId,limit=100){
 try{
 const snap=await db.collection(name).limit(limit).get();
