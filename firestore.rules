@@ -258,7 +258,36 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Financial and activity ledgers
+        // Announcements
+    match /announcements/{announcementId} {
+
+      // Administrators can read all announcements.
+      // Signed-in members can read published announcements only.
+      allow read: if isAdmin()
+        || (
+          signedIn()
+          && resource.data.published == true
+        );
+
+      // Only enabled administrators can publish announcements.
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly([
+          "title", "message", "published",
+          "createdAt", "createdBy"
+        ])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 100
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 2000
+        && request.resource.data.published == true
+        && request.resource.data.createdBy == request.auth.uid;
+
+      // Announcements cannot be edited or deleted from the website.
+      allow update, delete: if false;
+    }
+// Financial and activity ledgers
     // Members cannot directly write these records.
 
     match /walletTransactions/{transactionId} {
