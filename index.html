@@ -1778,6 +1778,28 @@ $("signOut").addEventListener("click",async()=>{
 try{await auth.signOut();}catch(err){show($("globalMessage"),messageFromError(err),true);}
 });
 
+// HomeUtensils notification bell: open and close the panel.
+$("notificationBell").addEventListener("click", () => {
+  const panel = $("notificationPanel");
+  const isOpening = panel.classList.contains("hidden");
+
+  panel.classList.toggle("hidden", !isOpening);
+
+  $("notificationBell").setAttribute(
+    "aria-expanded",
+    String(isOpening)
+  );
+});
+
+// Allow members to close the notification panel.
+$("notificationList").addEventListener("click", (event) => {
+  const closeButton = event.target.closest("[data-close-notifications]");
+
+  if (closeButton) {
+    $("notificationPanel").classList.add("hidden");
+    $("notificationBell").setAttribute("aria-expanded", "false");
+  }
+});
 $("menuToggle").addEventListener("click",()=>{
   const menu=$("iconMenu");
   const shade=$("menuShade");
