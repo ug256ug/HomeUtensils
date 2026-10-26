@@ -427,6 +427,65 @@ async function loadAnnouncementHistory() {
   }
 }
 
+async function refreshAll() {
+  if (!activeUser) {
+    message("Please sign in as an administrator.", true);
+    return;
+  }
+
+  message("Refreshing administrator records…");
+
+  const jobs = [
+    ["memberProfiles", "membersList"],
+    ["activationRequests", "activationList"],
+    ["agentApplications", "agentList"],
+    ["withdrawalRequests", "withdrawalList"],
+    ["walletTransactions", "walletList"],
+    ["p2pTransfers", "p2pList"],
+    ["taskSubmissions", "taskList"],
+    ["adminAuditLogs", "auditList"]
+  ];
+
+  const results = await Promise.all(
+    jobs.map(async ([collection, target]) => {
+      const records = await readCollection(collection, target, 100);
+      return { collection, records };
+    })
+  );
+
+  const members = results.find(
+    item => item.collection === "memberProfiles"
+  );
+
+  memberRecords = members && members.records
+    ? members.records
+    : [];
+
+  renderMembers();
+
+  const count = name => {
+    const item = results.find(
+      result => result.collection === name
+    );
+    return item && item.records
+      ? item.records.length
+      : "Error";
+  };
+
+  $("membersCount").textContent = count("memberProfiles");
+  $("activationCount").textContent = count("activationRequests");
+  $("agentsCount").textContent = count("agentApplications");
+  $("withdrawalsCount").textContent = count("withdrawalRequests");
+
+  const failures = results.filter(item => item.records === null);
+
+  message(
+    failures.length
+      ? "Refresh finished, but " + failures.length +
+        " collection(s) could not be loaded. Check the error shown in each section."
+      : "Records refreshed. Task submissions are shown in the Task submissions section."
+  );
+}
 </script>
 </body>
 </html>
