@@ -2144,6 +2144,33 @@ return (name.length > 1 ? name[0] + "••••" : "•") + "@" + domain;
 }
 function renderProfile(data) {
   profileData = data || {};
+// Limit visible task choices by the member's package.
+  const taskSelect = $("taskChoice");
+
+  if (taskSelect) {
+    const packageName = String(profileData.package || "").toLowerCase();
+
+    const taskLimit = {
+      starter: 3,
+      standard: 5,
+      plus: 6
+    }[packageName] || 0;
+
+    Array.from(taskSelect.options).forEach((option, index) => {
+      if (index === 0) {
+        option.hidden = false;
+        option.disabled = false;
+        return;
+      }
+
+      const taskNumber = index;
+
+      option.hidden = taskNumber > taskLimit;
+      option.disabled = taskNumber > taskLimit;
+    });
+
+    taskSelect.value = "";
+  }
 
   const accountStatus = profileData.accountStatus || "Not set";
   const details = $("packageDetails");
