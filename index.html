@@ -1429,30 +1429,127 @@ show($("globalMessage"),"");
 }catch(err){show($("globalMessage"),messageFromError(err),true);}
 });
 
+// Show or hide the registration password.
+$("toggleRegisterPassword").addEventListener("click", () => {
+  const input = $("registerPassword");
+  const showPassword = input.type === "password";
+
+  input.type = showPassword ? "text" : "password";
+  $("toggleRegisterPassword").textContent =
+    showPassword ? "Hide password" : "Show password";
+});
+
+// Show or hide the confirmation password.
+$("toggleConfirmPassword").addEventListener("click", () => {
+  const input = $("confirmPassword");
+  const showPassword = input.type === "password";
+
+  input.type = showPassword ? "text" : "password";
+  $("toggleConfirmPassword").textContent =
+    showPassword
+      ? "Hide confirmation password"
+      : "Show confirmation password";
+});
+
+// Check whether both passwords match.
+function checkRegistrationPasswordMatch() {
+  const password = $("registerPassword").value;
+  const confirmation = $("confirmPassword").value;
+  const message = $("passwordMatchMessage");
+
+  if (!confirmation) {
+    message.textContent = "";
+    return;
+  }
+
+  if (password === confirmation) {
+    message.textContent = "Passwords match.";
+    message.style.color = "green";
+  } else {
+    message.textContent = "Passwords do not match.";
+    message.style.color = "red";
+  }
+}
+
+$("registerPassword").addEventListener(
+  "input",
+  checkRegistrationPasswordMatch
+);
+
+$("confirmPassword").addEventListener(
+  "input",
+  checkRegistrationPasswordMatch
+);
+
+// Register a new HomeUtensils member.
 $("registerForm").addEventListener("submit", async e => {
   e.preventDefault();
 
   const name = $("fullName").value.trim();
   const email = $("registerEmail").value.trim();
   const password = $("registerPassword").value;
-  const btn = $("registerForm").querySelector('button[type="submit"]');
+  const confirmation = $("confirmPassword").value;
+
+  const btn = $("registerForm").querySelector(
+    'button[type="submit"]'
+  );
 
   if (!name) {
     show($("globalMessage"), "Enter your full name.", true);
     return;
   }
 
+  if (password.length < 6) {
+    show(
+      $("globalMessage"),
+      "Your password must contain at least 6 characters.",
+      true
+    );
+    return;
+  }
+
+  if (password !== confirmation) {
+    show(
+      $("globalMessage"),
+      "Your passwords do not match. Please check them.",
+      true
+    );
+    $("confirmPassword").focus();
+    return;
+  }
+
+  // Read a manually entered referral code when the field exists.
+  // Otherwise, use the referral code supplied in the invitation link.
+  const referralInput = document.getElementById(
+    "registrationReferralCode"
+  );
+
+  const urlReferralCode =
+    new URLSearchParams(window.location.search).get("ref") || "";
+
+  const referralCode = (
+    (referralInput && referralInput.value.trim()) ||
+    urlReferralCode
+  ).trim().toUpperCase();
+
   btn.disabled = true;
 
   try {
-    const result = await auth.createUserWithEmailAndPassword(email, password);
+    const result = await auth.createUserWithEmailAndPassword(
+      email,
+      password
+    );
 
     const memberId = "HU" + Array.from(
       crypto.getRandomValues(new Uint8Array(5)),
-      value => "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"[value % 36]
+      value => "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"[
+        value % 36
+      ]
     ).join("");
 
-    await db.collection("memberProfiles").doc(result.user.uid).set({
+    await db.collection("memberProfiles").doc(
+      result.user.uid
+    ).set({
       uid: result.user.uid,
       memberId: memberId,
       name: name,
@@ -1460,10 +1557,6 @@ $("registerForm").addEventListener("submit", async e => {
       accountStatus: "pending",
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-
-    const referralCode = (
-      new URLSearchParams(window.location.search).get("ref") || ""
-    ).trim().toUpperCase();
 
     if (referralCode) {
       try {
@@ -1481,11 +1574,14 @@ $("registerForm").addEventListener("submit", async e => {
           "Account created. Your referral was recorded, and your account is pending review."
         );
       } catch (referralError) {
-        console.error("Referral recording failed:", referralError);
+        console.error(
+          "Referral recording failed:",
+          referralError
+        );
 
         show(
           $("globalMessage"),
-          "Account created, but the referral could not yet be recorded. Your account is pending review. Please contact the administrator to check the referral.",
+          "Account created, but the referral could not be recorded. Your account is pending review. Please contact the administrator to check the referral.",
           true
         );
       }
@@ -1498,8 +1594,9 @@ $("registerForm").addEventListener("submit", async e => {
   } catch (err) {
     show(
       $("globalMessage"),
-      "Registration failed: " + messageFromError(err) +
-      ". If your login was created, sign in instead of registering again.",
+      "Registration failed: " +
+        messageFromError(err) +
+        ". If your login was created, sign in instead of registering again.",
       true
     );
   } finally {
