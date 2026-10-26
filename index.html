@@ -1423,6 +1423,31 @@ return "The current Uganda-time schedule could not be checked. Please try again 
 }
 }
 
+// Automatically open registration when a friend uses a referral link.
+const incomingReferralCode = (
+new URLSearchParams(window.location.search).get("ref") || ""
+).trim().toUpperCase();
+
+if (incomingReferralCode) {
+$("signInPanel").classList.add("hidden");
+$("registerPanel").classList.remove("hidden");
+
+const referralInput = $("registrationReferralCode");
+const inviterNotice = $("inviterNotice");
+const inviterMemberId = $("inviterMemberId");
+
+if (referralInput) {
+referralInput.value = incomingReferralCode;
+}
+
+if (inviterMemberId) {
+inviterMemberId.textContent = incomingReferralCode;
+}
+
+if (inviterNotice) {
+inviterNotice.classList.remove("hidden");
+}
+}
 $("showRegister").addEventListener("click",()=>{
 $("signInPanel").classList.add("hidden");
 $("registerPanel").classList.remove("hidden");
