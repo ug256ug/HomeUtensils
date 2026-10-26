@@ -832,4 +832,50 @@ exports.applyReferralCode = onCall(async (request) => {
     message: "Referral recorded successfully."
   };
 });
+exports.getMyTeam = onCall(async (request) => {
+const uid = requireSignedIn(request);
 
+const snapshot = await db
+.collection("memberProfiles")
+.where("referredByUid", "==", uid)
+.get();
+
+const now = Date.now();
+
+const members = snapshot.docs.map((doc) => {
+const member = doc.data();
+
+const expiryDate = member.expiryDate &&
+  typeof member.expiryDate.toDate === "function"
+    ? member.expiryDate.toDate()
+    : null;
+
+const active =
+  member.packageStatus === "active" &&
+  expiryDate !== null &&
+  expiryDate.getTime() > now;
+
+return {
+  memberId: String(member.memberId || ""),
+  name: String(member.name || member.fullName || "Member"),
+  package: String(member.package || ""),
+  status: active ? "active" : "inactive",
+  joinedAt: member.createdAt &&
+    typeof member.createdAt.toDate === "function"
+      ? member.createdAt.toDate().toISOString()
+      : null
+};
+
+});
+
+const activeCount = members.filter(
+(member) => member.status === "active"
+).length;
+
+return {
+total: members.length,
+active: activeCount,
+inactive: members.length - activeCount,
+members
+};
+});
