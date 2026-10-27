@@ -185,53 +185,71 @@ match /agentApplications/{applicationId} {
 
     // Agent working float
 
-    match /agentFloats/{agentId} {
-      allow read: if isAdmin();
+match /agentFloats/{agentId} {
+  allow read: if isAdmin();
 
-      allow create: if isAdmin()
-        && request.resource.data.uid == agentId
-        && request.resource.data.currency == "UGX"
-        && request.resource.data.capitalAmount == 50000
-        && request.resource.data.bonusAmount == 7500
-        && request.resource.data.openingBalance == 57500
-        && request.resource.data.restrictedBalance == 57500
-        && request.resource.data.withdrawableBalance == 0
-        && request.resource.data.status == "active"
-        && request.resource.data.restricted == true
-        && request.resource.data.permittedUse == "member_package_activation"
-        && request.resource.data.keys().hasOnly([
-          "uid", "currency", "capitalAmount", "bonusAmount",
-          "openingBalance", "restrictedBalance",
-          "withdrawableBalance", "status", "restricted",
-          "permittedUse", "issuedAt", "issuedBy",
-          "sourceApplicationId"
-        ]);
+  allow create: if isAdmin()
+    && request.resource.data.uid == agentId
+    && request.resource.data.currency == "UGX"
+    && request.resource.data.capitalAmount is int
+    && request.resource.data.capitalAmount >= 50000
+    && request.resource.data.bonusRate == 15
+    && request.resource.data.bonusAmount is int
+    && request.resource.data.bonusAmount
+      >= request.resource.data.capitalAmount * 15 / 100 - 0.5
+    && request.resource.data.bonusAmount
+      <= request.resource.data.capitalAmount * 15 / 100 + 0.5
+    && request.resource.data.openingBalance
+      == request.resource.data.capitalAmount
+        + request.resource.data.bonusAmount
+    && request.resource.data.restrictedBalance
+      == request.resource.data.openingBalance
+    && request.resource.data.withdrawableBalance == 0
+    && request.resource.data.status == "active"
+    && request.resource.data.restricted == true
+    && request.resource.data.permittedUse == "member_package_activation"
+    && request.resource.data.keys().hasOnly([
+      "uid", "currency", "capitalAmount", "bonusRate",
+      "bonusAmount", "openingBalance", "restrictedBalance",
+      "withdrawableBalance", "status", "restricted",
+      "permittedUse", "issuedAt", "issuedBy",
+      "sourceApplicationId"
+    ]);
 
-      allow update, delete: if false;
-    }
+  allow update, delete: if false;
+}
 
-    // Agent float audit transactions
+// Agent float audit transactions
 
-    match /agentFloatTransactions/{transactionId} {
-      allow read: if isAdmin();
+match /agentFloatTransactions/{transactionId} {
+  allow read: if isAdmin();
 
-      allow create: if isAdmin()
-        && request.resource.data.type == "initial_float_issuance"
-        && request.resource.data.amount == 57500
-        && request.resource.data.capitalAmount == 50000
-        && request.resource.data.bonusAmount == 7500
-        && request.resource.data.currency == "UGX"
-        && request.resource.data.balanceAfter == 57500
-        && request.resource.data.withdrawable == false
-        && request.resource.data.keys().hasOnly([
-          "uid", "type", "amount", "capitalAmount",
-          "bonusAmount", "currency", "balanceAfter",
-          "withdrawable", "sourceApplicationId",
-          "createdAt", "createdBy"
-        ]);
+  allow create: if isAdmin()
+    && request.resource.data.type == "initial_float_issuance"
+    && request.resource.data.currency == "UGX"
+    && request.resource.data.capitalAmount is int
+    && request.resource.data.capitalAmount >= 50000
+    && request.resource.data.bonusRate == 15
+    && request.resource.data.bonusAmount is int
+    && request.resource.data.bonusAmount
+      >= request.resource.data.capitalAmount * 15 / 100 - 0.5
+    && request.resource.data.bonusAmount
+      <= request.resource.data.capitalAmount * 15 / 100 + 0.5
+    && request.resource.data.amount
+      == request.resource.data.capitalAmount
+        + request.resource.data.bonusAmount
+    && request.resource.data.balanceAfter
+      == request.resource.data.amount
+    && request.resource.data.withdrawable == false
+    && request.resource.data.keys().hasOnly([
+      "uid", "type", "amount", "capitalAmount",
+      "bonusRate", "bonusAmount", "currency",
+      "balanceAfter", "withdrawable",
+      "sourceApplicationId", "createdAt", "createdBy"
+    ]);
 
-      allow update, delete: if false;
-    }
+  allow update, delete: if false;
+}
 
     // Withdrawal requests
 
