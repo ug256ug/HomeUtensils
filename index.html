@@ -3626,16 +3626,20 @@ withdrawalDocs.forEach(doc=>{
   title.textContent=name;
   item.appendChild(title);
 
+  
   const details=[
     ["Status",status.charAt(0).toUpperCase()+status.slice(1)],
     ["Member ID",(d.uid||d.memberUid||d.userId||"Not available")],
     ["Payment method",method],
+    ["Mobile money network",method==="Mobile Money"?(d.accountNetwork||"Not provided"):"Not applicable"],
     ["Account name",accountName],
     ["Payment number / account",account],
     ["Requested amount",money(d.amount)],
-    ["Fee",money(d.fee)],
-    ["Expected payout",money(d.payout)]
+    ["Fee (10%)",money(d.fee)],
+    ["Expected payout",money(d.payout)],
+    ["Total deduction if processed",money(d.totalDeducted!==undefined?d.totalDeducted:d.amount)]
   ];
+  
 
   details.forEach(([label,value])=>{
     const p=document.createElement("p");
