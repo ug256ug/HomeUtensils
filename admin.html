@@ -754,10 +754,17 @@ function renderWithdrawalRecords(records) {
 const target = $(id);
 target.replaceChildren();
 
+
 if (id === "activationList") {
   renderActivationRequests(records);
   return;
 }
+
+if (id === "withdrawalList") {
+  renderWithdrawalRecords(records);
+  return;
+  }
+  
 
 if (!records || !records.length) {
 const empty = document.createElement("p");
