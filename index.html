@@ -2822,20 +2822,50 @@ btn.disabled = false;
 
 async function loadMyAgentStatus(){
 if(!currentUser)return;
+
 try{
 const snap=await db.collection("agentApplications")
-.where("uid","==",currentUser.uid).limit(1).get();
-const box=$("myAgentStatus");box.replaceChildren();
-if(snap.empty){box.textContent="No agent application found.";return;}
-const d=snap.docs[0].data(),p=document.createElement("p");p.className="notice";
-if(d.status==="approved"){
-p.textContent="Agent application status: approved. The UGX 57,500 restricted float has not been independently verified as issued. Please contact the administrator to confirm its status.";
-}else{
-p.textContent="Agent application status: "+(d.status||"pending")+".";
+.where("uid","==",currentUser.uid)
+.limit(1)
+.get();
+
+const box=$("myAgentStatus");
+box.replaceChildren();
+
+if(snap.empty){
+  box.textContent="No agent application found.";
+  return;
 }
+
+const d=snap.docs[0].data();
+const p=document.createElement("p");
+p.className="notice";
+
+if(d.status==="approved"){
+  const capital=Number(d.capitalDeclared||0);
+  const bonus=Number(d.bonusAmount||0);
+  const total=Number(d.totalRestrictedFloat||0);
+
+  p.textContent=
+    "Agent application: APPROVED. "+
+    "Declared capital: UGX "+capital.toLocaleString("en-UG")+". "+
+    "Recorded 15% bonus: UGX "+bonus.toLocaleString("en-UG")+". "+
+    "Total restricted float: UGX "+total.toLocaleString("en-UG")+". "+
+    "This float is non-withdrawable and restricted to member package activation. "+
+    "Confirm actual payment receipt and float issuance with the administrator.";
+}else{
+  p.textContent=
+    "Agent application status: "+(d.status||"pending")+".";
+}
+
 box.appendChild(p);
+
 }catch(err){
-show($("myAgentStatus"),"Could not load application status: "+messageFromError(err),true);
+show(
+$("myAgentStatus"),
+"Could not load application status: "+messageFromError(err),
+true
+);
 }
 }
 
