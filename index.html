@@ -2571,69 +2571,117 @@ box.appendChild(item);
 },err=>show($("withdrawalHistory"),"Could not load withdrawal history: "+messageFromError(err),true));
 }
 
-$("withdrawalForm").addEventListener("submit",async e=>{
-e.preventDefault();
-if(!currentUser)return show($("withdrawalMessage"),"Please sign in first.",true);
 
-const amount=Number($("withdrawalAmount").value);
-const method=$("withdrawalMethod").value;
-const accountName=$("withdrawalAccountName").value.trim();
-const account=$("withdrawalAccount").value.trim();
-const note=$("withdrawalNote").value.trim();
+$("withdrawalForm").addEventListener("submit", async e => {
+  e.preventDefault();
 
-if(!Number.isInteger(amount)||amount<2000){
-return show($("withdrawalMessage"),"The minimum withdrawal request is UGX 2,000. Enter a whole number.",true);
-}
-if(!method||!accountName||!account){
-return show($("withdrawalMessage"),"Complete the payout method, account holder name and payout account fields.",true);
-}
+  if (!currentUser) {
+    return show($("withdrawalMessage"), "Please sign in first.", true);
+  }
 
-const scheduleError=withdrawalScheduleMessage();
-if(scheduleError){
-return show($("withdrawalMessage"),scheduleError,true);
-}
+  const amount = Number($("withdrawalAmount").value);
+  const method = $("withdrawalMethod").value;
+  const accountNetwork = $("withdrawalNetwork").value;
+  const accountName = $("withdrawalAccountName").value.trim();
+  const account = $("withdrawalAccount").value.trim();
+  const note = $("withdrawalNote").value.trim();
 
-const fee=Math.ceil(amount*0.10);
-const payout=amount-fee;
-const totalDeducted=amount;
+  if (!Number.isInteger(amount) || amount < 2000) {
+    return show(
+      $("withdrawalMessage"),
+      "Minimum withdrawal is UGX 2,000. Enter a whole number.",
+      true
+    );
+  }
 
-const btn=$("withdrawalSubmit");
-btn.disabled=true;
+  if (!method || !accountName || !account) {
+    return show(
+      $("withdrawalMessage"),
+      "Complete the payout method, account holder name and account details.",
+      true
+    );
+  }
 
-try{
-const existing=await db.collection("withdrawalRequests")
-.where("uid","==",currentUser.uid)
-.where("status","==","pending")
-.limit(1).get();
+  if (
+    method === "Mobile Money" &&
+    !["MTN", "Airtel", "Other"].includes(accountNetwork)
+  ) {
+    return show(
+      $("withdrawalMessage"),
+      "Select your mobile money network.",
+      true
+    );
+  }
 
-if(!existing.empty){
-show($("withdrawalMessage"),"You already have a pending withdrawal request. Wait for it to be reviewed before submitting another.",true);
-return;
-}
+  const scheduleError = withdrawalScheduleMessage();
 
-await db.collection("withdrawalRequests").add({
-uid:currentUser.uid,
-amount:amount,
-fee:fee,
-payout:payout,
-currency:"UGX",
+  if (scheduleError) {
+    return show($("withdrawalMessage"), scheduleError, true);
+  }
 
-method:method,
-accountName:accountName,
-account:account,
-note:note,
-status:"pending",
-createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  const fee = Math.ceil(amount * 0.10);
+  const payout = amount - fee;
+  const totalDeducted = amount;
+
+  const btn = $("withdrawalSubmit");
+  btn.disabled = true;
+
+  try {
+    const existing = await db.collection("withdrawalRequests")
+      .where("uid", "==", currentUser.uid)
+      .where("status", "==", "pending")
+      .limit(1)
+      .get();
+
+    if (!existing.empty) {
+      show(
+        $("withdrawalMessage"),
+        "You already have a pending withdrawal request. Wait for its review.",
+        true
+      );
+      return;
+    }
+
+    await db.collection("withdrawalRequests").add({
+      uid: currentUser.uid,
+      amount: amount,
+      fee: fee,
+      payout: payout,
+      totalDeducted: totalDeducted,
+      currency: "UGX",
+      method: method,
+      accountNetwork: method === "Mobile Money" ? accountNetwork : "",
+      accountName: accountName,
+      account: account,
+      note: note,
+      status: "pending",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    $("withdrawalForm").reset();
+    updateWithdrawalQuote();
+
+    show(
+      $("withdrawalMessage"),
+      "Withdrawal request submitted for administrator review. " +
+      "Requested: " + money(amount) +
+      ". Fee: " + money(fee) +
+      ". Expected payout: " + money(payout) +
+      ". Total deduction if approved: " + money(totalDeducted) +
+      ". No wallet balance has been changed and no payment has been made."
+    );
+
+  } catch (err) {
+    show(
+      $("withdrawalMessage"),
+      "Could not submit withdrawal request: " + messageFromError(err),
+      true
+    );
+  } finally {
+    btn.disabled = false;
+  }
 });
-
-$("withdrawalForm").reset();
-updateWithdrawalQuote();show($("withdrawalMessage"),"Withdrawal request submitted for administrator review. Amount requested: "+money(amount)+". Fee (10%): "+money(fee)+". Amount to receive: "+money(payout)+". Total deduction if approved and processed: "+money(totalDeducted)+". No wallet balance has been changed and no payment has been made.");
-}catch(err){
-show($("withdrawalMessage"),"Could not submit withdrawal request: "+messageFromError(err),true);
-}finally{
-btn.disabled=false;
-}
-});
+  
 async function loadMyTaskSubmissions() {
 const box = $("myTaskSubmissions");
 box.replaceChildren();
