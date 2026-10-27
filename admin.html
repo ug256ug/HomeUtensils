@@ -512,6 +512,11 @@ function renderActivationRequests(records) {
 const target = $(id);
 target.replaceChildren();
 
+if (id === "activationList") {
+  renderActivationRequests(records);
+  return;
+}
+
 if (!records || !records.length) {
 const empty = document.createElement("p");
 empty.className = "small";
