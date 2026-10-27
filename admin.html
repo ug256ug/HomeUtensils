@@ -283,7 +283,232 @@ message("Could not verify administrator access. Check Firebase rules and the adm
 }
 });
 
-function showRecords(id, records) {
+
+
+
+
+function renderActivationRequests(records) {
+  const target = $("activationList");
+  target.replaceChildren();
+
+  if (!records || records.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "small";
+    empty.textContent = "No activation requests found.";
+    target.appendChild(empty);
+    return;
+  }
+
+  const prices = {
+    Starter: 5000,
+    Standard: 10000,
+    Plus: 20000
+  };
+
+  const durations = {
+    Starter: 60,
+    Standard: 60,
+    Plus: 90
+  };
+
+  function getTime(value) {
+    if (!value) return 0;
+    if (typeof value.toMillis === "function") {
+      return value.toMillis();
+    }
+    if (typeof value.seconds === "number") {
+      return value.seconds * 1000;
+    }
+    return Date.parse(value) || 0;
+  }
+
+  records.sort((a, b) => {
+    const pendingA = a.status === "pending" ? 0 : 1;
+    const pendingB = b.status === "pending" ? 0 : 1;
+
+    return pendingA - pendingB ||
+      getTime(b.createdAt) - getTime(a.createdAt);
+  });
+
+  records.forEach(record => {
+    const card = document.createElement("div");
+    card.className = "record";
+    card.style.cssText =
+      "padding:14px;margin:10px 0;border:1px solid #ddd;border-radius:10px";
+
+    const heading = document.createElement("h3");
+    heading.textContent =
+      (record.packageRequested || "Unknown package") +
+      " activation";
+
+    const details = document.createElement("p");
+    details.style.whiteSpace = "pre-line";
+
+    details.textContent =
+      "Status: " + (record.status || "unknown") + "\n" +
+      "Member UID: " + (record.uid || "Not recorded") + "\n" +
+      "Expected price: UGX " +
+        (prices[record.packageRequested] || "Unknown") + "\n" +
+      "Payment method: " +
+        (record.proposedPaymentMethod || "Not recorded") + "\n" +
+      "Area: " + (record.area || "Not recorded") + "\n" +
+      "Request date: " +
+        (getTime(record.createdAt)
+          ? new Date(getTime(record.createdAt)).toLocaleString()
+          : "Not recorded");
+
+    card.append(heading, details);
+
+    if (record.status === "pending") {
+      const approve = document.createElement("button");
+      approve.type = "button";
+      approve.textContent = "Approve activation";
+
+      const reject = document.createElement("button");
+      reject.type = "button";
+      reject.textContent = "Reject request";
+      reject.style.marginLeft = "8px";
+
+      const result = document.createElement("p");
+      result.className = "small";
+      result.setAttribute("aria-live", "polite");
+
+      async function review(status) {
+        if (!activeUser) {
+          result.textContent = "Please sign in again.";
+          return;
+        }
+
+        if (status === "approved") {
+          const confirmed = confirm(
+            "Approve only after independently confirming that " +
+            "the full payment was received.\n\n" +
+            "Package: " + record.packageRequested + "\n" +
+            "Expected amount: UGX " +
+            (prices[record.packageRequested] || "Unknown") +
+            "\n\nNo money will be transferred by this action."
+          );
+
+          if (!confirmed) return;
+        } else {
+          if (!confirm("Reject this activation request?")) return;
+        }
+
+        approve.disabled = true;
+        reject.disabled = true;
+        result.textContent = "Saving review…";
+
+        try {
+          const adminDoc = await db.collection("admins")
+            .doc(activeUser.uid).get();
+
+          if (
+            !adminDoc.exists ||
+            adminDoc.data().role !== "admin" ||
+            adminDoc.data().enabled !== true
+          ) {
+            throw new Error(
+              "Enabled administrator permission was not verified."
+            );
+          }
+
+          const requestRef = db.collection("activationRequests")
+            .doc(record._id);
+
+          const latestRequest = await requestRef.get();
+
+          if (
+            !latestRequest.exists ||
+            latestRequest.data().status !== "pending"
+          ) {
+            throw new Error(
+              "This request has already been reviewed. Refresh the page."
+            );
+          }
+
+          const batch = db.batch();
+
+          if (status === "approved") {
+            if (!record.uid) {
+              throw new Error("Member UID is missing.");
+            }
+
+            const days = durations[record.packageRequested];
+
+            if (!days) {
+              throw new Error("Unknown package.");
+            }
+
+            const profileRef = db.collection("memberProfiles")
+              .doc(record.uid);
+
+            const profile = await profileRef.get();
+
+            if (!profile.exists) {
+              throw new Error(
+                "Member profile not found. No activation was approved."
+              );
+            }
+
+            const expiry = new Date();
+            expiry.setDate(expiry.getDate() + days);
+
+            batch.update(profileRef, {
+              package: record.packageRequested,
+              packageStatus: "active",
+              accountStatus: "active",
+              activationDate:
+                firebase.firestore.FieldValue.serverTimestamp(),
+              expiryDate:
+                firebase.firestore.Timestamp.fromDate(expiry),
+              paymentVerifiedByAdmin: true,
+              paymentVerifiedAt:
+                firebase.firestore.FieldValue.serverTimestamp(),
+              paymentVerifiedBy: activeUser.uid,
+              activatedFromRequestId: record._id
+            });
+          }
+
+          batch.update(requestRef, {
+            status: status,
+            reviewedAt:
+              firebase.firestore.FieldValue.serverTimestamp(),
+            reviewedBy: activeUser.uid
+          });
+
+          await batch.commit();
+
+          result.textContent = status === "approved"
+            ? "Activation approved. No money was transferred."
+            : "Activation request rejected.";
+
+          await refreshAll();
+
+        } catch (error) {
+          approve.disabled = false;
+          reject.disabled = false;
+
+          result.textContent =
+            "Review failed: " +
+            (error.message || "Check Firebase permissions.");
+        }
+      }
+
+      approve.addEventListener("click", () => review("approved"));
+      reject.addEventListener("click", () => review("rejected"));
+
+      card.append(approve, reject, result);
+
+    } else {
+      const statusNote = document.createElement("p");
+      statusNote.textContent = "This request has already been reviewed.";
+      card.appendChild(statusNote);
+    }
+
+    target.appendChild(card);
+  });
+      }
+  function showRecords(id, records) {
 const target = $(id);
 target.replaceChildren();
 
