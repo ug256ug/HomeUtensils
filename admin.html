@@ -750,6 +750,245 @@ function renderWithdrawalRecords(records) {
   });
   }
   
+  function renderAgentApplications(records) {
+  const target = $("agentList");
+  target.replaceChildren();
+
+  if (!records || records.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "small";
+    empty.textContent = "No agent applications found.";
+    target.appendChild(empty);
+    return;
+  }
+
+  const priority = { pending: 0, approved: 1, rejected: 2 };
+
+  records = records.slice().sort((a, b) =>
+    (priority[String(a.status || "pending").toLowerCase()] ?? 1) -
+    (priority[String(b.status || "pending").toLowerCase()] ?? 1)
+  );
+
+  records.forEach(record => {
+    const status = String(record.status || "pending").toLowerCase();
+
+    const card = document.createElement("article");
+    card.className = "record";
+    card.style.cssText =
+      "padding:16px;margin:14px 0;border:1px solid #dbe3ee;" +
+      "border-left:5px solid " +
+      (status === "approved" ? "#15803d" :
+       status === "rejected" ? "#b91c1c" : "#d97706") +
+      ";border-radius:14px;background:#fff;overflow-wrap:anywhere;";
+
+    const header = document.createElement("div");
+    header.style.cssText =
+      "display:flex;justify-content:space-between;" +
+      "align-items:center;flex-wrap:wrap;gap:10px;";
+
+    const heading = document.createElement("h3");
+    heading.textContent = record.name || "Agent applicant";
+    heading.style.margin = "0";
+
+    const badge = document.createElement("span");
+    badge.textContent = status.toUpperCase();
+    badge.style.cssText =
+      "font-size:12px;font-weight:700;padding:6px 10px;" +
+      "border-radius:20px;background:" +
+      (status === "approved" ? "#dcfce7" :
+       status === "rejected" ? "#fee2e2" : "#fef3c7") +
+      ";color:" +
+      (status === "approved" ? "#166534" :
+       status === "rejected" ? "#991b1b" : "#92400e") + ";";
+
+    header.append(heading, badge);
+    card.appendChild(header);
+
+    const capital = Number(record.capitalDeclared) || 0;
+
+    const summary = document.createElement("p");
+    summary.style.cssText =
+      "font-size:19px;font-weight:700;margin:14px 0 8px;";
+    summary.textContent =
+      "Declared capital: UGX " + capital.toLocaleString("en-UG");
+    card.appendChild(summary);
+
+    const details = [
+      ["Email", record.email],
+      ["Region", record.region],
+      ["Town", record.town],
+      ["Phone", record.phone],
+      ["Applicant UID", record.uid],
+      ["Capital verified", record.capitalVerified === true ? "Yes" : "Not verified"],
+      ["Submitted", formatAgentDate(record.createdAt)]
+    ];
+
+    details.forEach(([label, value]) => {
+      const line = document.createElement("p");
+      line.style.cssText = "margin:7px 0;line-height:1.5;";
+
+      const strong = document.createElement("strong");
+      strong.textContent = label + ": ";
+
+      line.append(
+        strong,
+        document.createTextNode(String(value || "Not recorded"))
+      );
+
+      card.appendChild(line);
+    });
+
+    const more = document.createElement("details");
+    more.style.marginTop = "12px";
+
+    const moreLabel = document.createElement("summary");
+    moreLabel.textContent = "View additional application details";
+    moreLabel.style.cssText =
+      "cursor:pointer;font-weight:700;padding:8px 0;";
+    more.appendChild(moreLabel);
+
+    [
+      ["Application ID", record._id],
+      ["National ID number", record.nin],
+      ["Bonus rate", record.bonusRate == null ? "Not recorded" : record.bonusRate + "%"],
+      ["Estimated bonus", record.estimatedBonus == null
+        ? "Not recorded"
+        : "UGX " + Number(record.estimatedBonus).toLocaleString("en-UG")],
+      ["Estimated total float", record.estimatedTotalFloat == null
+        ? "Not recorded"
+        : "UGX " + Number(record.estimatedTotalFloat).toLocaleString("en-UG")]
+    ].forEach(([label, value]) => {
+      const line = document.createElement("p");
+      line.style.margin = "7px 0";
+
+      const strong = document.createElement("strong");
+      strong.textContent = label + ": ";
+
+      line.append(strong, document.createTextNode(String(value || "Not recorded")));
+      more.appendChild(line);
+    });
+
+    card.appendChild(more);
+
+    if (status === "pending") {
+      const actions = document.createElement("div");
+      actions.style.cssText =
+        "display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;";
+
+      const approve = document.createElement("button");
+      approve.type = "button";
+      approve.textContent = "Approve application";
+      approve.style.flex = "1 1 150px";
+
+      const reject = document.createElement("button");
+      reject.type = "button";
+      reject.textContent = "Reject application";
+      reject.style.cssText =
+        "flex:1 1 150px;background:#991b1b;color:white;";
+
+      const result = document.createElement("p");
+      result.className = "small";
+      result.setAttribute("aria-live", "polite");
+
+      async function reviewApplication(newStatus) {
+        if (!activeUser) {
+          result.textContent = "Please sign in as an administrator.";
+          return;
+        }
+
+        const message = newStatus === "approved"
+          ? "Approve this agent application?"
+          : "Reject this agent application?";
+
+        if (!confirm(
+          message +
+          "\n\nThis records the application decision. " +
+          "It does not automatically verify capital, create a public agent listing, or release an agent float."
+        )) {
+          return;
+        }
+
+        approve.disabled = true;
+        reject.disabled = true;
+        result.textContent = "Saving application decision…";
+
+        try {
+          const adminDoc = await db.collection("admins")
+            .doc(activeUser.uid).get();
+
+          if (
+            !adminDoc.exists ||
+            adminDoc.data().role !== "admin" ||
+            adminDoc.data().enabled !== true
+          ) {
+            throw new Error("Enabled administrator access is required.");
+          }
+
+          await db.collection("agentApplications")
+            .doc(record._id)
+            .update({
+              status: newStatus,
+              reviewedAt:
+                firebase.firestore.FieldValue.serverTimestamp(),
+              reviewedBy: activeUser.uid
+            });
+
+          result.textContent = newStatus === "approved"
+            ? "Application marked approved. Agent listing and float are not created by this action."
+            : "Application marked rejected.";
+
+          await refreshAll();
+
+        } catch (error) {
+          approve.disabled = false;
+          reject.disabled = false;
+          result.textContent =
+            "Could not save decision: " +
+            (error.message || "Check administrator access and Firestore rules.");
+        }
+      }
+
+      approve.addEventListener(
+        "click", () => reviewApplication("approved")
+      );
+
+      reject.addEventListener(
+        "click", () => reviewApplication("rejected")
+      );
+
+      actions.append(approve, reject);
+      card.append(actions, result);
+
+    } else {
+      const note = document.createElement("p");
+      note.className = "small";
+      note.textContent = status === "approved"
+        ? "Application approved. Verify the agent setup separately."
+        : "Application rejected.";
+      card.appendChild(note);
+    }
+
+    target.appendChild(card);
+  });
+}
+
+function formatAgentDate(value) {
+  if (!value) return "Not recorded";
+
+  try {
+    if (typeof value.toDate === "function") {
+      return value.toDate().toLocaleString();
+    }
+
+    if (value.seconds) {
+      return new Date(value.seconds * 1000).toLocaleString();
+    }
+
+    return new Date(value).toLocaleString();
+  } catch (error) {
+    return "Not recorded";
+  }
+  }
   function showRecords(id, records) {
 const target = $(id);
 target.replaceChildren();
