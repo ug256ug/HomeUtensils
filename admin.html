@@ -723,7 +723,123 @@ JSON.stringify(m).toLowerCase().includes(q)
 }
 
 
-$("announcementForm").addEventListener("submit", async function(event) {
+$("generateGiftCodesBtn").addEventListener("click", async function () {
+const button = $("generateGiftCodesBtn");
+const status = $("giftCodeMessage");
+const output = $("generatedGiftCodes");
+
+output.replaceChildren();
+
+if (!activeUser) {
+status.textContent = "Please sign in as an administrator.";
+return;
+}
+
+const amount = Number($("giftAmount").value);
+const quantity = Number($("giftQuantity").value);
+
+if (
+!Number.isSafeInteger(amount) ||
+amount < 1 ||
+amount > 1000000
+) {
+status.textContent = "Enter a whole-number gift value from UGX 1 to UGX 1,000,000.";
+return;
+}
+
+if (
+!Number.isInteger(quantity) ||
+quantity < 1 ||
+quantity > 20
+) {
+status.textContent = "Enter a quantity from 1 to 20.";
+return;
+}
+
+if (!window.crypto || !window.crypto.getRandomValues) {
+status.textContent = "Secure code generation is unavailable in this browser.";
+return;
+}
+
+button.disabled = true;
+status.textContent = "Verifying administrator access…";
+
+try {
+const adminDoc = await db.collection("admins").doc(activeUser.uid).get();
+
+if (
+  !adminDoc.exists ||
+  adminDoc.data().role !== "admin" ||
+  adminDoc.data().enabled !== true
+) {
+  throw new Error("Enabled administrator access is required.");
+}
+
+const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const createdCodes = [];
+
+for (let i = 0; i < quantity; i++) {
+  let code;
+  let codeRef;
+  let attempts = 0;
+
+  do {
+    const randomValues = new Uint32Array(16);
+    window.crypto.getRandomValues(randomValues);
+
+    code = "HU-" + Array.from(
+      randomValues,
+      value => alphabet[value % alphabet.length]
+    ).join("");
+
+    codeRef = db.collection("giftCodes").doc(code);
+    const existing = await codeRef.get();
+
+    if (!existing.exists) break;
+
+    code = null;
+    attempts++;
+  } while (attempts < 5);
+
+  if (!code) {
+    throw new Error("Could not create a unique code. Please try again.");
+  }
+
+  await codeRef.set({
+    code: code,
+    amount: amount,
+    createdBy: activeUser.uid,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  createdCodes.push(code);
+}
+
+const heading = document.createElement("strong");
+heading.textContent = "Generated codes — save them securely:";
+output.appendChild(heading);
+
+createdCodes.forEach(code => {
+  const row = document.createElement("p");
+  row.textContent = code + " — UGX " + amount.toLocaleString();
+  output.appendChild(row);
+});
+
+status.textContent =
+  createdCodes.length + " code(s) created. These are not wallet credits; redemption requires manual review.";
+
+$("giftAmount").value = "";
+$("giftQuantity").value = "";
+
+} catch (error) {
+status.textContent =
+"Could not generate all requested codes: " +
+(error.message || "Please try again.");
+} finally {
+button.disabled = false;
+}
+});
+  $("announcementForm").addEventListener("submit", async function(event) {
   event.preventDefault();
 
   const titleInput = $("announcementTitle");
