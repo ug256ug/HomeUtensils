@@ -766,68 +766,141 @@ loading="lazy"
 </div>
 
 <div class="card" id="withdrawalCard">
-<h2>Request a withdrawal</h2>
-<p class="muted">Submit a withdrawal request for administrator review. Submitting this form does not guarantee approval or payment.</p>
+  <h2>💸 Request a Withdrawal</h2>
 
-<div class="notice">
-<strong>Withdrawal conditions</strong>
-<ul>
-<li>Minimum request: UGX 2,000.</li>
-<li>Fee: 10% of the requested amount.</li>
-<li>The fee is deducted from the requested amount when calculating the expected payout.</li>
-<li>Processing schedule: Monday–Saturday, 6:00 AM–8:00 PM Uganda time, excluding public holidays.</li>
-<li>Only one pending withdrawal request is permitted per member.</li>
-</ul>
-The server must verify the schedule, public holidays, available balance and pending-request limit before any real withdrawal is approved.
-</div>
+  <p class="muted">
+    Submit your withdrawal details for administrator review.
+    Submitting a request does not guarantee approval or payment.
+  </p>
 
-<form id="withdrawalForm">
-<label for="withdrawalAmount">Amount to withdraw (UGX)</label>
-<input id="withdrawalAmount" type="number" min="2000" step="1" inputmode="numeric" required placeholder="Minimum 2000">
+  <div class="notice">
+    <strong>Withdrawal conditions</strong>
+    <ul>
+      <li>Minimum withdrawal: UGX 2,000.</li>
+      <li>Withdrawal fee: 10% of the requested amount.</li>
+      <li>The fee is deducted from the requested amount.</li>
+      <li>Only one pending request is permitted per member.</li>
+      <li>Payment is sent manually after the request is reviewed.</li>
+    </ul>
+  </div>
 
-<div class="grid">
+  <form id="withdrawalForm">
 
-<div class="request">
-<div class="muted">Total deducted from wallet if approved</div>
-<div id="withdrawalFee" class="money">UGX 0</div>
-</div>
-<div class="request">
-<div class="muted">Amount you receive</div>
-<div id="withdrawalPayout" class="money">UGX 0</div>
-</div>
-<div class="request">
-<div class="muted">Total deducted (amount + 10% fee)</div>
-<div id="withdrawalTotal" class="money">UGX 0</div>
-</div>
-</div>
+    <label for="withdrawalAmount">
+      Amount to withdraw (UGX)
+    </label>
+    <input
+      id="withdrawalAmount"
+      type="number"
+      min="2000"
+      step="1"
+      inputmode="numeric"
+      required
+      placeholder="Minimum UGX 2,000"
+    >
 
+    <div class="grid">
 
-<label for="withdrawalMethod">Payout method</label>
-<select id="withdrawalMethod" required>
-<option value="">Select payout method</option>
-<option value="Mobile Money">Mobile Money</option>
-<option value="Bank Transfer">Bank Transfer</option>
-</select>
+      <div class="request">
+        <div class="muted">Withdrawal fee (10%)</div>
+        <div id="withdrawalFee" class="money">UGX 0</div>
+      </div>
 
-<label for="withdrawalAccountName">Account holder name</label>
-<input id="withdrawalAccountName" maxlength="100" required autocomplete="name" placeholder="Name registered with your provider">
+      <div class="request">
+        <div class="muted">Net amount you receive</div>
+        <div id="withdrawalPayout" class="money">UGX 0</div>
+      </div>
 
-<label for="withdrawalAccount">Mobile money number or bank account</label>
-<input id="withdrawalAccount" maxlength="100" required autocomplete="off" placeholder="Enter payout account details">
+      <div class="request">
+        <div class="muted">
+          Total wallet deduction if approved
+        </div>
+        <div id="withdrawalTotal" class="money">UGX 0</div>
+      </div>
 
-<label for="withdrawalNote">Optional note</label>
-<textarea id="withdrawalNote" maxlength="300" rows="3" placeholder="Additional information (optional)"></textarea>
+    </div>
 
-<p class="muted">Check your payout details carefully. Do not enter your password, PIN or one-time verification code.</p>
-<button id="withdrawalSubmit" type="submit">Submit withdrawal request</button>
-</form>
+    <label for="withdrawalMethod">
+      Payout method
+    </label>
 
-<div id="withdrawalMessage" aria-live="polite"></div>
+    <select id="withdrawalMethod" required>
+      <option value="">Select payout method</option>
+      <option value="Mobile Money">Mobile Money</option>
+      <option value="Bank Transfer">Bank Transfer</option>
+    </select>
+
+    <div id="withdrawalNetworkWrap">
+      <label for="withdrawalNetwork">
+        Mobile money network
+      </label>
+
+      <select id="withdrawalNetwork">
+        <option value="">Select network</option>
+        <option value="MTN">MTN</option>
+        <option value="Airtel">Airtel</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+
+    <label for="withdrawalAccountName">
+      Name registered to the SIM card or bank account
+    </label>
+
+    <input
+      id="withdrawalAccountName"
+      type="text"
+      maxlength="100"
+      autocomplete="name"
+      required
+      placeholder="Enter the registered account holder's name"
+    >
+
+    <label for="withdrawalAccount">
+      Mobile money number or bank account
+    </label>
+
+    <input
+      id="withdrawalAccount"
+      type="text"
+      maxlength="100"
+      autocomplete="off"
+      required
+      placeholder="Enter the recipient's account number"
+    >
+
+    <label for="withdrawalNote">
+      Additional note (optional)
+    </label>
+
+    <textarea
+      id="withdrawalNote"
+      maxlength="300"
+      rows="3"
+      placeholder="Optional payment information"
+    ></textarea>
+
+    <p class="muted">
+      Never enter your PIN, password or one-time verification code.
+      The account holder's name is supplied by the member and is
+      not automatically verified against the SIM card.
+    </p>
+
+    <button id="withdrawalSubmit" type="submit">
+      Submit Withdrawal Request
+    </button>
+
+  </form>
+
+  <div id="withdrawalMessage" aria-live="polite"></div>
 </div>
 
 <div class="card" id="withdrawalHistoryCard">
-<h2>Your withdrawal history</h2>
-<div id="withdrawalHistory">Your withdrawal requests will appear here.</div>
+  <h2>📄 Your Withdrawal History</h2>
+
+  <div id="withdrawalHistory">
+    Your withdrawal requests will appear here.
+  </div>
 </div>
 
 
