@@ -512,7 +512,245 @@ function renderActivationRequests(records) {
   });
 }
 
-function showRecords(id, records) {
+
+function renderWithdrawalRecords(records) {
+  const target = $("withdrawalList");
+  target.replaceChildren();
+
+  if (!records || records.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "small";
+    empty.textContent = "No withdrawal requests found.";
+    target.appendChild(empty);
+    return;
+  }
+
+  const priority = { pending: 0, rejected: 1, approved: 2 };
+  const sorted = records.slice().sort((a, b) =>
+    (priority[String(a.status || "pending").toLowerCase()] ?? 1) -
+    (priority[String(b.status || "pending").toLowerCase()] ?? 1)
+  );
+
+  const money = value =>
+    "UGX " + Math.round(Number(value) || 0).toLocaleString("en-UG");
+
+  sorted.forEach(record => {
+    const status = String(record.status || "pending").toLowerCase();
+    const amount = Number(record.amount) || 0;
+    const fee = Number(record.fee) || 0;
+    const payout = Number(record.payout) || Math.max(0, amount - fee);
+
+    const card = document.createElement("article");
+    card.className = "record";
+    card.style.cssText =
+      "padding:16px;margin:14px 0;border-radius:14px;" +
+      "border:1px solid #dbe3ee;border-left:5px solid " +
+      (status === "pending" ? "#d97706" :
+       status === "approved" ? "#15803d" : "#64748b") +
+      ";background:#fff;overflow-wrap:anywhere;";
+
+    const header = document.createElement("div");
+    header.style.cssText =
+      "display:flex;flex-wrap:wrap;justify-content:space-between;" +
+      "align-items:center;gap:10px;";
+
+    const title = document.createElement("h3");
+    title.textContent = record.accountName || "Withdrawal request";
+    title.style.margin = "0";
+
+    const badge = document.createElement("span");
+    badge.textContent = status.toUpperCase();
+    badge.style.cssText =
+      "font-weight:700;font-size:12px;padding:6px 10px;" +
+      "border-radius:20px;background:" +
+      (status === "pending" ? "#fef3c7" :
+       status === "approved" ? "#dcfce7" : "#e2e8f0") +
+      ";color:" +
+      (status === "pending" ? "#92400e" :
+       status === "approved" ? "#166534" : "#334155") + ";";
+
+    header.append(title, badge);
+    card.appendChild(header);
+
+    const requested = document.createElement("p");
+    requested.textContent = money(amount) + " requested";
+    requested.style.cssText =
+      "font-size:22px;font-weight:800;margin:14px 0 5px;";
+    card.appendChild(requested);
+
+    const payoutLine = document.createElement("p");
+    payoutLine.textContent =
+      "Fee: " + money(fee) + " · Expected payout: " + money(payout);
+    payoutLine.style.margin = "5px 0 10px";
+    card.appendChild(payoutLine);
+
+    const method = document.createElement("p");
+    method.textContent =
+      "Method: " + (record.method || "Not recorded") +
+      (record.method === "Mobile Money"
+        ? " · Network: " + (record.accountNetwork || "Not recorded")
+        : "");
+    card.appendChild(method);
+
+    const details = document.createElement("details");
+    details.style.marginTop = "10px";
+
+    const summary = document.createElement("summary");
+    summary.textContent = "View full request details";
+    summary.style.cssText = "cursor:pointer;font-weight:700;padding:10px 0;";
+    details.appendChild(summary);
+
+    const createdAt = record.createdAt;
+    let submitted = "Not recorded";
+
+    if (createdAt && typeof createdAt.toDate === "function") {
+      submitted = createdAt.toDate().toLocaleString();
+    } else if (createdAt && createdAt.seconds) {
+      submitted = new Date(createdAt.seconds * 1000).toLocaleString();
+    }
+
+    const fields = [
+      ["Record ID", record._id],
+      ["Member UID", record.uid],
+      ["Account holder", record.accountName],
+      ["Payout account", record.account],
+      ["Payment method", record.method],
+      ["Network", record.accountNetwork || "Not applicable"],
+      ["Currency", record.currency || "UGX"],
+      ["Requested amount", money(amount)],
+      ["Withdrawal fee", money(fee)],
+      ["Expected payout", money(payout)],
+      ["Total deduction if processed",
+        money(record.totalDeducted !== undefined
+          ? record.totalDeducted : amount)],
+      ["Submitted", submitted],
+      ["Review note", record.reviewNote || "No review note"]
+    ];
+
+    fields.forEach(([label, value]) => {
+      const line = document.createElement("p");
+      line.style.cssText = "margin:8px 0;line-height:1.5;";
+
+      const strong = document.createElement("strong");
+      strong.textContent = label + ": ";
+
+      line.append(
+        strong,
+        document.createTextNode(String(value || "Not recorded"))
+      );
+      details.appendChild(line);
+    });
+
+    card.appendChild(details);
+
+    if (status === "pending") {
+      const note = document.createElement("input");
+      note.type = "text";
+      note.maxLength = 500;
+      note.placeholder = "Optional administrator review note";
+      note.setAttribute("aria-label", "Review note");
+      note.style.marginTop = "12px";
+
+      const actions = document.createElement("div");
+      actions.style.cssText =
+        "display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;";
+
+      const approve = document.createElement("button");
+      approve.type = "button";
+      approve.textContent = "Approve review";
+      approve.style.flex = "1 1 140px";
+
+      const reject = document.createElement("button");
+      reject.type = "button";
+      reject.textContent = "Reject request";
+      reject.style.cssText =
+        "flex:1 1 140px;background:#991b1b;color:#fff;";
+
+      const result = document.createElement("p");
+      result.className = "small";
+      result.setAttribute("aria-live", "polite");
+
+      async function review(newStatus) {
+        if (!activeUser) {
+          result.textContent = "Please sign in as an administrator again.";
+          return;
+        }
+
+        const question = newStatus === "approved"
+          ? "Record this withdrawal as approved for review?"
+          : "Record this withdrawal as rejected?";
+
+        if (!confirm(
+          question +
+          "\n\nThis only records a review decision. It will NOT send money or change wallet balances."
+        )) return;
+
+        approve.disabled = true;
+        reject.disabled = true;
+        result.textContent = "Saving review decision…";
+
+        try {
+          const adminDoc = await db.collection("admins")
+            .doc(activeUser.uid).get();
+
+          if (
+            !adminDoc.exists ||
+            adminDoc.data().role !== "admin" ||
+            adminDoc.data().enabled !== true
+          ) {
+            throw new Error("Enabled administrator access is required.");
+          }
+
+          await db.collection("withdrawalRequests")
+            .doc(record._id)
+            .update({
+              status: newStatus,
+              reviewNote: note.value.trim(),
+              reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+              reviewedBy: activeUser.uid
+            });
+
+          result.textContent = newStatus === "approved"
+            ? "Review recorded as approved. Payment has NOT been sent or confirmed."
+            : "Review recorded as rejected. No wallet balance was changed.";
+
+          await refreshAll();
+
+        } catch (error) {
+          approve.disabled = false;
+          reject.disabled = false;
+          result.textContent =
+            "Review failed: " +
+            (error.message || "Check administrator access and Firestore rules.");
+        }
+      }
+
+      approve.addEventListener("click", () => review("approved"));
+      reject.addEventListener("click", () => review("rejected"));
+
+      actions.append(approve, reject);
+      card.append(note, actions, result);
+
+    } else {
+      const reviewed = document.createElement("p");
+      reviewed.className = "small";
+      reviewed.textContent = status === "approved"
+        ? "Review approved. This does not confirm payment."
+        : "This request has been rejected.";
+      card.appendChild(reviewed);
+    }
+
+    const safety = document.createElement("p");
+    safety.className = "small";
+    safety.textContent =
+      "Review only. No money is sent and no wallet balance is deducted here.";
+    card.appendChild(safety);
+
+    target.appendChild(card);
+  });
+  }
+  
+  function showRecords(id, records) {
 const target = $(id);
 target.replaceChildren();
 
