@@ -117,7 +117,10 @@ function isActiveMember(userId) {
 
 match /agentApplications/{applicationId} {
   allow read: if isAdmin()
-    || (signedIn() && resource.data.uid == request.auth.uid);
+    || (
+      signedIn()
+      && resource.data.uid == request.auth.uid
+    );
 
   allow create: if signedIn()
     && isActivePlus(request.auth.uid)
@@ -135,14 +138,15 @@ match /agentApplications/{applicationId} {
     && request.resource.data.capitalDeclared is int
     && request.resource.data.capitalDeclared >= 50000
     && request.resource.data.bonusRate == 15
-&& request.resource.data.estimatedBonus is int
-&& request.resource.data.estimatedBonus
->= request.resource.data.capitalDeclared * 15 / 100 - 0.5
-&& request.resource.data.estimatedBonus
-<= request.resource.data.capitalDeclared * 15 / 100 + 0.5
-&& request.resource.data.estimatedTotalFloat
-== request.resource.data.capitalDeclared
-+ request.resource.data.estimatedBonus    && request.resource.data.status == "pending"
+    && request.resource.data.estimatedBonus is int
+    && request.resource.data.estimatedBonus
+      >= request.resource.data.capitalDeclared * 15 / 100 - 0.5
+    && request.resource.data.estimatedBonus
+      <= request.resource.data.capitalDeclared * 15 / 100 + 0.5
+    && request.resource.data.estimatedTotalFloat
+      == request.resource.data.capitalDeclared
+        + request.resource.data.estimatedBonus
+    && request.resource.data.status == "pending"
     && request.resource.data.keys().hasOnly([
       "uid", "name", "email", "region", "town",
       "phone", "nin", "capitalDeclared",
