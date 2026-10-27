@@ -3434,113 +3434,235 @@ show($("adminSummary"),"Admin dashboard failed: "+messageFromError(err),true);
 }
 }
 
-async function reviewAgentApplication(id,status){
-if(!isAdminUser||!currentUser){
-show($("globalMessage"),"Administrator access required.",true);return;
-}
-if(!["approved","rejected"].includes(status))return;
-let verifiedName="";
-
-if(status==="approved"){
-const confirmed=confirm(
-"Before approving, independently verify:\n\n"+
-"1. The applicant has an active Plus package.\n"+
-"2. You have received and verified UGX 50,000 starting capital.\n"+
-"3. The applicant's identity and contact details have been checked.\n\n"+
-"Approval will create a restricted UGX 57,500 float record. Continue only after verification."
-);
-if(!confirmed)return;
-try{
-const existingSnap=await db.collection("agentApplications").doc(id).get();
-if(!existingSnap.exists)throw new Error("Agent application not found.");
-const existingApp=existingSnap.data();
-if(existingApp.status!=="pending")throw new Error("This application has already been reviewed.");
-if(!String(existingApp.name||"").trim()){
-const enteredName=prompt("Enter the applicant's VERIFIED full name.");
-if(enteredName===null)return;
-verifiedName=enteredName.trim();
-if(!verifiedName){show($("globalMessage"),"Verified full name is required.",true);return;}
-}
-}catch(err){show($("globalMessage"),"Could not check application: "+messageFromError(err),true);return;}
-}else if(!confirm("Reject this agent application?"))return;
-
-try{
-await db.runTransaction(async transaction=>{
-const applicationRef=db.collection("agentApplications").doc(id);
-const applicationSnap=await transaction.get(applicationRef);
-if(!applicationSnap.exists)throw new Error("Agent application not found.");
-const app=applicationSnap.data();
-if(app.status!=="pending")throw new Error("This application has already been reviewed.");
-if(!app.uid)throw new Error("Application has no member UID.");
-
-if(status==="rejected"){
-transaction.update(applicationRef,{
-status:"rejected",
-reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),
-reviewedBy:currentUser.uid
-});
+async function reviewAgentApplication(id, status) {
+if (!isAdminUser || !currentUser) {
+show($("globalMessage"), "Administrator access required.", true);
 return;
 }
 
-if(Number(app.capitalDeclared)!==50000)throw new Error("Declared starting capital must be UGX 50,000.");
-const phone=String(app.phone||"").trim(),region=String(app.region||"").trim(),town=String(app.town||"").trim();
-const validTowns = {
-  Central: ["Kampala", "Mukono"],
-  Western: ["Mbarara", "Fort Portal"],
-  Northern: ["Gulu", "Lira"],
-  Eastern: ["Jinja", "Mbale"]
-};
+if (!["approved", "rejected"].includes(status)) return;
 
-if(!phone)throw new Error("Applicant phone number is missing.");
-if(!validTowns[region]||!validTowns[region].includes(town))throw new Error("Invalid region and town.");
+let verifiedName = "";
 
-const profileRef=db.collection("memberProfiles").doc(app.uid);
-const directoryRef=db.collection("agentDirectory").doc(app.uid);
-const floatRef=db.collection("agentFloats").doc(app.uid);
-const issuanceRef=db.collection("agentFloatTransactions").doc(app.uid+"_initial");
-const profileSnap=await transaction.get(profileRef);
-const directorySnap=await transaction.get(directoryRef);
-const floatSnap=await transaction.get(floatRef);
-const issuanceSnap=await transaction.get(issuanceRef);
+if (status === "approved") {
+const confirmed = confirm(
+"Before approving, independently verify:\n\n" +
+"1. The applicant has an active Plus package.\n" +
+"2. You have actually received the declared starting capital.\n" +
+"3. The applicant's identity and contact details are verified.\n\n" +
+"The system will calculate a 15% bonus on the declared capital. " +
+"Approval creates a restricted, non-withdrawable float record. " +
+"Continue only after verifying the payment."
+);
 
-if(!profileSnap.exists)throw new Error("Member profile not found.");
-const profile=profileSnap.data();
-if(profile.package!=="Plus"||profile.packageStatus!=="active")throw new Error("An active Plus package is required.");
-if(directorySnap.exists)throw new Error("An agent directory entry already exists.");
-if(floatSnap.exists||issuanceSnap.exists)throw new Error("A float account or issuance record already exists.");
+if (!confirmed) return;
 
-const applicantName=String(app.name||verifiedName||profile.name||"").trim();
-if(!applicantName)throw new Error("Verified full name is required.");
-const serverTime=firebase.firestore.FieldValue.serverTimestamp();
+try {
+  const existingSnap = await db
+    .collection("agentApplications")
+    .doc(id)
+    .get();
 
-transaction.set(directoryRef,{
-uid:app.uid,name:applicantName,region,town,phone,status:"approved",approvedAt:serverTime
+  if (!existingSnap.exists) {
+    throw new Error("Agent application not found.");
+  }
+
+  const existingApp = existingSnap.data();
+
+  if (existingApp.status !== "pending") {
+    throw new Error("This application has already been reviewed.");
+  }
+
+  if (!String(existingApp.name || "").trim()) {
+    const enteredName = prompt("Enter the applicant's VERIFIED full name.");
+    if (enteredName === null) return;
+
+    verifiedName = enteredName.trim();
+
+    if (!verifiedName) {
+      show($("globalMessage"), "Verified full name is required.", true);
+      return;
+    }
+  }
+} catch (err) {
+  show(
+    $("globalMessage"),
+    "Could not check application: " + messageFromError(err),
+    true
+  );
+  return;
+}
+
+} else {
+if (!confirm("Reject this agent application?")) return;
+}
+
+try {
+await db.runTransaction(async transaction => {
+const applicationRef = db.collection("agentApplications").doc(id);
+const applicationSnap = await transaction.get(applicationRef);
+
+  if (!applicationSnap.exists) {
+    throw new Error("Agent application not found.");
+  }
+
+  const app = applicationSnap.data();
+
+  if (app.status !== "pending") {
+    throw new Error("This application has already been reviewed.");
+  }
+
+  if (!app.uid) {
+    throw new Error("Application has no member UID.");
+  }
+
+  if (status === "rejected") {
+    transaction.update(applicationRef, {
+      status: "rejected",
+      reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      reviewedBy: currentUser.uid
+    });
+    return;
+  }
+
+  const capital = Number(app.capitalDeclared);
+
+  if (!Number.isSafeInteger(capital) || capital < 50000) {
+    throw new Error("Starting capital must be at least UGX 50,000.");
+  }
+
+  const bonusRate = 15;
+  const bonus = Math.round(capital * bonusRate / 100);
+  const totalFloat = capital + bonus;
+
+  const phone = String(app.phone || "").trim();
+  const region = String(app.region || "").trim();
+  const town = String(app.town || "").trim();
+
+  const validTowns = {
+    Central: ["Kampala", "Mukono"],
+    Western: ["Mbarara", "Fort Portal"],
+    Northern: ["Gulu", "Lira"],
+    Eastern: ["Jinja", "Mbale"]
+  };
+
+  if (!phone) throw new Error("Applicant phone number is missing.");
+
+  if (!validTowns[region] || !validTowns[region].includes(town)) {
+    throw new Error("Invalid region and town.");
+  }
+
+  const profileRef = db.collection("memberProfiles").doc(app.uid);
+  const directoryRef = db.collection("agentDirectory").doc(app.uid);
+  const floatRef = db.collection("agentFloats").doc(app.uid);
+  const issuanceRef = db.collection("agentFloatTransactions")
+    .doc(app.uid + "_initial");
+
+  const profileSnap = await transaction.get(profileRef);
+  const directorySnap = await transaction.get(directoryRef);
+  const floatSnap = await transaction.get(floatRef);
+  const issuanceSnap = await transaction.get(issuanceRef);
+
+  if (!profileSnap.exists) {
+    throw new Error("Member profile not found.");
+  }
+
+  const profile = profileSnap.data();
+
+  if (profile.package !== "Plus" || profile.packageStatus !== "active") {
+    throw new Error("An active Plus package is required.");
+  }
+
+  if (directorySnap.exists) {
+    throw new Error("An agent directory entry already exists.");
+  }
+
+  if (floatSnap.exists || issuanceSnap.exists) {
+    throw new Error("A float account or issuance record already exists.");
+  }
+
+  const applicantName = String(
+    app.name || verifiedName || profile.fullName || profile.name || ""
+  ).trim();
+
+  if (!applicantName) {
+    throw new Error("Verified full name is required.");
+  }
+
+  const serverTime = firebase.firestore.FieldValue.serverTimestamp();
+
+  transaction.set(directoryRef, {
+    uid: app.uid,
+    name: applicantName,
+    region: region,
+    town: town,
+    phone: phone,
+    status: "approved",
+    approvedAt: serverTime
+  });
+
+  transaction.set(floatRef, {
+    uid: app.uid,
+    currency: "UGX",
+    capitalAmount: capital,
+    bonusRate: bonusRate,
+    bonusAmount: bonus,
+    openingBalance: totalFloat,
+    restrictedBalance: totalFloat,
+    withdrawableBalance: 0,
+    status: "active",
+    restricted: true,
+    permittedUse: "member_package_activation",
+    issuedAt: serverTime,
+    issuedBy: currentUser.uid,
+    sourceApplicationId: id
+  });
+
+  transaction.set(issuanceRef, {
+    uid: app.uid,
+    type: "initial_float_issuance",
+    amount: totalFloat,
+    capitalAmount: capital,
+    bonusRate: bonusRate,
+    bonusAmount: bonus,
+    currency: "UGX",
+    balanceAfter: totalFloat,
+    withdrawable: false,
+    sourceApplicationId: id,
+    createdAt: serverTime,
+    createdBy: currentUser.uid
+  });
+
+  transaction.update(applicationRef, {
+    name: applicantName,
+    status: "approved",
+    capitalVerified: true,
+    capitalVerifiedBy: currentUser.uid,
+    capitalVerifiedAt: serverTime,
+    bonusRate: bonusRate,
+    bonusAmount: bonus,
+    totalRestrictedFloat: totalFloat,
+    reviewedAt: serverTime,
+    reviewedBy: currentUser.uid
+  });
 });
-transaction.set(floatRef,{
-uid:app.uid,currency:"UGX",capitalAmount:50000,bonusAmount:7500,
-openingBalance:57500,restrictedBalance:57500,withdrawableBalance:0,
-status:"active",restricted:true,permittedUse:"member_package_activation",
-issuedAt:serverTime,issuedBy:currentUser.uid,sourceApplicationId:id
-});
-transaction.set(issuanceRef,{
-uid:app.uid,type:"initial_float_issuance",amount:57500,
-capitalAmount:50000,bonusAmount:7500,currency:"UGX",
-balanceAfter:57500,withdrawable:false,sourceApplicationId:id,
-createdAt:serverTime,createdBy:currentUser.uid
-});
-transaction.update(applicationRef,{
-name:applicantName,status:"approved",capitalVerified:true,
-reviewedAt:serverTime,reviewedBy:currentUser.uid
-});
-});
 
-show($("globalMessage"),status==="approved"
-?"Agent approved and the restricted float issuance record was created. Ensure all separate activation and financial workflows are configured."
-:"Agent application rejected.");
+show(
+  $("globalMessage"),
+  status === "approved"
+    ? "Agent approved. The declared capital, 15% bonus and restricted float records were saved. This does not itself verify a bank or mobile-money transaction."
+    : "Agent application rejected."
+);
+
 await loadAdmin();
 await loadMyAgentStatus();
-}catch(err){
-show($("globalMessage"),"Could not review agent application: "+messageFromError(err),true);
+
+} catch (err) {
+show(
+$("globalMessage"),
+"Could not review agent application: " + messageFromError(err),
+true
+);
 }
 }
 
