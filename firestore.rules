@@ -135,9 +135,14 @@ match /agentApplications/{applicationId} {
     && request.resource.data.capitalDeclared is int
     && request.resource.data.capitalDeclared >= 50000
     && request.resource.data.bonusRate == 15
-    && request.resource.data.estimatedBonus
-      && request.resource.data.estimatedBonus is int
+&& request.resource.data.estimatedBonus is int
 && request.resource.data.estimatedBonus
+>= request.resource.data.capitalDeclared * 15 / 100 - 0.5
+&& request.resource.data.estimatedBonus
+<= request.resource.data.capitalDeclared * 15 / 100 + 0.5
+&& request.resource.data.estimatedTotalFloat
+== request.resource.data.capitalDeclared
++ request.resource.data.estimatedBonus
 
 «= request.resource.data.capitalDeclared * 15 / 100 - 0.5
 && request.resource.data.estimatedBonus
