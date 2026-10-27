@@ -2705,37 +2705,119 @@ if (!taskId || !answer) {
   }
 });
 
-$("agentForm").addEventListener("submit",async e=>{
+$("agentForm").addEventListener("submit", async e => {
 e.preventDefault();
-if(!currentUser)return show($("agentMessage"),"Sign in first.",true);
-if(!profileData||profileData.package!=="Plus"||profileData.packageStatus!=="active"){
-return show($("agentMessage"),"Eligibility not met. You must have an active Plus package before applying to become an agent.",true);
+
+if (!currentUser) {
+return show($("agentMessage"), "Sign in first.", true);
 }
-const region=$("agentRegion").value,town=$("agentTown").value,phone=$("agentPhone").value.trim(),nin=$("agentNin").value.trim();
-if(!region||!town||!phone||!nin||!$("capitalConfirm").checked){
-return show($("agentMessage"),"Complete every field and confirm the starting-capital requirement.",true);
+
+if (
+!profileData ||
+profileData.package !== "Plus" ||
+profileData.packageStatus !== "active"
+) {
+return show(
+$("agentMessage"),
+"You must have an active Plus package before applying to become an agent.",
+true
+);
 }
-const btn=$("agentForm").querySelector("button[type=submit]");btn.disabled=true;
-try{
-const existing=await db.collection("agentApplications").where("uid","==",currentUser.uid).get();
-if(!existing.empty){
-show($("agentMessage"),"An agent application already exists for your account. Check your application status below.",true);
-await loadMyAgentStatus();return;
+
+const region = $("agentRegion").value;
+const town = $("agentTown").value;
+const phone = $("agentPhone").value.trim();
+const nin = $("agentNin").value.trim();
+const capital = Number($("agentCapital").value);
+
+if (
+!region ||
+!town ||
+!phone ||
+!nin ||
+!$("capitalConfirm").checked
+) {
+return show(
+$("agentMessage"),
+"Complete every field and confirm the starting-capital requirement.",
+true
+);
 }
+
+if (
+!Number.isSafeInteger(capital) ||
+capital < 50000
+) {
+return show(
+$("agentMessage"),
+"Starting capital must be a whole-number amount of at least UGX 50,000.",
+true
+);
+}
+
+const btn = $("agentForm").querySelector('button[type="submit"]');
+btn.disabled = true;
+
+try {
+const existing = await db
+.collection("agentApplications")
+.where("uid", "==", currentUser.uid)
+.get();
+
+if (!existing.empty) {
+  show(
+    $("agentMessage"),
+    "An agent application already exists for your account. Check your application status below.",
+    true
+  );
+  await loadMyAgentStatus();
+  return;
+}
+
+const bonus = Math.round(capital * 15 / 100);
+const totalFloat = capital + bonus;
+
 await db.collection("agentApplications").add({
-uid:currentUser.uid,
-name:profileData.name||"",
-email:currentUser.email||"",
-region,town,phone,nin,
-capitalDeclared:50000,
-status:"pending",
-createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  uid: currentUser.uid,
+  name: profileData.fullName || profileData.name || "",
+  email: currentUser.email || "",
+  region,
+  town,
+  phone,
+  nin,
+  capitalDeclared: capital,
+  bonusRate: 15,
+  estimatedBonus: bonus,
+  estimatedTotalFloat: totalFloat,
+  status: "pending",
+  createdAt: firebase.firestore.FieldValue.serverTimestamp()
 });
-$("agentForm").reset();setTowns("agentRegion","agentTown","Select town");
-show($("agentMessage"),"Application submitted. It is not approved yet. The administrator must verify your UGX 50,000 capital and Plus membership.");
+
+$("agentForm").reset();
+setTowns("agentRegion", "agentTown", "Select town");
+
+show(
+  $("agentMessage"),
+  "Application submitted for review. Declared capital: " +
+  money(capital) +
+  "; estimated 15% bonus: " +
+  money(bonus) +
+  "; estimated total restricted float: " +
+  money(totalFloat) +
+  ". These amounts are pending administrator verification and approval."
+);
+
 await loadMyAgentStatus();
-}catch(err){show($("agentMessage"),messageFromError(err),true);}
-finally{btn.disabled=false;}
+
+} catch (err) {
+show(
+$("agentMessage"),
+"Application failed: " + messageFromError(err),
+true
+);
+} finally {
+btn.disabled = false;
+}
 });
 
 async function loadMyAgentStatus(){
