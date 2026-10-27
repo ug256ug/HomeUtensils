@@ -367,7 +367,15 @@ allow read: if isAdmin()
   allow delete: if false;
 }
 
-    match /adminAuditLogs/{logId} {
+    
+    // Wallet transaction records: admin read-only.
+    // No direct client writes or wallet balance changes.
+    match /walletTransactions/{transactionId} {
+      allow read: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
+match /adminAuditLogs/{logId} {
       allow read: if isAdmin();
       allow create, update, delete: if false;
     }
