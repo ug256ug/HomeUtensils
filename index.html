@@ -3301,20 +3301,123 @@ $("adminSummary").textContent=
 " · Pending withdrawals: "+withdrawals.docs.filter(d=>d.data().status==="pending").length+
 " · Agent applications: "+applications.size;
 
-const reqBox=$("adminRequests");reqBox.replaceChildren();
-if(requests.empty)reqBox.textContent="No activation requests.";
-requests.forEach(doc=>{
-const d=doc.data(),item=document.createElement("div");item.className="request";
-item.textContent="Package: "+(d.packageRequested||"Not set")+" · Status: "+(d.status||"pending")+" · Area: "+(d.area||"Not set")+" · Member UID: "+(d.uid||"Not set");
-if(d.status==="pending"){
-const approve=document.createElement("button");approve.textContent="Approve activation";
-approve.addEventListener("click",()=>reviewActivation(doc.id,"approved"));
-const reject=document.createElement("button");reject.textContent="Reject activation";reject.className="secondary";
-reject.addEventListener("click",()=>reviewActivation(doc.id,"rejected"));
-item.append(approve,reject);
-}
-reqBox.appendChild(item);
+const reqBox=$("adminRequests");
+reqBox.replaceChildren();
+
+const packagePrices={
+Starter:5000,
+Standard:10000,
+Plus:20000
+};
+
+if(requests.empty){
+reqBox.textContent="No activation requests.";
+}else{
+const activationDocs=requests.docs.slice().sort((a,b)=>{
+const statusA=String(a.data().status||"pending").toLowerCase();
+const statusB=String(b.data().status||"pending").toLowerCase();
+
+const order={pending:0,rejected:1,approved:2};
+
+const rankA=order[statusA]??1;
+const rankB=order[statusB]??1;
+
+if(rankA!==rankB)return rankA-rankB;
+
+const timeA=a.data().createdAt?.seconds||0;
+const timeB=b.data().createdAt?.seconds||0;
+
+return timeB-timeA;
+
 });
+
+activationDocs.forEach(doc=>{
+const d=doc.data();
+const status=String(d.status||"pending").toLowerCase();
+const uid=d.uid||d.memberUid||d.userId||"";
+
+const profileDoc=members.docs.find(m=>m.id===uid);
+const member=profileDoc?profileDoc.data():{};
+
+const name=
+  member.fullName||
+  member.name||
+  d.fullName||
+  d.name||
+  "Name not set";
+
+const memberId=member.memberId||"Not assigned";
+const packageName=d.packageRequested||"Not set";
+const amount=packagePrices[packageName];
+const method=d.proposedPaymentMethod||"Not provided";
+
+const item=document.createElement("div");
+item.className="request";
+
+const heading=document.createElement("h3");
+heading.textContent=name;
+item.appendChild(heading);
+
+const statusLine=document.createElement("p");
+statusLine.textContent="Status: "+status.toUpperCase();
+statusLine.style.fontWeight="700";
+item.appendChild(statusLine);
+
+const details=[
+  ["Member ID",memberId],
+  ["User ID",uid||"Not available"],
+  ["Package",packageName],
+  ["Package price (expected)",amount?"UGX "+amount.toLocaleString("en-UG"):"Check package"],
+  ["Payment method",method],
+  ["Area",d.area||"Not provided"],
+  ["Request date",dateText(d.createdAt)]
+];
+
+details.forEach(([label,value])=>{
+  const line=document.createElement("p");
+  line.style.margin="5px 0";
+
+  const strong=document.createElement("strong");
+  strong.textContent=label+": ";
+
+  line.append(strong,document.createTextNode(String(value)));
+  item.appendChild(line);
+});
+
+if(status==="pending"){
+  const actions=document.createElement("div");
+  actions.style.display="flex";
+  actions.style.flexWrap="wrap";
+  actions.style.gap="8px";
+  actions.style.marginTop="12px";
+
+  const approve=document.createElement("button");
+  approve.type="button";
+  approve.textContent="Approve activation";
+  approve.addEventListener("click",()=>{
+    reviewActivation(doc.id,"approved");
+  });
+
+  const reject=document.createElement("button");
+  reject.type="button";
+  reject.textContent="Reject activation";
+  reject.className="secondary";
+  reject.addEventListener("click",()=>{
+    reviewActivation(doc.id,"rejected");
+  });
+
+  actions.append(approve,reject);
+  item.appendChild(actions);
+}else{
+  const reviewed=document.createElement("p");
+  reviewed.textContent="This request has already been reviewed.";
+  item.appendChild(reviewed);
+}
+
+reqBox.appendChild(item);
+
+});
+}
 
 
 const withdrawalBox=$("adminWithdrawals");
