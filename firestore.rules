@@ -115,41 +115,51 @@ function isActiveMember(userId) {
 
     // Agent applications
 
-    match /agentApplications/{applicationId} {
-      allow read: if isAdmin()
-        || (signedIn() && resource.data.uid == request.auth.uid);
+match /agentApplications/{applicationId} {
+  allow read: if isAdmin()
+    || (signedIn() && resource.data.uid == request.auth.uid);
 
-      allow create: if signedIn()
-        && isActivePlus(request.auth.uid)
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.name is string
-        && request.resource.data.email is string
-        && request.resource.data.region is string
-        && request.resource.data.town is string
-        && validRegionTown(
-          request.resource.data.region,
-          request.resource.data.town
-        )
-        && request.resource.data.phone is string
-        && request.resource.data.nin is string
-        && request.resource.data.capitalDeclared == 50000
-        && request.resource.data.status == "pending"
-        && request.resource.data.keys().hasOnly([
-          "uid", "name", "email", "region", "town",
-          "phone", "nin", "capitalDeclared",
-          "status", "createdAt"
-        ]);
+  allow create: if signedIn()
+    && isActivePlus(request.auth.uid)
+    && request.resource.data.uid == request.auth.uid
+    && request.resource.data.name is string
+    && request.resource.data.email is string
+    && request.resource.data.region is string
+    && request.resource.data.town is string
+    && validRegionTown(
+      request.resource.data.region,
+      request.resource.data.town
+    )
+    && request.resource.data.phone is string
+    && request.resource.data.nin is string
+    && request.resource.data.capitalDeclared is int
+    && request.resource.data.capitalDeclared >= 50000
+    && request.resource.data.bonusRate == 15
+    && request.resource.data.estimatedBonus
+      == request.resource.data.capitalDeclared * 15 / 100
+    && request.resource.data.estimatedTotalFloat
+      == request.resource.data.capitalDeclared
+        + request.resource.data.estimatedBonus
+    && request.resource.data.status == "pending"
+    && request.resource.data.keys().hasOnly([
+      "uid", "name", "email", "region", "town",
+      "phone", "nin", "capitalDeclared",
+      "bonusRate", "estimatedBonus", "estimatedTotalFloat",
+      "status", "createdAt"
+    ]);
 
-      allow update: if isAdmin()
-        && resource.data.status == "pending"
-        && request.resource.data.diff(resource.data)
-          .affectedKeys().hasOnly([
-            "name", "status", "capitalVerified",
-            "reviewedAt", "reviewedBy"
-          ]);
+  allow update: if isAdmin()
+    && resource.data.status == "pending"
+    && request.resource.data.diff(resource.data)
+      .affectedKeys().hasOnly([
+        "name", "status", "capitalVerified",
+        "capitalVerifiedBy", "capitalVerifiedAt",
+        "bonusRate", "bonusAmount", "totalRestrictedFloat",
+        "reviewedAt", "reviewedBy"
+      ]);
 
-      allow delete: if false;
-    }
+  allow delete: if false;
+}
 
     // Public directory of approved agents
 
