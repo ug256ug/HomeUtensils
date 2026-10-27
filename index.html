@@ -3872,7 +3872,137 @@ firebase.initializeApp(firebaseConfig);
 auth=firebase.auth();
 db=firebase.firestore();
 
-auth.onAuthStateChanged(async user=>{
+// HomeUtensils single-use gift-code redemption.
+// Claims require an active member and are reserved once.
+// This code does not credit wallet balances.
+
+function setGiftCodeFormState() {
+  const button = $("claimGiftCodeButton");
+  const input = $("giftCodeInput");
+  const messageBox = $("giftCodeRedemptionMessage");
+
+  if (!button || !input || !messageBox) return;
+
+  const expiry = profileData && profileData.expiryDate;
+  const expiryDate = expiry && typeof expiry.toDate === "function"
+    ? expiry.toDate()
+    : null;
+
+  const active = Boolean(
+    currentUser &&
+    profileData &&
+    profileData.packageStatus === "active" &&
+    expiryDate &&
+    expiryDate.getTime() > Date.now()
+  );
+
+  button.disabled = !active;
+
+  button.textContent = active
+    ? "Claim gift code"
+    : "Active package required";
+
+  if (!active) {
+    messageBox.textContent =
+      "Sign in with an active, unexpired package to redeem a gift code.";
+  } else {
+    messageBox.textContent =
+      "Enter your gift code. Each code can be claimed only once.";
+  }
+}
+
+const giftCodeForm = $("giftCodeRedemptionForm");
+
+if (giftCodeForm) {
+  giftCodeForm.addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    const input = $("giftCodeInput");
+    const button = $("claimGiftCodeButton");
+    const messageBox = $("giftCodeRedemptionMessage");
+    const historyBox = $("giftCodeRedemptionHistory");
+
+    if (!currentUser || !profileData) {
+      messageBox.textContent = "Please sign in first.";
+      return;
+    }
+
+    const expiry = profileData.expiryDate;
+    const expiryDate = expiry && typeof expiry.toDate === "function"
+      ? expiry.toDate()
+      : null;
+
+    if (
+      profileData.packageStatus !== "active" ||
+      !expiryDate ||
+      expiryDate.getTime() <= Date.now()
+    ) {
+      messageBox.textContent =
+        "Your package must be active and unexpired.";
+      return;
+    }
+
+    const code = input.value.trim().toUpperCase();
+
+    if (!/^[A-Z0-9-]{8,40}$/.test(code)) {
+      messageBox.textContent =
+        "Enter a valid gift code.";
+      return;
+    }
+
+    button.disabled = true;
+    messageBox.textContent = "Checking gift code…";
+
+    try {
+      // Gift-code document ID must equal the code.
+      const codeRef = db.collection("giftCodes").doc(code);
+      const codeDoc = await codeRef.get();
+
+      if (!codeDoc.exists || codeDoc.data().code !== code) {
+        throw new Error("This gift code is invalid.");
+      }
+
+      // One permanent claim document per code.
+      const claimRef = db
+        .collection("giftCodeRedemptionRequests")
+        .doc(code);
+
+      const existingClaim = await claimRef.get();
+
+      if (existingClaim.exists) {
+        throw new Error(
+          "This gift code has already been claimed and cannot be reused."
+        );
+      }
+
+      // Firestore rules enforce active membership and allow creation
+      // only once for this document ID.
+      await claimRef.set({
+        uid: currentUser.uid,
+        code: code,
+        status: "pending",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      input.value = "";
+
+      messageBox.textContent =
+        "Claim submitted successfully. Your code is now reserved and awaits administrator review. No wallet credit has been made.";
+
+      historyBox.textContent =
+        "Your claim for " + code + " is pending administrator review.";
+
+    } catch (error) {
+      messageBox.textContent =
+        error.message ||
+        "The claim could not be submitted. Please try again.";
+
+    } finally {
+      setGiftCodeFormState();
+    }
+  });
+  }
+  auth.onAuthStateChanged(async user=>{
 currentUser=user;
 profileData=null;
 isAdminUser=false;
