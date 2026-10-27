@@ -298,7 +298,8 @@ match /agentFloatTransactions/{transactionId} {
       allow delete: if false;
     }
 
-        // Announcements
+        
+    // Announcements
     match /announcements/{announcementId} {
 
       // Administrators can read all announcements.
@@ -327,6 +328,7 @@ match /agentFloatTransactions/{transactionId} {
       // Announcements cannot be edited or deleted from the website.
       allow update, delete: if false;
     }
+
 // Financial and activity ledgers
     // Members cannot directly write these records.
 
