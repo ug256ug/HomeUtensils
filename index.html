@@ -2543,33 +2543,93 @@ box.appendChild(item);
 },err=>show($("requestHistory"),messageFromError(err),true));
 }
 
-function listenWithdrawals(user){
-$("withdrawalHistory").textContent="Loading withdrawal requests…";
-db.collection("withdrawalRequests").where("uid","==",user.uid).onSnapshot(snapshot=>{
-const box=$("withdrawalHistory");box.replaceChildren();
-if(snapshot.empty){box.textContent="You have not submitted any withdrawal requests.";return;}
-snapshot.forEach(doc=>{
-const d=doc.data(),item=document.createElement("div");item.className="request";
-const p=document.createElement("p");
-p.textContent="Request: "+doc.id;
-item.appendChild(p);
-[
-["Amount to receive",money(d.payout)],
-["Fee (10%)",money(d.fee)],
-["Total deduction",money(d.totalDeducted !== undefined ? d.totalDeducted : (Number(d.payout || d.amount || 0) + Number(d.fee || 0)))],
-["Method",d.method||"Not set"],
-["Status",d.status||"pending"],
-["Submitted",dateText(d.createdAt)],
-["Review note",d.reviewNote||"No review note"]
-].forEach(([label,value])=>{
-const line=document.createElement("p");
-line.textContent=label+": "+value;
-item.appendChild(line);
-});
-box.appendChild(item);
-});
-},err=>show($("withdrawalHistory"),"Could not load withdrawal history: "+messageFromError(err),true));
+
+function listenWithdrawals(user) {
+  const box = $("withdrawalHistory");
+  box.textContent = "Loading withdrawal requests…";
+
+  db.collection("withdrawalRequests")
+    .where("uid", "==", user.uid)
+    .onSnapshot(snapshot => {
+      box.replaceChildren();
+
+      if (snapshot.empty) {
+        box.textContent = "You have not submitted any withdrawal requests.";
+        return;
+      }
+
+      const docs = snapshot.docs.slice().sort((a, b) => {
+        const timeA = a.data().createdAt?.seconds || 0;
+        const timeB = b.data().createdAt?.seconds || 0;
+        return timeB - timeA;
+      });
+
+      docs.forEach(doc => {
+        const d = doc.data();
+        const item = document.createElement("div");
+        item.className = "request";
+
+        const heading = document.createElement("h3");
+        heading.textContent = "Withdrawal request";
+        item.appendChild(heading);
+
+        const status = String(d.status || "pending").toLowerCase();
+        const statusLine = document.createElement("p");
+        statusLine.textContent =
+          "Status: " + status.charAt(0).toUpperCase() + status.slice(1);
+        statusLine.style.fontWeight = "700";
+        item.appendChild(statusLine);
+
+        const details = [
+          ["Request ID", doc.id],
+          ["Amount requested", money(d.amount)],
+          ["Withdrawal fee (10%)", money(d.fee)],
+          ["Expected payout", money(d.payout)],
+          ["Total deduction if processed",
+            money(d.totalDeducted !== undefined ? d.totalDeducted : d.amount)],
+          ["Payment method", d.method || "Not provided"],
+          ["Mobile money network",
+            d.method === "Mobile Money"
+              ? (d.accountNetwork || "Not provided")
+              : "Not applicable"],
+          ["Account holder", d.accountName || "Not provided"],
+          ["Payout account", d.account || "Not provided"],
+          ["Submitted", dateText(d.createdAt)],
+          ["Administrator review note", d.reviewNote || "No review note yet"]
+        ];
+
+        details.forEach(([label, value]) => {
+          const line = document.createElement("p");
+          line.style.margin = "7px 0";
+
+          const strong = document.createElement("strong");
+          strong.textContent = label + ": ";
+
+          line.append(strong, document.createTextNode(String(value)));
+          item.appendChild(line);
+        });
+
+        const notice = document.createElement("p");
+        notice.className = "muted";
+        notice.textContent =
+          status === "approved"
+            ? "Reviewed and approved. Payment has not been confirmed."
+            : status === "rejected"
+              ? "This request was rejected. No payment was sent."
+              : "Awaiting administrator review. No payment has been sent.";
+        item.appendChild(notice);
+
+        box.appendChild(item);
+      });
+    }, err => {
+      show(
+        $("withdrawalHistory"),
+        "Could not load withdrawal history: " + messageFromError(err),
+        true
+      );
+    });
 }
+  
 
 
 $("withdrawalForm").addEventListener("submit", async e => {
