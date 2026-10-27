@@ -454,13 +454,23 @@ allow read: if isAdmin()
           "createdAt"
         ]);
 
-      // Administrators can review all claims.
-      // Members can read only their own claim.
-      allow read: if isAdmin()
+            // Administrators can read all claims.
+      // Members can check whether a code is unclaimed.
+      // Existing claims remain private to their owner and administrators.
+      allow get: if isAdmin()
+        || (
+          signedIn()
+          && !exists(
+            /databases/$(database)/documents/giftCodeRedemptionRequests/$(requestId)
+          )
+        )
         || (
           signedIn()
           && resource.data.uid == request.auth.uid
         );
+
+      // Only administrators can list all claims.
+      allow list: if isAdmin();
 
       // Only an administrator can review a pending claim.
       // Rejected claims remain recorded and cannot be resubmitted.
