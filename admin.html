@@ -151,22 +151,45 @@ footer{text-align:center;padding:22px;color:var(--muted);font-size:12px}
 
 
 <section class="card" id="giftCodes">
-<div class="section-label">Member rewards</div>
-<h2>UGX gift codes</h2>
-<div class="safe">Planned feature. No codes can be generated or redeemed from this dashboard yet.</div>
+  <div class="section-label">Member rewards</div>
+  <h2>UGX Gift Codes</h2>  <div class="notice">
+    Temporary manual-review system. Gift codes are not automatic wallet credits.
+    A member's request must be checked before any reward is approved.
+  </div>  <h3>Create a gift code</h3><label for="giftAmount">Gift value (UGX)</label>
+<input
+id="giftAmount"
+type="number"
+min="1"
+step="1"
+placeholder="Enter whole UGX amount"
 
-<label for="giftAmount">Gift value (UGX)</label>
-<input id="giftAmount" type="number" min="1" step="1" placeholder="Enter whole UGX amount" disabled>
+«»
 
 <label for="giftQuantity">Number of codes</label>
-<input id="giftQuantity" type="number" min="1" max="100" step="1" placeholder="Enter number of codes" disabled>
+<input
+id="giftQuantity"
+type="number"
+min="1"
+max="20"
+step="1"
+placeholder="Enter 1–20"
 
-<button type="button" class="gold" disabled>Generate gift codes — not enabled</button>
+«»
 
-<h3>Gift code history</h3>
-<p class="small">Gift code history will appear here after secure code creation and redemption are implemented.</p>
-
-<p class="small">Because redeemed gifts are intended to become withdrawable cash, the backend must validate each code, prevent duplicate redemption, record an audit trail, and credit the member's wallet exactly once. The member interface must also be implemented.</p>
+  <button type="button" class="gold" id="generateGiftCodesBtn">
+    Generate gift codes
+  </button>  <p id="giftCodeMessage" class="small" role="status" aria-live="polite">
+    Gift codes will be saved only after the secure creation handler and
+    Firestore permissions are configured.
+  </p>  <div id="generatedGiftCodes" class="small" aria-live="polite"></div>  <h3>Gift code redemption requests</h3>
+  <div id="giftCodeHistory" class="small">
+    Redemption requests will appear here after the member form and
+    secure Firestore permissions are configured.
+  </div>  <p class="small">
+    Never promise a cash payout from a code until its validity and the
+    approved reward record have been verified. Do not enter member passwords
+    or payment credentials here.
+  </p>
 </section>
 
 <section class="card" id="security">
