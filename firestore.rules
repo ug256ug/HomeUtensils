@@ -391,55 +391,105 @@ allow read: if isAdmin()
       allow create, update, delete: if false;
     }
 
-    // HomeUtensils temporary gift-code system
-// Gift codes are for manual review only; these rules do not credit wallets.
+       // HomeUtensils gift codes
+    // Codes are single-use. Approval does not directly credit wallets.
 
-match /giftCodes/{giftCodeId} {
-  allow read: if isAdmin();
+    match /giftCodes/{giftCodeId} {
+      // Administrators can view all gift codes.
+      // Active members can look up an individual code only.
+      allow get: if isAdmin()
+        || (
+          signedIn()
+          && isActiveMember(request.auth.uid)
+          && resource.data.code == giftCodeId
+        );
 
-  allow create: if isAdmin()
-    && request.resource.data.code is string
-    && request.resource.data.code.size() >= 8
-    && request.resource.data.code.size() <= 40
-    && request.resource.data.amount is int
-    && request.resource.data.amount > 0
-    && request.resource.data.amount <= 1000000
-    && request.resource.data.createdBy == request.auth.uid
-    && request.resource.data.createdAt == request.time
-    && request.resource.data.keys().hasOnly([
-      "code", "amount", "createdBy", "createdAt"
-    ]);
+      allow list: if isAdmin();
 
-  allow update, delete: if false;
-}
+      // New code document IDs must equal the actual gift code.
+      allow create: if isAdmin()
+        && request.resource.data.code is string
+        && giftCodeId == request.resource.data.code
+        && request.resource.data.code.size() >= 8
+        && request.resource.data.code.size() <= 40
+        && request.resource.data.amount is int
+        && request.resource.data.amount > 0
+        && request.resource.data.amount <= 1000000
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.keys().hasOnly([
+          "code",
+          "amount",
+          "createdBy",
+          "createdAt"
+        ]);
 
-match /giftCodeRedemptionRequests/{requestId} {
-  allow create: if signedIn()
-    && request.resource.data.uid == request.auth.uid
-    && request.resource.data.code is string
-    && request.resource.data.code.size() >= 8
-    && request.resource.data.code.size() <= 40
-    && request.resource.data.status == "pending"
-    && request.resource.data.createdAt == request.time
-    && request.resource.data.keys().hasOnly([
-      "uid", "code", "status", "createdAt"
-    ]);
+      // Gift codes cannot be edited or deleted through the website.
+      allow update, delete: if false;
+    }
 
-  allow read: if isAdmin()
-    || (signedIn() && resource.data.uid == request.auth.uid);
+    match /giftCodeRedemptionRequests/{requestId} {
+      // One request per gift code.
+      // The request ID must equal the code, so a second claim
+      // cannot create another request for the same code.
+      allow create: if signedIn()
+        && isActiveMember(request.auth.uid)
+        && requestId == request.resource.data.code
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.code is string
+        && request.resource.data.code.size() >= 8
+        && request.resource.data.code.size() <= 40
+        && exists(
+          /databases/$(database)/documents/giftCodes/$(requestId)
+        )
+        && get(
+          /databases/$(database)/documents/giftCodes/$(requestId)
+        ).data.code == requestId
+        && request.resource.data.status == "pending"
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.keys().hasOnly([
+          "uid",
+          "code",
+          "status",
+          "createdAt"
+        ]);
 
-  allow update: if isAdmin()
-    && resource.data.status == "pending"
-    && request.resource.data.diff(resource.data)
-      .affectedKeys().hasOnly([
-        "status", "reviewedAt", "reviewedBy", "reviewNote"
-      ])
-    && request.resource.data.status in ["approved", "rejected"]
-    && request.resource.data.reviewedBy == request.auth.uid
-    && request.resource.data.reviewedAt == request.time;
+      // Administrators can review all claims.
+      // Members can read only their own claim.
+      allow read: if isAdmin()
+        || (
+          signedIn()
+          && resource.data.uid == request.auth.uid
+        );
 
-  allow delete: if false;
-}
+      // Only an administrator can review a pending claim.
+      // Rejected claims remain recorded and cannot be resubmitted.
+      allow update: if isAdmin()
+        && resource.data.status == "pending"
+        && request.resource.data.diff(resource.data)
+          .affectedKeys().hasOnly([
+            "status",
+            "reviewedAt",
+            "reviewedBy",
+            "reviewNote"
+          ])
+        && request.resource.data.status in [
+          "approved",
+          "rejected"
+        ]
+        && request.resource.data.reviewedBy == request.auth.uid
+        && request.resource.data.reviewedAt == request.time
+        && (
+          !("reviewNote" in request.resource.data)
+          || (
+            request.resource.data.reviewNote is string
+            && request.resource.data.reviewNote.size() <= 500
+          )
+        );
+
+      // Claims cannot be deleted through the website.
+      allow delete: if false;
+    }
 // Default: deny everything else
 
     match /{document=**} {
