@@ -700,13 +700,13 @@ JSON.stringify(m).toLowerCase().includes(q)
 }
 
 
-$("adminAnnouncementForm").addEventListener("submit", async function(event) {
+$("announcementForm").addEventListener("submit", async function(event) {
   event.preventDefault();
 
   const titleInput = $("announcementTitle");
   const bodyInput = $("announcementBody");
-  const status = $("adminAnnouncementMessage");
-  const button = $("publishAnnouncementButton");
+  const status = $("announcementMessage");
+  const button = $("sendAnnouncementBtn");
 
   if (!activeUser) {
     status.textContent = "Please sign in as an administrator.";
@@ -756,13 +756,8 @@ $("adminAnnouncementForm").addEventListener("submit", async function(event) {
       createdBy: activeUser.uid
     });
 
-    $("announcementForm")?.reset();
-
-    titleInput.value = "";
-    bodyInput.value = "";
-
-    status.textContent =
-      "Announcement published successfully.";
+    $("announcementForm").reset();
+    status.textContent = "Announcement published successfully.";
 
     await loadAnnouncementHistory();
 
