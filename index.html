@@ -3963,17 +3963,10 @@ if (giftCodeForm) {
       }
 
       // One permanent claim document per code.
-      const claimRef = db
-        .collection("giftCodeRedemptionRequests")
-        .doc(code);
-
-      const existingClaim = await claimRef.get();
-
-      if (existingClaim.exists) {
-        throw new Error(
-          "This gift code has already been claimed and cannot be reused."
-        );
-      }
+// Firestore rules must reject updates to existing claims.
+const claimRef = db
+  .collection("giftCodeRedemptionRequests")
+  .doc(code);
 
       // Firestore rules enforce active membership and allow creation
       // only once for this document ID.
