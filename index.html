@@ -3652,81 +3652,171 @@ reqBox.appendChild(item);
 }
 
 
-const withdrawalBox=$("adminWithdrawals");
+
+const withdrawalBox = $("adminWithdrawals");
 withdrawalBox.replaceChildren();
 
-if(withdrawals.empty){
-  withdrawalBox.textContent="No withdrawal requests.";
+if (withdrawals.empty) {
+  withdrawalBox.textContent = "No withdrawal requests.";
 }
 
-const withdrawalDocs=withdrawals.docs.slice().sort((a,b)=>{
-  const order={pending:0,rejected:1,approved:2};
-  const statusA=String(a.data().status||"pending").toLowerCase();
-  const statusB=String(b.data().status||"pending").toLowerCase();
-  return (order[statusA]??1)-(order[statusB]??1);
+const withdrawalDocs = withdrawals.docs.slice().sort((a, b) => {
+  const order = { pending: 0, rejected: 1, approved: 2 };
+  const statusA = String(a.data().status || "pending").toLowerCase();
+  const statusB = String(b.data().status || "pending").toLowerCase();
+
+  return (order[statusA] ?? 1) - (order[statusB] ?? 1);
 });
 
-withdrawalDocs.forEach(doc=>{
-  const d=doc.data();
-  const item=document.createElement("div");
-  item.className="request";
+withdrawalDocs.forEach(doc => {
+  const d = doc.data();
+  const status = String(d.status || "pending").toLowerCase();
+  const method = d.method || "Not provided";
+  const uid = d.uid || d.memberUid || d.userId || "";
 
-  const profile=members.docs.find(m=>
-    m.id===(d.uid||d.memberUid||d.userId)
-  );
-  const member=profile?profile.data():{};
+  const profile = members.docs.find(m => m.id === uid);
+  const member = profile ? profile.data() : {};
 
-  const name=member.fullName||member.name||d.name||d.accountName||"Name not set";
-  const status=String(d.status||"pending").toLowerCase();
-  const method=d.method||"Not provided";
-  const account=d.account||d.phone||d.phoneNumber||"Not provided";
-  const accountName=d.accountName||"Not provided";
+  const name =
+    member.fullName ||
+    member.name ||
+    d.name ||
+    d.accountName ||
+    "Name not set";
 
-  const title=document.createElement("h3");
-  title.textContent=name;
-  item.appendChild(title);
+  const item = document.createElement("div");
+  item.className = "request";
+  item.style.marginBottom = "14px";
+  item.style.padding = "14px";
+  item.style.borderRadius = "12px";
+  item.style.overflowWrap = "anywhere";
 
-  
-  const details=[
-    ["Status",status.charAt(0).toUpperCase()+status.slice(1)],
-    ["Member ID",(d.uid||d.memberUid||d.userId||"Not available")],
-    ["Payment method",method],
-    ["Mobile money network",method==="Mobile Money"?(d.accountNetwork||"Not provided"):"Not applicable"],
-    ["Account name",accountName],
-    ["Payment number / account",account],
-    ["Requested amount",money(d.amount)],
-    ["Fee (10%)",money(d.fee)],
-    ["Expected payout",money(d.payout)],
-    ["Total deduction if processed",money(d.totalDeducted!==undefined?d.totalDeducted:d.amount)]
+  // Compact heading
+  const heading = document.createElement("h3");
+  heading.textContent = name;
+  heading.style.margin = "0 0 8px";
+  item.appendChild(heading);
+
+  // Status
+  const statusLine = document.createElement("p");
+  statusLine.textContent =
+    "STATUS: " + status.toUpperCase();
+  statusLine.style.fontWeight = "700";
+  statusLine.style.margin = "6px 0";
+  item.appendChild(statusLine);
+
+  // Main information shown without expanding the card
+  const summary = document.createElement("p");
+  summary.style.margin = "8px 0";
+  summary.style.lineHeight = "1.6";
+  summary.textContent =
+    "Requested: " + money(d.amount) +
+    " · Fee: " + money(d.fee) +
+    " · Expected payout: " + money(d.payout);
+
+  item.appendChild(summary);
+
+  const methodLine = document.createElement("p");
+  methodLine.style.margin = "6px 0";
+  methodLine.textContent =
+    "Method: " + method +
+    (method === "Mobile Money"
+      ? " · Network: " + (d.accountNetwork || "Not provided")
+      : "");
+  item.appendChild(methodLine);
+
+  // Expandable details keep the dashboard from becoming crowded
+  const extra = document.createElement("details");
+  extra.style.marginTop = "10px";
+
+  const extraTitle = document.createElement("summary");
+  extraTitle.textContent = "View full request details";
+  extraTitle.style.cursor = "pointer";
+  extraTitle.style.fontWeight = "700";
+  extraTitle.style.padding = "8px 0";
+  extra.appendChild(extraTitle);
+
+  const detailRows = [
+    ["Request ID", doc.id],
+    ["Member UID", uid || "Not available"],
+    ["Account holder", d.accountName || "Not provided"],
+    ["Payout account", d.account || d.phone || d.phoneNumber || "Not provided"],
+    ["Mobile money network",
+      method === "Mobile Money"
+        ? (d.accountNetwork || "Not provided")
+        : "Not applicable"],
+    ["Requested amount", money(d.amount)],
+    ["Withdrawal fee", money(d.fee)],
+    ["Expected payout", money(d.payout)],
+    ["Total deduction if processed",
+      money(d.totalDeducted !== undefined ? d.totalDeducted : d.amount)],
+    ["Submitted", typeof dateText === "function"
+      ? dateText(d.createdAt)
+      : "Date unavailable"],
+    ["Administrator review note", d.reviewNote || "No review note yet"]
   ];
-  
 
-  details.forEach(([label,value])=>{
-    const p=document.createElement("p");
-    p.textContent=label+": "+value;
-    item.appendChild(p);
+  detailRows.forEach(([label, value]) => {
+    const row = document.createElement("p");
+    row.style.margin = "7px 0";
+    row.style.lineHeight = "1.5";
+
+    const strong = document.createElement("strong");
+    strong.textContent = label + ": ";
+
+    row.append(strong, document.createTextNode(String(value)));
+    extra.appendChild(row);
   });
 
-  const note=document.createElement("p");
-  note.className="muted";
-  note.textContent="Review status only. This does not send payment.";
-  item.appendChild(note);
+  item.appendChild(extra);
 
-  if(status==="pending"){
-    const approve=document.createElement("button");
-    approve.textContent="Approve for review";
-    approve.addEventListener("click",()=>reviewWithdrawal(doc.id,"approved"));
+  // Review actions appear only for pending requests
+  if (status === "pending") {
+    const actions = document.createElement("div");
+    actions.style.display = "flex";
+    actions.style.flexWrap = "wrap";
+    actions.style.gap = "8px";
+    actions.style.marginTop = "12px";
 
-    const reject=document.createElement("button");
-    reject.textContent="Reject";
-    reject.className="secondary";
-    reject.addEventListener("click",()=>reviewWithdrawal(doc.id,"rejected"));
+    const approve = document.createElement("button");
+    approve.type = "button";
+    approve.textContent = "Approve (review only)";
+    approve.addEventListener("click", () => {
+      reviewWithdrawal(doc.id, "approved");
+    });
 
-    item.append(approve,reject);
+    const reject = document.createElement("button");
+    reject.type = "button";
+    reject.textContent = "Reject";
+    reject.className = "secondary";
+    reject.addEventListener("click", () => {
+      reviewWithdrawal(doc.id, "rejected");
+    });
+
+    actions.append(approve, reject);
+    item.appendChild(actions);
+  } else {
+    const reviewed = document.createElement("p");
+    reviewed.className = "muted";
+    reviewed.style.marginTop = "10px";
+    reviewed.textContent =
+      status === "approved"
+        ? "Approved for review purposes. Payment is not confirmed."
+        : "This request has been rejected.";
+    item.appendChild(reviewed);
   }
+
+  const notice = document.createElement("p");
+  notice.className = "muted";
+  notice.style.fontSize = "0.9em";
+  notice.style.marginBottom = "0";
+  notice.textContent =
+    "Reviewing a request does not send money or deduct wallet funds.";
+  item.appendChild(notice);
 
   withdrawalBox.appendChild(item);
 });
+  
 
 const memberBox=$("adminMembers");memberBox.replaceChildren();
 if(members.empty)memberBox.textContent="No registered member profiles.";
