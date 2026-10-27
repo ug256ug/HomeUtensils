@@ -879,3 +879,193 @@ inactive: members.length - activeCount,
 members
 };
 });
+
+ // Agent facilitation: secure request-only workflow.
+// This does not deduct float or activate packages.
+const AGENT_PACKAGE_PRICES = Object.freeze({
+  Starter: 5000,
+  Standard: 10000,
+  Plus: 20000
+});
+
+async function requireApprovedAgent(uid) {
+  const agentSnap = await db.collection("agentDirectory").doc(uid).get();
+
+  if (!agentSnap.exists || agentSnap.data().status !== "approved") {
+    throw new HttpsError(
+      "permission-denied",
+      "Only an approved HomeUtensils agent can use Agent Facilitation."
+    );
+  }
+
+  return agentSnap.data();
+}
+
+exports.findFacilitationMember = onCall(async (request) => {
+  const agentUid = requireSignedIn(request);
+  await requireApprovedAgent(agentUid);
+
+  const memberId = String(request.data?.memberId || "")
+    .trim()
+    .toUpperCase();
+
+  if (!/^HU[A-Z0-9]{5}$/.test(memberId)) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Enter a valid HomeUtensils Member ID."
+    );
+  }
+
+  const memberQuery = await db.collection("memberProfiles")
+    .where("memberId", "==", memberId)
+    .limit(2)
+    .get();
+
+  if (memberQuery.size !== 1) {
+    throw new HttpsError("not-found", "Member not found.");
+  }
+
+  const memberDoc = memberQuery.docs[0];
+  const member = memberDoc.data();
+
+  const activations = await db.collection("activationRequests")
+    .where("uid", "==", memberDoc.id)
+    .where("status", "==", "pending")
+    .get();
+
+  const pendingPackages = [...new Set(
+    activations.docs
+      .map(doc => String(doc.data().packageRequested || ""))
+      .filter(name =>
+        Object.prototype.hasOwnProperty.call(AGENT_PACKAGE_PRICES, name)
+      )
+  )];
+
+  return {
+    ok: true,
+    memberId,
+    name: String(member.name || member.fullName || "Member"),
+    pendingPackages,
+    message: pendingPackages.length
+      ? "Member found. Select a package with a pending activation."
+      : "Member found, but no eligible pending activation exists."
+  };
+});
+
+exports.submitAgentFacilitationRequest = onCall(async (request) => {
+  const agentUid = requireSignedIn(request);
+  await requireApprovedAgent(agentUid);
+
+  const memberId = String(request.data?.memberId || "")
+    .trim()
+    .toUpperCase();
+
+  const packageName = String(request.data?.packageName || "").trim();
+
+  if (
+    !/^HU[A-Z0-9]{5}$/.test(memberId) ||
+    !Object.prototype.hasOwnProperty.call(
+      AGENT_PACKAGE_PRICES,
+      packageName
+    )
+  ) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Enter a valid Member ID and package."
+    );
+  }
+
+  const memberQuery = await db.collection("memberProfiles")
+    .where("memberId", "==", memberId)
+    .limit(2)
+    .get();
+
+  if (memberQuery.size !== 1) {
+    throw new HttpsError("not-found", "Member not found.");
+  }
+
+  const memberDoc = memberQuery.docs[0];
+
+  const activationQuery = await db.collection("activationRequests")
+    .where("uid", "==", memberDoc.id)
+    .where("status", "==", "pending")
+    .where("packageRequested", "==", packageName)
+    .limit(2)
+    .get();
+
+  if (activationQuery.size !== 1) {
+    throw new HttpsError(
+      "failed-precondition",
+      "Exactly one matching pending activation is required. No funds were deducted."
+    );
+  }
+
+  const activationDoc = activationQuery.docs[0];
+
+  const requestId = (agentUid + "_" + activationDoc.id)
+    .replace(/[^A-Za-z0-9_-]/g, "_")
+    .slice(0, 140);
+
+  const requestRef = db.collection("agentFacilitationRequests")
+    .doc(requestId);
+
+  const result = await db.runTransaction(async (transaction) => {
+    const existing = await transaction.get(requestRef);
+    const activation = await transaction.get(activationDoc.ref);
+
+    if (!activation.exists || activation.data().status !== "pending") {
+      throw new HttpsError(
+        "failed-precondition",
+        "The activation is no longer pending. Refresh and check again."
+      );
+    }
+
+    if (existing.exists) {
+      return { duplicate: true, requestId };
+    }
+
+    transaction.create(requestRef, {
+      requestId,
+      agentUid,
+      memberUid: memberDoc.id,
+      memberId,
+      activationRequestId: activationDoc.id,
+      packageRequested: packageName,
+      packagePrice: AGENT_PACKAGE_PRICES[packageName],
+      currency: "UGX",
+      status: "pending_review",
+      fundsDeducted: false,
+      packageActivated: false,
+      createdAt: FieldValue.serverTimestamp(),
+      source: "trusted_backend"
+    });
+
+    return { duplicate: false, requestId };
+  });
+
+  await db.collection("adminAuditLogs").add({
+    actorUid: agentUid,
+    action: result.duplicate
+      ? "AGENT_FACILITATION_DUPLICATE_BLOCKED"
+      : "AGENT_FACILITATION_REQUEST_SUBMITTED",
+    targetType: "agentFacilitationRequest",
+    targetId: result.requestId,
+    memberUid: memberDoc.id,
+    activationRequestId: activationDoc.id,
+    packageRequested: packageName,
+    createdAt: FieldValue.serverTimestamp(),
+    source: "trusted_backend"
+  });
+
+  return {
+    ok: true,
+    duplicate: result.duplicate,
+    requestId: result.requestId,
+    fundsDeducted: false,
+    packageActivated: false,
+    message: result.duplicate
+      ? "This request already exists. No additional deduction was made."
+      : "Request submitted for administrator review. No funds were deducted and the package was not activated."
+  };
+});
+
