@@ -1006,12 +1006,63 @@ The server must verify the schedule, public holidays, available balance and pend
 
 
 <div class="card" id="bonusCard">
-  <h2>Bonus Code</h2>
+  <h2>🎁 Redeem Gift Code</h2>
+
+  <p>
+    Enter a gift code issued by HomeUtensils to request your bonus.
+  </p>
+
   <div class="notice">
-    <strong>Bonus redemption is not available yet.</strong>
-    <p>Bonus codes must be validated securely before any reward is credited.</p>
+    <strong>Gift code rules</strong>
+    <ul>
+      <li>Only members with an active, unexpired package are eligible.</li>
+      <li>Each gift code can be claimed by one member only.</li>
+      <li>A code is reserved when the first valid claim succeeds.</li>
+      <li>Submitting a claim does not guarantee approval.</li>
+      <li>An approved bonus must be credited only once.</li>
+    </ul>
   </div>
-</div>
+
+  <form id="giftCodeRedemptionForm">
+    <label for="giftCodeInput">Gift code</label>
+
+    <input
+      id="giftCodeInput"
+      name="giftCode"
+      type="text"
+      placeholder="Example: HU-XXXXXXXX"
+      minlength="8"
+      maxlength="40"
+      autocomplete="off"
+      autocapitalize="characters"
+      spellcheck="false"
+      required
+    >
+
+    <button
+      id="claimGiftCodeButton"
+      type="submit"
+      disabled
+    >
+      Redemption temporarily unavailable
+    </button>
+  </form>
+
+  <div
+    id="giftCodeRedemptionMessage"
+    class="notice"
+    role="status"
+    aria-live="polite"
+  >
+    Secure redemption is being connected. Please do not submit a code
+    until the claim system is enabled.
+  </div>
+
+  <div id="giftCodeRedemptionHistory">
+    <h3>My gift code claims</h3>
+    <p>Your claim history will appear here when redemption is enabled.</p>
+  </div>
+  </div>
 
 <div class="card" id="welcomeGiftBonusCard">
   <h2>🎁 Welcome Gift Bonus</h2>
