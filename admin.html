@@ -533,7 +533,99 @@ records.forEach(record => {
 const row = document.createElement("div");
 row.className = "record";
 
-if (id === "taskList") {
+
+if (id === "giftCodeHistory") {
+  const heading = document.createElement("h3");
+  heading.textContent = "Gift code: " + (record.code || record._id);
+
+  const member = document.createElement("p");
+  member.textContent = "Member UID: " + (record.uid || "Not recorded");
+
+  const status = document.createElement("p");
+  status.textContent = "Status: " + (record.status || "unknown");
+
+  row.append(heading, member, status);
+
+  if (record.status === "pending") {
+    const approve = document.createElement("button");
+    approve.type = "button";
+    approve.textContent = "Approve claim";
+
+    const reject = document.createElement("button");
+    reject.type = "button";
+    reject.textContent = "Reject claim";
+
+    const note = document.createElement("input");
+    note.type = "text";
+    note.maxLength = 500;
+    note.placeholder = "Optional review note";
+
+    const result = document.createElement("p");
+    result.className = "small";
+    result.setAttribute("aria-live", "polite");
+
+    async function reviewGiftCode(newStatus) {
+      if (!activeUser) {
+        result.textContent = "Please sign in again.";
+        return;
+      }
+
+      if (!confirm("Confirm " + newStatus + " for this gift-code claim?")) {
+        return;
+      }
+
+      approve.disabled = true;
+      reject.disabled = true;
+      result.textContent = "Saving review…";
+
+      try {
+        const adminDoc = await db.collection("admins")
+          .doc(activeUser.uid).get();
+
+        if (
+          !adminDoc.exists ||
+          adminDoc.data().role !== "admin" ||
+          adminDoc.data().enabled !== true
+        ) {
+          throw new Error("Enabled administrator access is required.");
+        }
+
+        const update = {
+          status: newStatus,
+          reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          reviewedBy: activeUser.uid
+        };
+
+        if (note.value.trim()) {
+          update.reviewNote = note.value.trim();
+        }
+
+        await db.collection("giftCodeRedemptionRequests")
+          .doc(record._id)
+          .update(update);
+
+        result.textContent = newStatus === "approved"
+          ? "Claim approved. No wallet credit has been made."
+          : "Claim rejected. The code remains reserved.";
+
+        await refreshAll();
+
+      } catch (error) {
+        approve.disabled = false;
+        reject.disabled = false;
+        result.textContent =
+          "Review failed: " + (error.message || "Please try again.");
+      }
+    }
+
+    approve.addEventListener("click", () => reviewGiftCode("approved"));
+    reject.addEventListener("click", () => reviewGiftCode("rejected"));
+
+    row.append(note, approve, reject, result);
+  }
+
+} else if (id === "taskList") {
+  
   const heading = document.createElement("h3");
   heading.textContent = record.taskTitle || record.taskId || "Submitted task";
 
