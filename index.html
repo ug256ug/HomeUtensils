@@ -2576,6 +2576,87 @@ $("copyReferralLink").addEventListener("click", async () => {
     );
   }
 });
+  // HomeUtensils: load the signed-in member's direct referral team.
+async function loadMyReferralTeam() {
+  const message = $("referralTeamMessage");
+  const list = $("referralTeamList");
+  const button = $("refreshReferralTeam");
+
+  if (!message || !list || !button) return;
+
+  if (!currentUser) {
+    message.textContent = "Please sign in first.";
+    return;
+  }
+
+  button.disabled = true;
+  message.textContent = "Loading your referral team…";
+  list.replaceChildren();
+
+  try {
+    const getMyTeam = firebase
+      .app()
+      .functions()
+      .httpsCallable("getMyTeam");
+
+    const response = await getMyTeam({});
+    const result = response.data || {};
+    const members = Array.isArray(result.members)
+      ? result.members
+      : [];
+
+    $("referralTotal").textContent =
+      String(result.total ?? members.length);
+
+    $("referralActive").textContent =
+      String(result.active ?? 0);
+
+    $("referralInactive").textContent =
+      String(result.inactive ?? members.length);
+
+    if (members.length === 0) {
+      message.textContent =
+        "No direct referrals have been recorded for your account yet.";
+      return;
+    }
+
+    members.forEach(member => {
+      const card = document.createElement("div");
+      card.className = "request";
+
+      const name = document.createElement("strong");
+      name.textContent = member.name || "HomeUtensils Member";
+
+      const memberId = document.createElement("p");
+      memberId.textContent =
+        "Member ID: " + (member.memberId || "Not available");
+
+      const packageInfo = document.createElement("p");
+      packageInfo.textContent =
+        "Package: " + (member.package || "Not recorded");
+
+      const status = document.createElement("p");
+      status.textContent =
+        "Referral status: " + (member.status || "inactive");
+
+      card.append(name, memberId, packageInfo, status);
+      list.appendChild(card);
+    });
+
+    message.textContent = "Referral team loaded successfully.";
+  } catch (error) {
+    console.error("Referral team loading failed:", error);
+    message.textContent =
+      "Could not load your referral team: " +
+      messageFromError(error);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+$("refreshReferralTeam").addEventListener("click", async () => {
+  await loadMyReferralTeam();
+});
 function listenRequests(user){
 $("requestHistory").textContent="Loading requests…";
 db.collection("activationRequests").where("uid","==",user.uid).onSnapshot(snapshot=>{
