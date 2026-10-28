@@ -1282,6 +1282,51 @@ loading="lazy"
 
 
 <div class="card" id="agentWorkCard">
+  <div class="card" id="agentFloatDashboard">
+  <h3>💼 My Agent Float</h3>
+
+  <p class="muted">
+    Your restricted float is for facilitating eligible member package activations.
+    It cannot be withdrawn as personal cash.
+  </p>
+
+  <div id="agentFloatStatus" class="notice" aria-live="polite">
+    Sign in to view your agent float.
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:14px 0;">
+
+    <div class="notice">
+      <small>Starting capital</small>
+      <h3 id="agentFloatCapital">UGX 0</h3>
+    </div>
+
+    <div class="notice">
+      <small>Bonus awarded</small>
+      <h3 id="agentFloatBonus">UGX 0</h3>
+    </div>
+
+    <div class="notice">
+      <small>Restricted balance</small>
+      <h3 id="agentFloatBalance">UGX 0</h3>
+    </div>
+
+    <div class="notice">
+      <small>Withdrawable balance</small>
+      <h3 id="agentFloatWithdrawable">UGX 0</h3>
+    </div>
+
+  </div>
+
+  <h4>Recent Float Transactions</h4>
+  <div id="agentFloatHistory" aria-live="polite">
+    Sign in to view transaction history.
+  </div>
+
+  <button id="refreshAgentFloat" type="button">
+    Refresh Float
+  </button>
+  </div>
   <h2>Agent Facilitation</h2>
   <p>Use the registered member ID to locate a member and submit a package facilitation request.</p>
 
