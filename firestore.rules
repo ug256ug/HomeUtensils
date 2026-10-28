@@ -85,7 +85,72 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Package activation requests
+    
+    // Referral requests: members submit claims for administrator verification.
+
+    match /referralRequests/{referredUid} {
+      allow create: if signedIn()
+        && referredUid == request.auth.uid
+        && request.resource.data.referredUid == request.auth.uid
+        && request.resource.data.referredName is string
+        && request.resource.data.referredName.size() >= 2
+        && request.resource.data.referredName.size() <= 100
+        && request.resource.data.referredMemberId is string
+        && request.resource.data.referredMemberId.matches('^HU[A-Z0-9]{5}$')
+        && request.resource.data.referrerCode is string
+        && request.resource.data.referrerCode.matches('^HU[A-Z0-9]{5}$')
+        && request.resource.data.status == "pending"
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.keys().hasOnly([
+          "referredUid",
+          "referredName",
+          "referredMemberId",
+          "referrerCode",
+          "status",
+          "createdAt"
+        ])
+        && !exists(
+          /databases/$(database)/documents/referralRequests/$(referredUid)
+        );
+
+      allow get: if isAdmin()
+        || (signedIn() && referredUid == request.auth.uid);
+
+      allow list: if isAdmin()
+        || (
+          signedIn()
+          && resource.data.status == "approved"
+          && resource.data.referrerCode
+            == get(
+              /databases/$(database)/documents/memberProfiles/$(request.auth.uid)
+            ).data.memberId
+        );
+
+      allow update: if isAdmin()
+        && resource.data.status == "pending"
+        && request.resource.data.status in ["approved", "rejected"]
+        && request.resource.data.reviewedBy == request.auth.uid
+        && request.resource.data.reviewedAt == request.time
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly([
+            "status",
+            "reviewedAt",
+            "reviewedBy",
+            "verifiedReferrerUid"
+          ])
+        && (
+          (
+            request.resource.data.status == "approved"
+            && request.resource.data.verifiedReferrerUid is string
+          )
+          || request.resource.data.status == "rejected"
+        );
+
+      allow delete: if false;
+    }
+
+
+// Package activation requests
 
     match /activationRequests/{requestId} {
       allow read: if isAdmin()
