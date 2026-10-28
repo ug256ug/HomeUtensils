@@ -1,4 +1,3 @@
-
 rules_version = '2';
 
 service cloud.firestore {
@@ -26,12 +25,13 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/memberProfiles/$(userId)).data.package == "Plus"
         && get(/databases/$(database)/documents/memberProfiles/$(userId)).data.packageStatus == "active";
     }
-function isActiveMember(userId) {
-  return exists(/databases/$(database)/documents/memberProfiles/$(userId))
-    && get(/databases/$(database)/documents/memberProfiles/$(userId)).data.packageStatus == "active"
-    && get(/databases/$(database)/documents/memberProfiles/$(userId)).data.expiryDate is timestamp
-    && request.time < get(/databases/$(database)/documents/memberProfiles/$(userId)).data.expiryDate;
-}
+
+    function isActiveMember(userId) {
+      return exists(/databases/$(database)/documents/memberProfiles/$(userId))
+        && get(/databases/$(database)/documents/memberProfiles/$(userId)).data.packageStatus == "active"
+        && get(/databases/$(database)/documents/memberProfiles/$(userId)).data.expiryDate is timestamp
+        && request.time < get(/databases/$(database)/documents/memberProfiles/$(userId)).data.expiryDate;
+    }
 
     // Uganda agent regions and towns
 
@@ -58,7 +58,6 @@ function isActiveMember(userId) {
       allow create, update, delete: if false;
     }
 
-    
     // Member profiles
 
     match /memberProfiles/{userId} {
@@ -85,7 +84,6 @@ function isActiveMember(userId) {
 
       allow delete: if false;
     }
-
 
     // Package activation requests
 
@@ -115,57 +113,57 @@ function isActiveMember(userId) {
 
     // Agent applications
 
-match /agentApplications/{applicationId} {
-  allow read: if isAdmin()
-    || (
-      signedIn()
-      && resource.data.uid == request.auth.uid
-    );
+    match /agentApplications/{applicationId} {
+      allow read: if isAdmin()
+        || (
+          signedIn()
+          && resource.data.uid == request.auth.uid
+        );
 
-  allow create: if signedIn()
-    && isActivePlus(request.auth.uid)
-    && request.resource.data.uid == request.auth.uid
-    && request.resource.data.name is string
-    && request.resource.data.email is string
-    && request.resource.data.region is string
-    && request.resource.data.town is string
-    && validRegionTown(
-      request.resource.data.region,
-      request.resource.data.town
-    )
-    && request.resource.data.phone is string
-    && request.resource.data.nin is string
-    && request.resource.data.capitalDeclared is int
-    && request.resource.data.capitalDeclared >= 50000
-    && request.resource.data.bonusRate == 15
-    && request.resource.data.estimatedBonus is int
-    && request.resource.data.estimatedBonus
-      >= request.resource.data.capitalDeclared * 15 / 100 - 0.5
-    && request.resource.data.estimatedBonus
-      <= request.resource.data.capitalDeclared * 15 / 100 + 0.5
-    && request.resource.data.estimatedTotalFloat
-      == request.resource.data.capitalDeclared
-        + request.resource.data.estimatedBonus
-    && request.resource.data.status == "pending"
-    && request.resource.data.keys().hasOnly([
-      "uid", "name", "email", "region", "town",
-      "phone", "nin", "capitalDeclared",
-      "bonusRate", "estimatedBonus", "estimatedTotalFloat",
-      "status", "createdAt"
-    ]);
+      allow create: if signedIn()
+        && isActivePlus(request.auth.uid)
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.name is string
+        && request.resource.data.email is string
+        && request.resource.data.region is string
+        && request.resource.data.town is string
+        && validRegionTown(
+          request.resource.data.region,
+          request.resource.data.town
+        )
+        && request.resource.data.phone is string
+        && request.resource.data.nin is string
+        && request.resource.data.capitalDeclared is int
+        && request.resource.data.capitalDeclared >= 50000
+        && request.resource.data.bonusRate == 15
+        && request.resource.data.estimatedBonus is int
+        && request.resource.data.estimatedBonus
+          >= request.resource.data.capitalDeclared * 15 / 100 - 0.5
+        && request.resource.data.estimatedBonus
+          <= request.resource.data.capitalDeclared * 15 / 100 + 0.5
+        && request.resource.data.estimatedTotalFloat
+          == request.resource.data.capitalDeclared
+            + request.resource.data.estimatedBonus
+        && request.resource.data.status == "pending"
+        && request.resource.data.keys().hasOnly([
+          "uid", "name", "email", "region", "town",
+          "phone", "nin", "capitalDeclared",
+          "bonusRate", "estimatedBonus", "estimatedTotalFloat",
+          "status", "createdAt"
+        ]);
 
-  allow update: if isAdmin()
-    && resource.data.status == "pending"
-    && request.resource.data.diff(resource.data)
-      .affectedKeys().hasOnly([
-        "name", "status", "capitalVerified",
-        "capitalVerifiedBy", "capitalVerifiedAt",
-        "bonusRate", "bonusAmount", "totalRestrictedFloat",
-        "reviewedAt", "reviewedBy"
-      ]);
+      allow update: if isAdmin()
+        && resource.data.status == "pending"
+        && request.resource.data.diff(resource.data)
+          .affectedKeys().hasOnly([
+            "name", "status", "capitalVerified",
+            "capitalVerifiedBy", "capitalVerifiedAt",
+            "bonusRate", "bonusAmount", "totalRestrictedFloat",
+            "reviewedAt", "reviewedBy"
+          ]);
 
-  allow delete: if false;
-}
+      allow delete: if false;
+    }
 
     // Public directory of approved agents
 
@@ -189,246 +187,241 @@ match /agentApplications/{applicationId} {
       allow delete: if isAdmin();
     }
 
-        // Agent working float
+    // Agent working float
+    // Test-only records; no actual capital is verified or paid.
 
-    
-match /agentFloats/{agentId} {
-  allow read: if isAdmin()
-    || (signedIn() && request.auth.uid == agentId);
+    match /agentFloats/{agentId} {
+      allow read: if isAdmin()
+        || (signedIn() && request.auth.uid == agentId);
 
-  // Temporary test float only. This does not verify real capital.
-  allow create: if isAdmin()
-    && request.resource.data.uid == agentId
-    && request.resource.data.applicationId is string
-    && request.resource.data.capitalAmount is number
-    && request.resource.data.capitalAmount > 0
-    && request.resource.data.bonusAmount is number
-    && request.resource.data.bonusAmount
-      >= request.resource.data.capitalAmount * 15 / 100 - 0.5
-    && request.resource.data.bonusAmount
-      <= request.resource.data.capitalAmount * 15 / 100 + 0.5
-    && request.resource.data.restrictedBalance
-      == request.resource.data.capitalAmount
-        + request.resource.data.bonusAmount
-    && request.resource.data.withdrawableBalance == 0
-    && request.resource.data.status == "test_only"
-    && request.resource.data.testOnly == true
-    && request.resource.data.capitalVerified == false
-    && request.resource.data.restricted == true
-    && request.resource.data.permittedUse
-      == "member_package_activation"
-    && request.resource.data.createdBy == request.auth.uid
-    && request.resource.data.keys().hasOnly([
-      "uid",
-      "applicationId",
-      "capitalAmount",
-      "bonusAmount",
-      "restrictedBalance",
-      "withdrawableBalance",
-      "status",
-      "testOnly",
-      "capitalVerified",
-      "restricted",
-      "permittedUse",
-      "createdAt",
-      "createdBy"
-    ]);
+      allow create: if isAdmin()
+        && request.resource.data.uid == agentId
+        && request.resource.data.applicationId is string
+        && request.resource.data.capitalAmount is number
+        && request.resource.data.capitalAmount > 0
+        && request.resource.data.bonusAmount is number
+        && request.resource.data.bonusAmount
+          >= request.resource.data.capitalAmount * 15 / 100 - 0.5
+        && request.resource.data.bonusAmount
+          <= request.resource.data.capitalAmount * 15 / 100 + 0.5
+        && request.resource.data.restrictedBalance
+          == request.resource.data.capitalAmount
+            + request.resource.data.bonusAmount
+        && request.resource.data.withdrawableBalance == 0
+        && request.resource.data.status == "test_only"
+        && request.resource.data.testOnly == true
+        && request.resource.data.capitalVerified == false
+        && request.resource.data.restricted == true
+        && request.resource.data.permittedUse
+          == "member_package_activation"
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          "uid",
+          "applicationId",
+          "capitalAmount",
+          "bonusAmount",
+          "restrictedBalance",
+          "withdrawableBalance",
+          "status",
+          "testOnly",
+          "capitalVerified",
+          "restricted",
+          "permittedUse",
+          "createdAt",
+          "createdBy"
+        ]);
 
-  allow update, delete: if false;
-}
-
+      allow update, delete: if false;
+    }
 
     // Agent float audit transactions
 
-    
-match /agentFloatTransactions/{transactionId} {
-  allow read: if isAdmin()
-    || (signedIn() && resource.data.uid == request.auth.uid);
+    match /agentFloatTransactions/{transactionId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
 
-  allow create: if isAdmin() && (
-    (
-      request.resource.data.type == "initial_float_issuance"
-      && request.resource.data.currency == "UGX"
-      && request.resource.data.capitalAmount is int
-      && request.resource.data.capitalAmount >= 50000
-      && request.resource.data.bonusRate == 15
-      && request.resource.data.bonusAmount is int
-      && request.resource.data.bonusAmount
-        >= request.resource.data.capitalAmount * 15 / 100 - 0.5
-      && request.resource.data.bonusAmount
-        <= request.resource.data.capitalAmount * 15 / 100 + 0.5
-      && request.resource.data.amount
-        == request.resource.data.capitalAmount
-          + request.resource.data.bonusAmount
-      && request.resource.data.balanceAfter
-        == request.resource.data.amount
-      && request.resource.data.withdrawable == false
-      && request.resource.data.keys().hasOnly([
-        "uid", "type", "amount", "capitalAmount",
-        "bonusRate", "bonusAmount", "currency",
-        "balanceAfter", "withdrawable",
-        "sourceApplicationId", "createdAt", "createdBy"
-      ])
-    )
-    ||
-    (
-      request.resource.data.type == "initial_test_float_issuance"
-      && request.resource.data.testOnly == true
-      && request.resource.data.uid is string
-      && request.resource.data.applicationId is string
-      && request.resource.data.capitalAmount is number
-      && request.resource.data.capitalAmount > 0
-      && request.resource.data.bonusAmount is number
-      && request.resource.data.bonusAmount
-        >= request.resource.data.capitalAmount * 15 / 100 - 0.5
-      && request.resource.data.bonusAmount
-        <= request.resource.data.capitalAmount * 15 / 100 + 0.5
-      && request.resource.data.amount
-        == request.resource.data.capitalAmount
-          + request.resource.data.bonusAmount
-      && request.resource.data.withdrawableBalance == 0
-      && request.resource.data.createdBy == request.auth.uid
-      && request.resource.data.keys().hasOnly([
-        "uid", "applicationId", "type", "capitalAmount",
-        "bonusAmount", "amount", "testOnly",
-        "withdrawableBalance", "createdAt", "createdBy"
-      ])
-    )
-  );
+      allow create: if isAdmin() && (
+        (
+          request.resource.data.type == "initial_float_issuance"
+          && request.resource.data.currency == "UGX"
+          && request.resource.data.capitalAmount is int
+          && request.resource.data.capitalAmount >= 50000
+          && request.resource.data.bonusRate == 15
+          && request.resource.data.bonusAmount is int
+          && request.resource.data.bonusAmount
+            >= request.resource.data.capitalAmount * 15 / 100 - 0.5
+          && request.resource.data.bonusAmount
+            <= request.resource.data.capitalAmount * 15 / 100 + 0.5
+          && request.resource.data.amount
+            == request.resource.data.capitalAmount
+              + request.resource.data.bonusAmount
+          && request.resource.data.balanceAfter
+            == request.resource.data.amount
+          && request.resource.data.withdrawable == false
+          && request.resource.data.keys().hasOnly([
+            "uid", "type", "amount", "capitalAmount",
+            "bonusRate", "bonusAmount", "currency",
+            "balanceAfter", "withdrawable",
+            "sourceApplicationId", "createdAt", "createdBy"
+          ])
+        )
+        ||
+        (
+          request.resource.data.type == "initial_test_float_issuance"
+          && request.resource.data.testOnly == true
+          && request.resource.data.uid is string
+          && request.resource.data.applicationId is string
+          && request.resource.data.capitalAmount is number
+          && request.resource.data.capitalAmount > 0
+          && request.resource.data.bonusAmount is number
+          && request.resource.data.bonusAmount
+            >= request.resource.data.capitalAmount * 15 / 100 - 0.5
+          && request.resource.data.bonusAmount
+            <= request.resource.data.capitalAmount * 15 / 100 + 0.5
+          && request.resource.data.amount
+            == request.resource.data.capitalAmount
+              + request.resource.data.bonusAmount
+          && request.resource.data.withdrawableBalance == 0
+          && request.resource.data.createdBy == request.auth.uid
+          && request.resource.data.keys().hasOnly([
+            "uid", "applicationId", "type", "capitalAmount",
+            "bonusAmount", "amount", "testOnly",
+            "withdrawableBalance", "createdAt", "createdBy"
+          ])
+        )
+      );
 
-  allow update, delete: if false;
-}
-
+      allow update, delete: if false;
+    }
 
     // Withdrawal requests
 
-    
-match /withdrawalRequests/{requestId} {
-  allow read: if isAdmin()
-    || (signedIn() && resource.data.uid == request.auth.uid);
+    match /withdrawalRequests/{requestId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
 
-  allow create: if signedIn()
-    && request.resource.data.uid == request.auth.uid
-    && request.resource.data.amount is number
-    && request.resource.data.amount >= 2000
-    && request.resource.data.amount == request.resource.data.amount
-    && request.resource.data.fee is number
-    && request.resource.data.fee >= 0
-    && request.resource.data.fee <= request.resource.data.amount
-    && request.resource.data.payout is number
-    && request.resource.data.payout > 0
-    && request.resource.data.payout
-      == request.resource.data.amount - request.resource.data.fee
-    && request.resource.data.currency == "UGX"
-    && request.resource.data.method in [
-      "Mobile Money", "Bank Transfer"
-    ]
-    && request.resource.data.accountName is string
-    && request.resource.data.account is string
-    && request.resource.data.accountName.size() > 0
-    && request.resource.data.account.size() > 0
-    && (
-      (
-        request.resource.data.method == "Mobile Money"
-        && request.resource.data.accountNetwork in [
-          "MTN", "Airtel", "Other"
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.amount is number
+        && request.resource.data.amount >= 2000
+        && request.resource.data.fee is number
+        && request.resource.data.fee >= 0
+        && request.resource.data.fee <= request.resource.data.amount
+        && request.resource.data.payout is number
+        && request.resource.data.payout > 0
+        && request.resource.data.payout
+          == request.resource.data.amount - request.resource.data.fee
+        && request.resource.data.currency == "UGX"
+        && request.resource.data.method in [
+          "Mobile Money", "Bank Transfer"
         ]
-      )
-      ||
-      (
-        request.resource.data.method == "Bank Transfer"
-        && request.resource.data.accountNetwork == ""
-      )
-    )
-    && request.resource.data.status == "pending"
-    && request.resource.data.keys().hasOnly([
-      "uid", "amount", "fee", "payout", "totalDeducted",
-      "currency", "method", "accountNetwork",
-      "accountName", "account", "note", "status", "createdAt"
-    ]);
+        && request.resource.data.accountName is string
+        && request.resource.data.account is string
+        && request.resource.data.accountName.size() > 0
+        && request.resource.data.account.size() > 0
+        && (
+          (
+            request.resource.data.method == "Mobile Money"
+            && request.resource.data.accountNetwork in [
+              "MTN", "Airtel", "Other"
+            ]
+          )
+          ||
+          (
+            request.resource.data.method == "Bank Transfer"
+            && request.resource.data.accountNetwork == ""
+          )
+        )
+        && request.resource.data.status == "pending"
+        && request.resource.data.keys().hasOnly([
+          "uid", "amount", "fee", "payout", "totalDeducted",
+          "currency", "method", "accountNetwork",
+          "accountName", "account", "note", "status", "createdAt"
+        ]);
 
-  allow update: if isAdmin()
-    && resource.data.status == "pending"
-    && request.resource.data.diff(resource.data)
-      .affectedKeys().hasOnly([
-        "status", "reviewNote", "reviewedAt", "reviewedBy"
-      ])
-    && request.resource.data.status in ["approved", "rejected"];
+      allow update: if isAdmin()
+        && resource.data.status == "pending"
+        && request.resource.data.diff(resource.data)
+          .affectedKeys().hasOnly([
+            "status", "reviewNote", "reviewedAt", "reviewedBy"
+          ])
+        && request.resource.data.status in ["approved", "rejected"];
 
-  allow delete: if false;
-}
+      allow delete: if false;
+    }
 
+    // P2P transfers: client writes are disabled
 
     match /p2pTransfers/{transferId} {
       allow read: if isAdmin();
       allow create, update, delete: if false;
     }
 
+    // Task submissions
+
     match /taskSubmissions/{submissionId} {
-allow read: if isAdmin()
-|| (signedIn() && resource.data.uid == request.auth.uid);
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
 
-  allow create: if signedIn()
-    && request.resource.data.uid == request.auth.uid
-&& isActiveMember(request.auth.uid)
-    && request.resource.data.taskId is string
-    && request.resource.data.taskId.size() <= 50
-    && request.resource.data.taskTitle is string
-    && request.resource.data.taskTitle.size() <= 150
-    && request.resource.data.answer is string
-    && request.resource.data.answer.size() > 0
-    && request.resource.data.answer.size() <= 200
-    && request.resource.data.status == "pending"
-    && (
-      !("notes" in request.resource.data)
-      || (
-        request.resource.data.notes is string
-        && request.resource.data.notes.size() <= 500
-      )
-    )
-    && request.resource.data.keys().hasOnly([
-      "uid", "taskId", "taskTitle", "answer",
-      "notes", "status", "createdAt"
-    ]);
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && isActiveMember(request.auth.uid)
+        && request.resource.data.taskId is string
+        && request.resource.data.taskId.size() <= 50
+        && request.resource.data.taskTitle is string
+        && request.resource.data.taskTitle.size() <= 150
+        && request.resource.data.answer is string
+        && request.resource.data.answer.size() > 0
+        && request.resource.data.answer.size() <= 200
+        && request.resource.data.status == "pending"
+        && (
+          !("notes" in request.resource.data)
+          || (
+            request.resource.data.notes is string
+            && request.resource.data.notes.size() <= 500
+          )
+        )
+        && request.resource.data.keys().hasOnly([
+          "uid", "taskId", "taskTitle", "answer",
+          "notes", "status", "createdAt"
+        ]);
 
-  allow update: if isAdmin()
-    && resource.data.status == "pending"
-    && request.resource.data.diff(resource.data)
-      .affectedKeys().hasOnly([
-        "status", "feedback", "isCorrect",
-        "reviewedAt", "reviewedBy"
-      ])
-    && request.resource.data.status in ["approved", "rejected"]
-    && (
-      !("feedback" in request.resource.data)
-      || (
-        request.resource.data.feedback is string
-        && request.resource.data.feedback.size() <= 500
-      )
-    );
+      allow update: if isAdmin()
+        && resource.data.status == "pending"
+        && request.resource.data.diff(resource.data)
+          .affectedKeys().hasOnly([
+            "status", "feedback", "isCorrect",
+            "reviewedAt", "reviewedBy"
+          ])
+        && request.resource.data.status in ["approved", "rejected"]
+        && (
+          !("feedback" in request.resource.data)
+          || (
+            request.resource.data.feedback is string
+            && request.resource.data.feedback.size() <= 500
+          )
+        );
 
-  allow delete: if false;
-}
+      allow delete: if false;
+    }
 
-    
-    // Wallet transaction records: admin read-only.
-    // No direct client writes or wallet balance changes.
+    // Wallet transaction records
+
     match /walletTransactions/{transactionId} {
       allow read: if isAdmin();
       allow create, update, delete: if false;
     }
 
-match /adminAuditLogs/{logId} {
+    // Administrator audit logs
+
+    match /adminAuditLogs/{logId} {
       allow read: if isAdmin();
       allow create, update, delete: if false;
     }
 
-       // HomeUtensils gift codes
-    // Codes are single-use. Approval does not directly credit wallets.
+    // HomeUtensils gift codes
 
     match /giftCodes/{giftCodeId} {
-      // Administrators can view all gift codes.
-      // Active members can look up an individual code only.
       allow get: if isAdmin()
         || (
           signedIn()
@@ -438,7 +431,6 @@ match /adminAuditLogs/{logId} {
 
       allow list: if isAdmin();
 
-      // New code document IDs must equal the actual gift code.
       allow create: if isAdmin()
         && request.resource.data.code is string
         && giftCodeId == request.resource.data.code
@@ -456,14 +448,12 @@ match /adminAuditLogs/{logId} {
           "createdAt"
         ]);
 
-      // Gift codes cannot be edited or deleted through the website.
       allow update, delete: if false;
     }
 
+    // Gift-code redemption requests
+
     match /giftCodeRedemptionRequests/{requestId} {
-      // One request per gift code.
-      // The request ID must equal the code, so a second claim
-      // cannot create another request for the same code.
       allow create: if signedIn()
         && isActiveMember(request.auth.uid)
         && requestId == request.resource.data.code
@@ -486,9 +476,6 @@ match /adminAuditLogs/{logId} {
           "createdAt"
         ]);
 
-            // Administrators can read all claims.
-      // Members can check whether a code is unclaimed.
-      // Existing claims remain private to their owner and administrators.
       allow get: if isAdmin()
         || (
           signedIn()
@@ -501,11 +488,8 @@ match /adminAuditLogs/{logId} {
           && resource.data.uid == request.auth.uid
         );
 
-      // Only administrators can list all claims.
       allow list: if isAdmin();
 
-      // Only an administrator can review a pending claim.
-      // Rejected claims remain recorded and cannot be resubmitted.
       allow update: if isAdmin()
         && resource.data.status == "pending"
         && request.resource.data.diff(resource.data)
@@ -529,10 +513,10 @@ match /adminAuditLogs/{logId} {
           )
         );
 
-      // Claims cannot be deleted through the website.
       allow delete: if false;
     }
-// Default: deny everything else
+
+    // Default: deny everything else
 
     match /{document=**} {
       allow read, write: if false;
