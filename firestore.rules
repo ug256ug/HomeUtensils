@@ -191,8 +191,8 @@ match /agentApplications/{applicationId} {
 
     // Agent working float
 
-match /agentFloats/{agentId} {
-  allow read: if isAdmin();
+allow read: if isAdmin()
+  || (signedIn() && request.auth.uid == agentId);
 
   allow create: if isAdmin()
     && request.resource.data.uid == agentId
@@ -227,8 +227,11 @@ match /agentFloats/{agentId} {
 
 // Agent float audit transactions
 
-match /agentFloatTransactions/{transactionId} {
-  allow read: if isAdmin();
+allow read: if isAdmin()
+  || (
+    signedIn()
+    && resource.data.uid == request.auth.uid
+  );
 
   allow create: if isAdmin()
     && request.resource.data.type == "initial_float_issuance"
