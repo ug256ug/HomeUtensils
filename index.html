@@ -1775,18 +1775,33 @@ function checkRegistrationPasswordMatch() {
   const password = $("registerPassword").value;
   const confirmation = $("confirmPassword").value;
   const message = $("passwordMatchMessage");
+  const registerButton = document.querySelector(
+    '#registerForm button[type="submit"]'
+  );
 
   if (!confirmation) {
-    message.textContent = "";
+    message.textContent = "Enter your password twice to confirm it.";
+    message.style.color = "";
+    $("confirmPassword").setCustomValidity("");
+
+    if (registerButton) registerButton.disabled = false;
     return;
   }
 
-  if (password === confirmation) {
-    message.textContent = "Passwords match.";
-    message.style.color = "green";
-  } else {
-    message.textContent = "Passwords do not match.";
+  if (password !== confirmation) {
+    message.textContent = "❌ Passwords do not match.";
     message.style.color = "red";
+    $("confirmPassword").setCustomValidity(
+      "The passwords do not match."
+    );
+
+    if (registerButton) registerButton.disabled = true;
+  } else {
+    message.textContent = "✅ Passwords match.";
+    message.style.color = "green";
+    $("confirmPassword").setCustomValidity("");
+
+    if (registerButton) registerButton.disabled = false;
   }
 }
 
