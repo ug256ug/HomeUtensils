@@ -959,13 +959,145 @@ function renderWithdrawalRecords(records) {
       actions.append(approve, reject);
       card.append(actions, result);
 
-    } else {
-      const note = document.createElement("p");
-      note.className = "small";
-      note.textContent = status === "approved"
-        ? "Application approved. Verify the agent setup separately."
-        : "Application rejected.";
-      card.appendChild(note);
+    } else if (status === "approved") {
+const actions = document.createElement("div");
+actions.style.cssText =
+"display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;";
+
+  const testLedger = document.createElement("button");
+  testLedger.type = "button";
+  testLedger.textContent = "Create TEST ledger";
+  testLedger.style.cssText =
+    "flex:1 1 190px;background:#d8b568;color:#17251d;font-weight:700;";
+
+  const result = document.createElement("p");
+  result.className = "small";
+  result.setAttribute("aria-live", "polite");
+  result.textContent =
+    "Approved application. Test ledger is optional; capital remains unverified.";
+
+  testLedger.addEventListener("click", async () => {
+    if (!activeUser) {
+      result.textContent = "Please sign in as an administrator.";
+      return;
+    }
+
+    if (!confirm(
+      "TEST MODE ONLY\n\n" +
+      "Create a simulated restricted ledger?\n" +
+      "This does not verify real capital or create real money. " +
+      "Withdrawable balance will remain UGX 0."
+    )) return;
+
+    testLedger.disabled = true;
+    result.textContent = "Creating test-only ledger…";
+
+    try {
+      const adminDoc = await db.collection("admins")
+        .doc(activeUser.uid).get();
+
+      if (
+        !adminDoc.exists ||
+        adminDoc.data().role !== "admin" ||
+        adminDoc.data().enabled !== true
+      ) {
+        throw new Error("Enabled administrator access is required.");
+      }
+
+      const appRef = db.collection("agentApplications").doc(record._id);
+      const appSnap = await appRef.get();
+
+      if (!appSnap.exists) {
+        throw new Error("Agent application not found.");
+      }
+
+      const app = appSnap.data();
+
+      if (String(app.status || "").toLowerCase() !== "approved") {
+        throw new Error("Only approved applications can have a test ledger.");
+      }
+
+      const uid = app.uid || app.memberUid;
+
+      if (!uid) {
+        throw new Error("Applicant UID is missing.");
+      }
+
+      const capital = Number(app.capitalDeclared || 0);
+
+      if (!Number.isFinite(capital) || capital <= 0) {
+        throw new Error("Declared capital is missing or invalid.");
+      }
+
+      const bonus = Math.round(capital * 0.15);
+      const totalFloat = capital + bonus;
+
+      const floatRef = db.collection("agentFloats").doc(uid);
+      const transactionRef = db.collection("agentFloatTransactions")
+        .doc(uid + "_test_initial");
+
+      await db.runTransaction(async transaction => {
+        const existingFloat = await transaction.get(floatRef);
+        const existingTransaction = await transaction.get(transactionRef);
+
+        if (existingFloat.exists || existingTransaction.exists) {
+          throw new Error(
+            "A test ledger already exists. No duplicate was created."
+          );
+        }
+
+        transaction.set(floatRef, {
+          uid: uid,
+          applicationId: record._id,
+          capitalAmount: capital,
+          bonusAmount: bonus,
+          restrictedBalance: totalFloat,
+          withdrawableBalance: 0,
+          status: "test_only",
+          testOnly: true,
+          capitalVerified: false,
+          restricted: true,
+          permittedUse: "member_package_activation",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdBy: activeUser.uid
+        });
+
+        transaction.set(transactionRef, {
+          uid: uid,
+          applicationId: record._id,
+          type: "initial_test_float_issuance",
+          capitalAmount: capital,
+          bonusAmount: bonus,
+          amount: totalFloat,
+          testOnly: true,
+          withdrawableBalance: 0,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdBy: activeUser.uid
+        });
+      });
+
+      result.textContent =
+        "TEST ledger created: UGX " +
+        totalFloat.toLocaleString("en-UG") +
+        " restricted. Withdrawable balance: UGX 0. Capital remains unverified.";
+
+      testLedger.textContent = "TEST ledger created";
+    } catch (error) {
+      result.textContent =
+        "Test ledger not created: " +
+        (error.message || "Check administrator access and Firestore rules.");
+
+      testLedger.disabled = false;
+    }
+  });
+
+  actions.appendChild(testLedger);
+  card.append(actions, result);
+} else {
+  const note = document.createElement("p");
+  note.className = "small";
+  note.textContent = "Application rejected.";
+  card.appendChild(note);
     }
 
     target.appendChild(card);
