@@ -4668,6 +4668,7 @@ const profileDoc=await db.collection("memberProfiles").doc(user.uid).get();
 if(profileDoc.exists){
 renderProfile(profileDoc.data());
   setGiftCodeFormState();
+  await loadMyReferralTeam();
 }else{
 $("missingProfileRecovery").classList.remove("hidden");
 show($("profileMessage"),"Your sign-in is valid, but no member profile was found. Use the recovery form below.",true);
