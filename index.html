@@ -4085,6 +4085,118 @@ show($("adminSummary"),"Admin dashboard failed: "+messageFromError(err),true);
 }
 }
 
+async function createTestAgentLedger(applicationId) {
+  if (!isAdminUser || !currentUser) {
+    show($("globalMessage"), "Administrator access required.", true);
+    return;
+  }
+
+  const confirmed = confirm(
+    "TEST MODE ONLY\n\n" +
+    "This creates a simulated agent ledger, not proof of payment.\n" +
+    "No real capital will be verified and no money will be withdrawable.\n\n" +
+    "Continue?"
+  );
+
+  if (!confirmed) return;
+
+  try {
+    const appRef = db.collection("agentApplications").doc(applicationId);
+    const appSnap = await appRef.get();
+
+    if (!appSnap.exists) {
+      throw new Error("Agent application not found.");
+    }
+
+    const app = appSnap.data();
+
+    if (String(app.status || "").toLowerCase() !== "approved") {
+      throw new Error("Only an approved application can have a test ledger.");
+    }
+
+    const uid = app.uid || app.memberUid;
+
+    if (!uid) {
+      throw new Error("Application has no member UID. No ledger was created.");
+    }
+
+    const capital = Number(app.capitalDeclared || 0);
+
+    if (!Number.isFinite(capital) || capital <= 0) {
+      throw new Error("Declared capital is missing or invalid.");
+    }
+
+    const bonus = Math.round(capital * 0.15);
+    const totalFloat = capital + bonus;
+
+    const floatRef = db.collection("agentFloats").doc(uid);
+    const transactionRef = db.collection("agentFloatTransactions")
+      .doc(uid + "_test_initial");
+
+    await db.runTransaction(async (transaction) => {
+      const existingFloat = await transaction.get(floatRef);
+      const existingTransaction = await transaction.get(transactionRef);
+
+      if (existingFloat.exists || existingTransaction.exists) {
+        throw new Error(
+          "A float or test issuance record already exists. No duplicate was created."
+        );
+      }
+
+      transaction.set(floatRef, {
+        uid: uid,
+        applicationId: applicationId,
+        capitalAmount: capital,
+        bonusAmount: bonus,
+        restrictedBalance: totalFloat,
+        withdrawableBalance: 0,
+        status: "test_only",
+        testOnly: true,
+        capitalVerified: false,
+        restricted: true,
+        permittedUse: "member_package_activation",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdBy: currentUser.uid
+      });
+
+      transaction.set(transactionRef, {
+        uid: uid,
+        applicationId: applicationId,
+        type: "initial_test_float_issuance",
+        capitalAmount: capital,
+        bonusAmount: bonus,
+        amount: totalFloat,
+        testOnly: true,
+        withdrawableBalance: 0,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdBy: currentUser.uid
+      });
+    });
+
+    show(
+      $("globalMessage"),
+      "TEST ledger created. Simulated restricted float: " +
+      money(totalFloat) +
+      ". Withdrawable balance: UGX 0. Capital remains unverified."
+    );
+
+    if (typeof loadAdminAgentApplications === "function") {
+      await loadAdminAgentApplications();
+    }
+
+    if (currentUser && currentUser.uid === uid) {
+      await loadMyAgentFloat();
+    }
+  } catch (err) {
+    show(
+      $("globalMessage"),
+      "Test ledger not created: " + messageFromError(err),
+      true
+    );
+  }
+}
+
+  
 async function reviewAgentApplication(id, status) {
 if (!isAdminUser || !currentUser) {
 show($("globalMessage"), "Administrator access required.", true);
