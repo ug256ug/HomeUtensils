@@ -4456,6 +4456,9 @@ const claimRef = db
     }
   });
   }
+  $("refreshAgentFloat").addEventListener("click", async () => {
+  await loadMyAgentFloat();
+});
   auth.onAuthStateChanged(async user=>{
 currentUser=user;
 profileData=null;
