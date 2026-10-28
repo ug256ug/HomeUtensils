@@ -1878,30 +1878,36 @@ $("registerForm").addEventListener("submit", async e => {
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
+    
     if (referralCode) {
       try {
-        const applyReferralCode = firebase
-          .app()
-          .functions()
-          .httpsCallable("applyReferralCode");
+        const normalizedReferralCode = String(referralCode)
+          .trim()
+          .toUpperCase();
 
-        await applyReferralCode({
-          referralCode: referralCode
+        if (!/^HU[A-Z0-9]{5}$/.test(normalizedReferralCode)) {
+          throw new Error("The referral code format is invalid.");
+        }
+
+        await db.collection("referralRequests").doc(result.user.uid).set({
+          referredUid: result.user.uid,
+          referredName: name,
+          referredMemberId: memberId,
+          referrerCode: normalizedReferralCode,
+          status: "pending",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
         show(
           $("globalMessage"),
-          "Account created. Your referral was recorded, and your account is pending review."
+          "Account created. Your referral request was submitted for administrator verification. Your account is pending review."
         );
       } catch (referralError) {
-        console.error(
-          "Referral recording failed:",
-          referralError
-        );
+        console.error("Referral request submission failed:", referralError);
 
         show(
           $("globalMessage"),
-          "Account created, but the referral could not be recorded. Your account is pending review. Please contact the administrator to check the referral.",
+          "Account created, but the referral request could not be submitted. Your account is still pending review. Please contact the administrator. Do not register again.",
           true
         );
       }
@@ -1911,6 +1917,7 @@ $("registerForm").addEventListener("submit", async e => {
         "Account created. Your account is pending review."
       );
     }
+    
   } catch (err) {
     show(
       $("globalMessage"),
