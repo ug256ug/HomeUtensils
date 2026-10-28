@@ -2584,6 +2584,7 @@ $("copyReferralLink").addEventListener("click", async () => {
   }
 });
   // HomeUtensils: load the signed-in member's direct referral team.
+
 async function loadMyReferralTeam() {
   const message = $("referralTeamMessage");
   const list = $("referralTeamList");
@@ -2597,65 +2598,61 @@ async function loadMyReferralTeam() {
   }
 
   button.disabled = true;
-  message.textContent = "Loading your referral team…";
+  message.textContent = "Loading verified referrals…";
   list.replaceChildren();
 
   try {
-    const getMyTeam = firebase
-      .app()
-      .functions()
-      .httpsCallable("getMyTeam");
+    const ownMemberId = String(
+      (profileData && profileData.memberId) || ""
+    ).trim().toUpperCase();
 
-    const response = await getMyTeam({});
-    const result = response.data || {};
-    const members = Array.isArray(result.members)
-      ? result.members
-      : [];
+    if (!/^HU[A-Z0-9]{5}$/.test(ownMemberId)) {
+      throw new Error(
+        "Your Member ID is not available. Refresh your profile and try again."
+      );
+    }
 
-    $("referralTotal").textContent =
-      String(result.total ?? members.length);
+    const snapshot = await db.collection("referralRequests")
+      .where("referrerCode", "==", ownMemberId)
+      .where("status", "==", "approved")
+      .get();
 
-    $("referralActive").textContent =
-      String(result.active ?? 0);
+    $("referralTotal").textContent = String(snapshot.size);
+    $("referralActive").textContent = "—";
+    $("referralInactive").textContent = "—";
 
-    $("referralInactive").textContent =
-      String(result.inactive ?? members.length);
-
-    if (members.length === 0) {
+    if (snapshot.empty) {
       message.textContent =
-        "No direct referrals have been recorded for your account yet.";
+        "No administrator-verified direct referrals have been recorded yet.";
       return;
     }
 
-    members.forEach(member => {
+    snapshot.forEach((doc) => {
+      const member = doc.data();
       const card = document.createElement("div");
       card.className = "request";
 
       const name = document.createElement("strong");
-      name.textContent = member.name || "HomeUtensils Member";
+      name.textContent =
+        member.referredName || "HomeUtensils Member";
 
       const memberId = document.createElement("p");
       memberId.textContent =
-        "Member ID: " + (member.memberId || "Not available");
-
-      const packageInfo = document.createElement("p");
-      packageInfo.textContent =
-        "Package: " + (member.package || "Not recorded");
+        "Member ID: " + (member.referredMemberId || "Not available");
 
       const status = document.createElement("p");
-      status.textContent =
-        "Referral status: " + (member.status || "inactive");
+      status.textContent = "Referral verification: Approved";
 
-      card.append(name, memberId, packageInfo, status);
+      card.append(name, memberId, status);
       list.appendChild(card);
     });
 
-    message.textContent = "Referral team loaded successfully.";
+    message.textContent =
+      "Verified referral team loaded. Active package counts are not connected yet.";
   } catch (error) {
     console.error("Referral team loading failed:", error);
     message.textContent =
-      "Could not load your referral team: " +
-      messageFromError(error);
+      "Could not load verified referrals: " + messageFromError(error);
   } finally {
     button.disabled = false;
   }
@@ -2664,6 +2661,7 @@ async function loadMyReferralTeam() {
 $("refreshReferralTeam").addEventListener("click", async () => {
   await loadMyReferralTeam();
 });
+  
 function listenRequests(user){
 $("requestHistory").textContent="Loading requests…";
 db.collection("activationRequests").where("uid","==",user.uid).onSnapshot(snapshot=>{
