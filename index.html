@@ -4493,13 +4493,14 @@ listenWithdrawals(user);
 startMemberNotifications(user);
 startAnnouncementNotifications(user);
 await loadMyAgentStatus();
+await loadMyAgentFloat();
 
 isAdminUser=await checkAdmin(user);
 if(isAdminUser){
 $("adminSection").classList.remove("hidden");
 await loadAdmin();
 await loadAdminAnnouncements();
-}
+  }
 }catch(err){
 show($("profileMessage"),"Could not load your account: "+messageFromError(err),true);
 }
