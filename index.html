@@ -4063,8 +4063,19 @@ applications.forEach(doc=>{
       reviewAgentApplication(doc.id,"rejected");
     });
 
+    
     item.append(approve,reject);
+  } else if (String(d.status || "").toLowerCase() === "approved") {
+    const testLedger = document.createElement("button");
+    testLedger.type = "button";
+    testLedger.textContent = "Create TEST ledger";
+    testLedger.className = "secondary";
+    testLedger.addEventListener("click", () => {
+      createTestAgentLedger(doc.id);
+    });
+    item.appendChild(testLedger);
   }
+  
 
   agentBox.appendChild(item);
 });
