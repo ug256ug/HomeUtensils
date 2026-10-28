@@ -191,41 +191,52 @@ match /agentApplications/{applicationId} {
 
         // Agent working float
 
-    match /agentFloats/{agentId} {
-      allow read: if isAdmin()
-        || (signedIn() && request.auth.uid == agentId);
+    
+match /agentFloats/{agentId} {
+  allow read: if isAdmin()
+    || (signedIn() && request.auth.uid == agentId);
 
-      allow create: if isAdmin()
-        && request.resource.data.uid == agentId
-        && request.resource.data.currency == "UGX"
-        && request.resource.data.capitalAmount is int
-        && request.resource.data.capitalAmount >= 50000
-        && request.resource.data.bonusRate == 15
-        && request.resource.data.bonusAmount is int
-        && request.resource.data.bonusAmount
-          >= request.resource.data.capitalAmount * 15 / 100 - 0.5
-        && request.resource.data.bonusAmount
-          <= request.resource.data.capitalAmount * 15 / 100 + 0.5
-        && request.resource.data.openingBalance
-          == request.resource.data.capitalAmount
-            + request.resource.data.bonusAmount
-        && request.resource.data.restrictedBalance
-          == request.resource.data.openingBalance
-        && request.resource.data.withdrawableBalance == 0
-        && request.resource.data.status == "active"
-        && request.resource.data.restricted == true
-        && request.resource.data.permittedUse
-          == "member_package_activation"
-        && request.resource.data.keys().hasOnly([
-          "uid", "currency", "capitalAmount", "bonusRate",
-          "bonusAmount", "openingBalance", "restrictedBalance",
-          "withdrawableBalance", "status", "restricted",
-          "permittedUse", "issuedAt", "issuedBy",
-          "sourceApplicationId"
-        ]);
+  // Temporary test float only. This does not verify real capital.
+  allow create: if isAdmin()
+    && request.resource.data.uid == agentId
+    && request.resource.data.applicationId is string
+    && request.resource.data.capitalAmount is number
+    && request.resource.data.capitalAmount > 0
+    && request.resource.data.bonusAmount is number
+    && request.resource.data.bonusAmount
+      >= request.resource.data.capitalAmount * 15 / 100 - 0.5
+    && request.resource.data.bonusAmount
+      <= request.resource.data.capitalAmount * 15 / 100 + 0.5
+    && request.resource.data.restrictedBalance
+      == request.resource.data.capitalAmount
+        + request.resource.data.bonusAmount
+    && request.resource.data.withdrawableBalance == 0
+    && request.resource.data.status == "test_only"
+    && request.resource.data.testOnly == true
+    && request.resource.data.capitalVerified == false
+    && request.resource.data.restricted == true
+    && request.resource.data.permittedUse
+      == "member_package_activation"
+    && request.resource.data.createdBy == request.auth.uid
+    && request.resource.data.keys().hasOnly([
+      "uid",
+      "applicationId",
+      "capitalAmount",
+      "bonusAmount",
+      "restrictedBalance",
+      "withdrawableBalance",
+      "status",
+      "testOnly",
+      "capitalVerified",
+      "restricted",
+      "permittedUse",
+      "createdAt",
+      "createdBy"
+    ]);
 
-      allow update, delete: if false;
-    }
+  allow update, delete: if false;
+}
+
 
     // Agent float audit transactions
 
