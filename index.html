@@ -2996,12 +2996,25 @@ const existing = await db
 .where("uid", "==", currentUser.uid)
 .get();
 
-if (!existing.empty) {
+const activeApplication = existing.docs.find(doc => {
+  const status = String(doc.data().status || "pending").toLowerCase();
+
+  return status === "pending" || status === "approved";
+});
+
+if (activeApplication) {
+  const status = String(
+    activeApplication.data().status || "pending"
+  ).toLowerCase();
+
   show(
     $("agentMessage"),
-    "An agent application already exists for your account. Check your application status below.",
+    status === "pending"
+      ? "Your agent application is awaiting administrator review. Please wait for a decision before submitting another application."
+      : "Your agent application has already been approved. Contact the administrator if you need to update your agent details.",
     true
   );
+
   await loadMyAgentStatus();
   return;
 }
