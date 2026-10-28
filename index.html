@@ -3126,6 +3126,134 @@ if(snap.empty){
   box.textContent="No agent application found.";
   return;
 }
+  async function loadMyAgentFloat() {
+  const statusBox = $("agentFloatStatus");
+  const historyBox = $("agentFloatHistory");
+
+  if (!currentUser) {
+    statusBox.textContent = "Please sign in to view your agent float.";
+    return;
+  }
+
+  try {
+    statusBox.textContent = "Loading your restricted float…";
+
+    const uid = currentUser.uid;
+
+    const floatSnap = await db
+      .collection("agentFloats")
+      .doc(uid)
+      .get();
+
+    if (!floatSnap.exists) {
+      $("agentFloatCapital").textContent = "UGX 0";
+      $("agentFloatBonus").textContent = "UGX 0";
+      $("agentFloatBalance").textContent = "UGX 0";
+      $("agentFloatWithdrawable").textContent = "UGX 0";
+
+      statusBox.textContent =
+        "No float account found. Your agent application must be approved and float issuance completed.";
+
+      historyBox.textContent = "No float account available.";
+      return;
+    }
+
+    const f = floatSnap.data();
+
+    const money = value =>
+      "UGX " + Math.round(Number(value) || 0).toLocaleString("en-UG");
+
+    $("agentFloatCapital").textContent =
+      money(f.capitalAmount);
+
+    $("agentFloatBonus").textContent =
+      money(f.bonusAmount);
+
+    $("agentFloatBalance").textContent =
+      money(f.restrictedBalance);
+
+    $("agentFloatWithdrawable").textContent =
+      money(f.withdrawableBalance);
+
+    statusBox.textContent =
+      f.status === "active"
+        ? "Agent float active. Restricted to member package activation."
+        : "Float account status: " + (f.status || "unknown") + ".";
+
+    historyBox.textContent = "Loading transaction history…";
+
+    const historySnap = await db
+      .collection("agentFloatTransactions")
+      .where("uid", "==", uid)
+      .limit(20)
+      .get();
+
+    historyBox.replaceChildren();
+
+    if (historySnap.empty) {
+      historyBox.textContent = "No float transactions recorded yet.";
+      return;
+    }
+
+    const transactions = historySnap.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    transactions.sort((a, b) => {
+      const at = a.createdAt && a.createdAt.seconds
+        ? a.createdAt.seconds : 0;
+
+      const bt = b.createdAt && b.createdAt.seconds
+        ? b.createdAt.seconds : 0;
+
+      return bt - at;
+    });
+
+    transactions.forEach(tx => {
+      const row = document.createElement("div");
+      row.className = "notice";
+      row.style.marginBottom = "10px";
+
+      const title = document.createElement("strong");
+      title.textContent = String(
+        tx.type || "Float transaction"
+      ).replace(/_/g, " ");
+
+      const amount = document.createElement("p");
+      amount.textContent = "Amount: " + money(tx.amount);
+
+      const balance = document.createElement("p");
+      balance.textContent =
+        "Recorded balance after transaction: " +
+        money(tx.balanceAfter);
+
+      let dateText = "Date not recorded";
+
+      if (tx.createdAt && typeof tx.createdAt.toDate === "function") {
+        dateText = tx.createdAt.toDate().toLocaleString();
+      } else if (tx.createdAt && tx.createdAt.seconds) {
+        dateText = new Date(
+          tx.createdAt.seconds * 1000
+        ).toLocaleString();
+      }
+
+      const date = document.createElement("small");
+      date.textContent = dateText;
+
+      row.append(title, amount, balance, date);
+      historyBox.appendChild(row);
+    });
+
+  } catch (error) {
+    statusBox.textContent =
+      "Could not load agent float: " +
+      (error.message || "Please try again.");
+
+    historyBox.textContent =
+      "Transaction history is unavailable.";
+  }
+  }
 
 const d=snap.docs[0].data();
 const p=document.createElement("p");
