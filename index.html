@@ -1030,50 +1030,36 @@ loading="lazy"
 
 
 <div class="card" id="referralCard">
-  <h2>Referral Program</h2>
-
-  <p>Invite people to join HomeUtensils using your personal referral link.</p>
-
-  <div class="notice">
-    <strong>Referral tracking is being prepared.</strong>
-    <p>Your referral code, invited members, and referral earnings will appear here after secure referral verification is connected.</p>
-  </div>
-
-  <div class="field">
+  <h2>Referral Program</h2>  <p>Invite people to join HomeUtensils using your personal referral link.</p>  <div class="field">
     <label for="referralCode">Your referral code</label>
-    <input
-      id="referralCode"
-      type="text"
-      readonly
-      placeholder="Not available yet"
-    >
-  </div>
-
-  <div class="field">
+    <input id="referralCode" type="text" readonly
+      placeholder="Sign in to load your code">
+  </div>  <div class="field">
     <label for="referralLink">Your referral link</label>
-    <input
-      id="referralLink"
-      type="text"
-      readonly
-      placeholder="Not available yet"
-    >
-  </div>
+    <input id="referralLink" type="text" readonly
+      placeholder="Sign in to load your link">
+  </div><button type="button" id="copyReferralLink">Copy Referral Link</button>
 
-  <button type="button" id="copyReferralLink">
-  Copy Referral Link
-</button>
-
-<div id="referralMessage" aria-live="polite"></div>
-
-  <h3>Referral Summary</h3>
-  <p>Verified direct referrals: <strong>Not available yet</strong></p>
-  <p>Eligible referral earnings: <strong>Not available yet</strong></p>
-  <p>Referral payment status: <strong>Not available yet</strong></p>
-
-  <p class="muted">
-    Referral rewards will only be calculated after eligible task earnings
-    are verified by the trusted system. This page does not credit referral
-    money or initiate payments.
+  <div id="referralMessage" aria-live="polite"></div>  <hr>  <h3>My Direct Referral Team</h3>  <div class="notice">
+    <p>Total direct referrals: <strong id="referralTotal">—</strong></p>
+    <p>Active referrals: <strong id="referralActive">—</strong></p>
+    <p>Inactive referrals: <strong id="referralInactive">—</strong></p>
+  </div>  <button type="button" id="refreshReferralTeam">
+    Refresh Referral Team
+  </button>  <div id="referralTeamMessage" aria-live="polite">
+    Sign in to load your referral team.
+  </div>  <div id="referralTeamList"></div>  <h3>Referral Earnings</h3>
+  <p>
+    Verified referral earnings:
+    <strong>Not connected yet</strong>
+  </p>
+  <p>
+    Referral payments:
+    <strong>Not connected yet</strong>
+  </p>  <p class="muted">
+    Team information comes from recorded referrals. Active status depends
+    on the package status and expiry date recorded in the member profile.
+    Referral earnings and payments are not activated by this display.
   </p>
 </div>
 
