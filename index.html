@@ -3800,7 +3800,9 @@ $("adminSummary").textContent=
 " · Pending activations: "+requests.docs.filter(d=>d.data().status==="pending").length+
 " · Withdrawal requests: "+withdrawals.size+
 " · Pending withdrawals: "+withdrawals.docs.filter(d=>d.data().status==="pending").length+
-" · Agent applications: "+applications.size;
+" · Agent applications: "+applications.size+
+" · Pending referrals: "+
+referralRequests.docs.filter(d=>d.data().status==="pending").length;
 
 const reqBox=$("adminRequests");
 reqBox.replaceChildren();
