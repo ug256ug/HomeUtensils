@@ -1338,17 +1338,44 @@ if (id === "giftCodeHistory") {
     row.appendChild(status);
   }
 } else {
-  const data = { ...record };
-  delete data._id;
+if (id === "memberList") {
+const heading = document.createElement("h3");
+heading.textContent = record.fullName || record.name || "Member";
 
-  const details = document.createElement("pre");
-  details.style.whiteSpace = "pre-wrap";
-  details.style.overflowWrap = "anywhere";
-  details.textContent =
-    "Record ID: " + record._id + "\n" +
-    JSON.stringify(data, null, 2);
+const details = [
+  ["Member ID", record.memberId || "Not assigned"],
+  ["Email", record.email || "Not provided"],
+  ["Package", record.package || "Not assigned"],
+  ["Status", record.packageStatus || record.status || "Not set"],
+  ["Phone", record.phone || record.phoneNumber || "Not provided"],
+  ["Activation date", formatAdminDate(record.activationDate || record.activatedAt)],
+  ["Expiry date", formatAdminDate(record.expiryDate || record.expiresAt)]
+];
 
-  row.appendChild(details);
+row.appendChild(heading);
+
+details.forEach(([label, value]) => {
+  const line = document.createElement("p");
+  line.style.margin = "7px 0";
+  line.style.overflowWrap = "anywhere";
+  line.textContent = label + ": " + value;
+  row.appendChild(line);
+});
+
+} else {
+const data = { ...record };
+delete data._id;
+
+const details = document.createElement("pre");
+details.style.whiteSpace = "pre-wrap";
+details.style.overflowWrap = "anywhere";
+details.textContent =
+  "Record ID: " + record._id + "\n" +
+  JSON.stringify(data, null, 2);
+
+row.appendChild(details);
+
+}
 }
 
 target.appendChild(row);
