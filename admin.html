@@ -1363,6 +1363,49 @@ details.forEach(([label, value]) => {
 });
 
 } else {
+if (id === "membersList") {
+const heading = document.createElement("h3");
+heading.textContent = record.fullName || record.name || "Member";
+
+row.appendChild(heading);
+
+const formatDate = (value) => {
+  if (!value) return "Not recorded";
+
+  let date;
+
+  if (typeof value.toDate === "function") {
+    date = value.toDate();
+  } else if (typeof value.seconds === "number") {
+    date = new Date(value.seconds * 1000);
+  } else {
+    date = new Date(value);
+  }
+
+  return Number.isNaN(date.getTime())
+    ? "Not recorded"
+    : date.toLocaleString();
+};
+
+const details = [
+  ["Member ID", record.memberId || "Not assigned"],
+  ["Email", record.email || "Not provided"],
+  ["Package", record.package || "Not assigned"],
+  ["Status", record.packageStatus || record.status || "Not set"],
+  ["Phone", record.phone || record.phoneNumber || "Not provided"],
+  ["Activation date", formatDate(record.activationDate || record.activatedAt)],
+  ["Expiry date", formatDate(record.expiryDate || record.expiresAt)]
+];
+
+details.forEach(([label, value]) => {
+  const line = document.createElement("p");
+  line.style.margin = "7px 0";
+  line.style.overflowWrap = "anywhere";
+  line.textContent = label + ": " + value;
+  row.appendChild(line);
+});
+
+} else {
 const data = { ...record };
 delete data._id;
 
