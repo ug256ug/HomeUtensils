@@ -3804,6 +3804,78 @@ $("adminSummary").textContent=
 " · Pending referrals: "+
 referralRequests.docs.filter(d=>d.data().status==="pending").length;
 
+const referralBox = $("adminReferralRequests");
+referralBox.replaceChildren();
+
+if (referralRequests.empty) {
+referralBox.textContent = "No referral verification requests.";
+} else {
+const referralDocs = referralRequests.docs.slice().sort((a, b) => {
+const statusA = String(a.data().status || "pending");
+const statusB = String(b.data().status || "pending");
+if (statusA === "pending" && statusB !== "pending") return -1;
+if (statusB === "pending" && statusA !== "pending") return 1;
+return 0;
+});
+
+referralDocs.forEach((refDoc) => {
+const referral = refDoc.data();
+const item = document.createElement("div");
+item.className = "request";
+
+const heading = document.createElement("h3");
+heading.textContent = referral.referredName || "Member name unavailable";
+item.appendChild(heading);
+
+const details = [
+  "Referred Member ID: " + (referral.referredMemberId || "Not available"),
+  "Submitted referral code: " + (referral.referrerCode || "Not available"),
+  "Status: " + String(referral.status || "pending").toUpperCase()
+];
+
+details.forEach((value) => {
+  const line = document.createElement("p");
+  line.textContent = value;
+  item.appendChild(line);
+});
+
+const referrerProfile = members.docs.find((memberDoc) =>
+  String(memberDoc.data().memberId || "").trim().toUpperCase() ===
+  String(referral.referrerCode || "").trim().toUpperCase()
+);
+
+if (referral.status === "pending") {
+  if (referrerProfile && referrerProfile.id !== refDoc.id) {
+    const approveButton = document.createElement("button");
+    approveButton.type = "button";
+    approveButton.textContent = "Approve referral";
+    approveButton.addEventListener("click", () =>
+      reviewReferralRequest(refDoc.id, "approved", referrerProfile.id)
+    );
+    item.appendChild(approveButton);
+  } else {
+    const warning = document.createElement("p");
+    warning.className = "error";
+    warning.textContent =
+      "No matching referrer Member ID was found, or this appears to be a self-referral. Verify the details before approving.";
+    item.appendChild(warning);
+  }
+
+  const rejectButton = document.createElement("button");
+  rejectButton.type = "button";
+  rejectButton.className = "danger";
+  rejectButton.textContent = "Reject referral";
+  rejectButton.addEventListener("click", () =>
+    reviewReferralRequest(refDoc.id, "rejected", "")
+  );
+  item.appendChild(rejectButton);
+}
+
+referralBox.appendChild(item);
+
+});
+}
+
 const reqBox=$("adminRequests");
 reqBox.replaceChildren();
 
