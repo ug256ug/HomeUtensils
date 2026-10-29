@@ -1117,11 +1117,12 @@ function formatAgentDate(value) {
     }
 
     return new Date(value).toLocaleString();
-  } catch (error) {
+    } catch (error) {
     return "Not recorded";
   }
-  }
-  function showRecords(id, records) {
+}
+
+function showRecords(id, records) {
 const target = $(id);
 target.replaceChildren();
 
