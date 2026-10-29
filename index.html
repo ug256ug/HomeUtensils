@@ -3785,12 +3785,15 @@ button.disabled = false;
 async function loadAdmin(){
 await loadAdminTaskSubmissions();
 try{
-const [requests,members,applications,withdrawals]=await Promise.all([
+
+const [requests,members,applications,withdrawals,referralRequests]=await Promise.all([
 db.collection("activationRequests").get(),
 db.collection("memberProfiles").get(),
 db.collection("agentApplications").get(),
-db.collection("withdrawalRequests").get()
+db.collection("withdrawalRequests").get(),
+db.collection("referralRequests").get()
 ]);
+  
 $("adminSummary").textContent=
 "Members: "+members.size+
 " · Activation requests: "+requests.size+
