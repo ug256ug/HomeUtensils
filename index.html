@@ -3782,7 +3782,100 @@ true
 button.disabled = false;
 }
 });
-async function loadAdmin(){
+async function reviewReferralRequest(requestId, status, referrerUid) {
+  if (!currentUser) {
+    alert("Please sign in as an administrator.");
+    return;
+  }
+
+  if (!["approved", "rejected"].includes(status)) {
+    alert("Invalid referral review status.");
+    return;
+  }
+
+  if (!confirm(
+    status === "approved"
+      ? "Approve this referral after verifying the referrer's Member ID?"
+      : "Reject this referral request?"
+  )) {
+    return;
+  }
+
+  try {
+    const requestRef = db.collection("referralRequests").doc(requestId);
+    const requestSnapshot = await requestRef.get();
+
+    if (!requestSnapshot.exists) {
+      throw new Error("This referral request no longer exists.");
+    }
+
+    const referral = requestSnapshot.data();
+
+    if (referral.status !== "pending") {
+      throw new Error("This request has already been reviewed.");
+    }
+
+    const updateData = {
+      status: status,
+      reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      reviewedBy: currentUser.uid
+    };
+
+    if (status === "approved") {
+      if (!referrerUid || referrerUid === requestId) {
+        throw new Error("The referrer could not be verified.");
+      }
+
+      const referrerSnapshot = await db
+        .collection("memberProfiles")
+        .doc(referrerUid)
+        .get();
+
+      if (!referrerSnapshot.exists) {
+        throw new Error("The referrer's profile was not found.");
+      }
+
+      const referrer = referrerSnapshot.data();
+
+      const actualMemberId = String(referrer.memberId || "")
+        .trim()
+        .toUpperCase();
+
+      const submittedCode = String(referral.referrerCode || "")
+        .trim()
+        .toUpperCase();
+
+      if (!actualMemberId || actualMemberId !== submittedCode) {
+        throw new Error(
+          "The referrer's Member ID does not match the submitted code."
+        );
+      }
+
+      updateData.verifiedReferrerUid = referrerUid;
+    }
+
+    await requestRef.update(updateData);
+
+    alert(
+      status === "approved"
+        ? "Referral verified. No wallet credit or earnings were created."
+        : "Referral request rejected."
+    );
+
+    await loadAdmin();
+
+  } catch (error) {
+    console.error("Referral review failed:", error);
+
+    alert(
+      "Referral review failed: " +
+      (typeof messageFromError === "function"
+        ? messageFromError(error)
+        : error.message || "Please try again.")
+    );
+  }
+}
+  async function loadAdmin(){
 await loadAdminTaskSubmissions();
 try{
 
